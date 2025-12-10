@@ -5,7 +5,14 @@
 
 // Read the environment variable with debug logs
 const envApiUrl = process.env.NEXT_PUBLIC_API_URL
-const API_BASE_URL = envApiUrl || 'http://localhost:8000'
+
+// Normalize the URL - ensure it starts with http:// or https://
+let API_BASE_URL = envApiUrl || 'http://localhost:8000'
+
+// If the URL doesn't start with http:// or https://, add https://
+if (API_BASE_URL && !API_BASE_URL.match(/^https?:\/\//)) {
+  API_BASE_URL = `https://${API_BASE_URL}`
+}
 
 // Debug log - only on client side
 if (typeof window !== 'undefined') {
@@ -13,7 +20,8 @@ if (typeof window !== 'undefined') {
     'process.env.NEXT_PUBLIC_API_URL': envApiUrl,
     'API_BASE_URL (final)': API_BASE_URL,
     'isLocalhost': API_BASE_URL.includes('localhost'),
-    'isRailway': API_BASE_URL.includes('railway.app')
+    'isRailway': API_BASE_URL.includes('railway.app'),
+    'hasProtocol': API_BASE_URL.match(/^https?:\/\//) !== null
   })
 }
 
