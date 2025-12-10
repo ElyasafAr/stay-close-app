@@ -199,7 +199,7 @@ export default function ContactsPage() {
                   <div className={styles.reminderBadge}>
                     <MdNotifications style={{ fontSize: '16px', marginLeft: '4px' }} />
                     <span>
-                      כל {getReminderForContact(contact.id)!.interval_value} {getReminderForContact(contact.id)!.interval_type === 'hours' ? 'שעות' : 'ימים'}
+                      כל {getReminderForContact(contact.id)?.interval_value} {getReminderForContact(contact.id)?.interval_type === 'hours' ? 'שעות' : 'ימים'}
                     </span>
                   </div>
                 )}
@@ -211,8 +211,9 @@ export default function ContactsPage() {
                       reminder: getReminderForContact(contact.id)
                     })}
                     className={styles.reminderButton}
+                    disabled={!contact.id}
                   >
-                    {getReminderForContact(contact.id) ? (
+                    {contact.id && getReminderForContact(contact.id) ? (
                       <>
                         <MdNotifications style={{ fontSize: '18px' }} />
                         ערוך התראה
