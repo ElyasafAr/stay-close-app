@@ -189,3 +189,42 @@ def create_or_get_google_user(google_user_info: dict) -> dict:
         "email": email
     }
 
+def create_or_get_firebase_user(firebase_user_info: dict) -> dict:
+    """יוצר או מחזיר משתמש Firebase"""
+    users = load_users_from_file()
+    email = firebase_user_info.get("email")
+    uid = firebase_user_info.get("user_id")  # Firebase UID
+    
+    if not email or not uid:
+        raise HTTPException(status_code=400, detail="Firebase user info missing email or UID")
+    
+    # חיפוש משתמש קיים לפי UID או אימייל
+    for user_id, user_data in users.items():
+        if user_data.get("firebase_uid") == uid or (user_data.get("email") == email and user_data.get("auth_provider") == "firebase"):
+            return {
+                "user_id": user_id,
+                "username": user_data.get("username", email.split("@")[0]),
+                "email": email
+            }
+    
+    # יצירת משתמש חדש
+    username = firebase_user_info.get("name", email.split('@')[0])
+    user_id = hashlib.sha256(f"{email}{datetime.now()}".encode()).hexdigest()[:16]
+    
+    users[user_id] = {
+        "id": user_id,
+        "username": username,
+        "email": email,
+        "hashed_password": "",  # Firebase users don't have local password
+        "created_at": datetime.now().isoformat(),
+        "auth_provider": "firebase",
+        "firebase_uid": uid
+    }
+    
+    save_users_to_file(users)
+    return {
+        "user_id": user_id,
+        "username": username,
+        "email": email
+    }
+
