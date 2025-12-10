@@ -163,7 +163,7 @@ export default function ContactsPage() {
               <div className={styles.emptyIcon}>💙</div>
               <p>אין אנשי קשר עדיין</p>
               <p style={{ fontSize: '0.9rem', marginTop: '8px', opacity: 0.7 }}>
-                לחץ על "הוסף איש קשר" כדי להתחיל
+                לחץ על &quot;הוסף איש קשר&quot; כדי להתחיל
               </p>
             </div>
           ) : (
