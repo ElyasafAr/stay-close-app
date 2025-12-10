@@ -62,6 +62,30 @@ allowed_origins.append("http://stay-close-app-front-production.up.railway.app")
 # לוגים לבדיקה
 print(f"[CORS] Allowed origins: {allowed_origins}")
 
+# Additional middleware to ensure CORS headers are always set
+# This MUST be added BEFORE the CORS middleware to work correctly
+@app.middleware("http")
+async def add_cors_headers(request: Request, call_next):
+    """Ensure CORS headers are always present"""
+    origin = request.headers.get("origin")
+    
+    response = await call_next(request)
+    
+    # Always add CORS headers if origin is provided and in allowed list
+    if origin:
+        if origin in allowed_origins:
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+            response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+            response.headers["Access-Control-Allow-Headers"] = "*"
+            response.headers["Access-Control-Expose-Headers"] = "*"
+            print(f"[CORS] Added headers for origin: {origin}")
+        else:
+            print(f"[CORS] Origin not allowed: {origin}")
+            print(f"[CORS] Allowed origins: {allowed_origins}")
+    
+    return response
+
 # CORS configuration
 # When allow_credentials=True, cannot use allow_origins=["*"]
 # Must specify exact origins
@@ -83,24 +107,6 @@ print(f"[CORS] Allow methods: GET, POST, PUT, DELETE, OPTIONS, PATCH")
 
 # FastAPI CORS middleware handles OPTIONS requests automatically
 # No need for explicit handler
-
-# Additional middleware to ensure CORS headers are always set
-@app.middleware("http")
-async def add_cors_headers(request: Request, call_next):
-    """Ensure CORS headers are always present"""
-    origin = request.headers.get("origin")
-    
-    response = await call_next(request)
-    
-    # If origin is in allowed list, add CORS headers
-    if origin and origin in allowed_origins:
-        response.headers["Access-Control-Allow-Origin"] = origin
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-        response.headers["Access-Control-Allow-Headers"] = "*"
-        response.headers["Access-Control-Expose-Headers"] = "*"
-    
-    return response
 
 # מודלים לנתונים
 class Contact(BaseModel):
