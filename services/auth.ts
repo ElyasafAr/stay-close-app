@@ -291,9 +291,24 @@ export function onAuthStateChange(callback: (user: User | null) => void) {
                 localStorage.setItem('user', JSON.stringify(response.data.user))
                 callback(response.data.user)
                 return
+              } else {
+                // If backend is not available, use stored user if available
+                console.warn('⚠️ [AUTH] Backend unavailable, using stored user if available')
+                const storedUser = getStoredUser()
+                if (storedUser) {
+                  callback(storedUser)
+                  return
+                }
               }
             } catch (error) {
-              console.error('שגיאה בעדכון token:', error)
+              // Silently handle errors - backend might not be ready yet
+              console.warn('⚠️ [AUTH] Could not get JWT token from backend (this is OK if backend is not ready):', error instanceof Error ? error.message : 'Unknown error')
+              // Use stored user if available
+              const storedUser = getStoredUser()
+              if (storedUser) {
+                callback(storedUser)
+                return
+              }
             }
           }
           
