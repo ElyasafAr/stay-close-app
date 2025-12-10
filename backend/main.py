@@ -10,8 +10,9 @@ import sys
 if sys.version_info < (3, 7):
     raise RuntimeError("האפליקציה דורשת Python 3.7 או גרסה חדשה יותר. גרסה נוכחית: {}".format(sys.version))
 
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response
 from pydantic import BaseModel, EmailStr
 from typing import List, Optional
 import os
@@ -80,15 +81,8 @@ print(f"[CORS] Allowed origins: {allowed_origins}")
 print(f"[CORS] Allow credentials: True")
 print(f"[CORS] Allow methods: GET, POST, PUT, DELETE, OPTIONS, PATCH")
 
-# Explicit OPTIONS handler for preflight requests (backup)
-@app.options("/{full_path:path}")
-async def options_handler(full_path: str):
-    """Handle OPTIONS requests for CORS preflight"""
-    return {
-        "message": "OK",
-        "allowed_methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-        "allowed_origins": allowed_origins
-    }
+# FastAPI CORS middleware handles OPTIONS requests automatically
+# No need for explicit handler
 
 # מודלים לנתונים
 class Contact(BaseModel):
