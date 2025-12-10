@@ -84,6 +84,24 @@ print(f"[CORS] Allow methods: GET, POST, PUT, DELETE, OPTIONS, PATCH")
 # FastAPI CORS middleware handles OPTIONS requests automatically
 # No need for explicit handler
 
+# Additional middleware to ensure CORS headers are always set
+@app.middleware("http")
+async def add_cors_headers(request: Request, call_next):
+    """Ensure CORS headers are always present"""
+    origin = request.headers.get("origin")
+    
+    response = await call_next(request)
+    
+    # If origin is in allowed list, add CORS headers
+    if origin and origin in allowed_origins:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+        response.headers["Access-Control-Expose-Headers"] = "*"
+    
+    return response
+
 # מודלים לנתונים
 class Contact(BaseModel):
     """מודל ליצירת קשר"""
