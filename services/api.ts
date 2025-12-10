@@ -1,9 +1,21 @@
 /**
- * שירות API לתקשורת עם השרת
- * כל הפונקציות כאן מטפלות בתקשורת עם ה-backend
+ * API service for communication with the server
+ * All functions here handle communication with the backend
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+// Read the environment variable with debug logs
+const envApiUrl = process.env.NEXT_PUBLIC_API_URL
+const API_BASE_URL = envApiUrl || 'http://localhost:8000'
+
+// Debug log - only on client side
+if (typeof window !== 'undefined') {
+  console.log('🔍 [API] Environment check:', {
+    'process.env.NEXT_PUBLIC_API_URL': envApiUrl,
+    'API_BASE_URL (final)': API_BASE_URL,
+    'isLocalhost': API_BASE_URL.includes('localhost'),
+    'isRailway': API_BASE_URL.includes('railway.app')
+  })
+}
 
 export interface ApiResponse<T> {
   success: boolean
@@ -12,7 +24,7 @@ export interface ApiResponse<T> {
 }
 
 /**
- * פונקציה כללית לביצוע קריאות API
+ * General function for making API calls
  */
 async function fetchApi<T>(
   endpoint: string,
@@ -27,8 +39,8 @@ async function fetchApi<T>(
   })
   
   try {
-    // הוספת token ל-headers אם קיים
-    // נשתמש ב-JWT token (auth_token) אם קיים, אחרת ב-Firebase token
+    // Add token to headers if available
+    // Use JWT token (auth_token) if available, otherwise Firebase token
     const token = typeof window !== 'undefined' 
       ? (localStorage.getItem('auth_token') || localStorage.getItem('firebase_token'))
       : null
@@ -71,14 +83,14 @@ async function fetchApi<T>(
         statusText: response.statusText
       })
       
-      // אם 401 - המשתמש לא מחובר
+      // If 401 - user is not authenticated
       if (response.status === 401) {
         console.warn('⚠️ [API] Unauthorized - clearing tokens')
         if (typeof window !== 'undefined') {
           localStorage.removeItem('auth_token')
           localStorage.removeItem('firebase_token')
           localStorage.removeItem('user')
-          // רק אם לא אנחנו כבר בדף login
+          // Only redirect if we're not already on the login page
           if (!window.location.pathname.includes('/login')) {
             console.log('🔄 [API] Redirecting to login...')
             window.location.href = '/login'
@@ -86,8 +98,8 @@ async function fetchApi<T>(
         }
       }
       
-      // נסה לקבל הודעת שגיאה מהשרת
-      let errorMessage = `שגיאת HTTP: ${response.status}`
+      // Try to get error message from server
+      let errorMessage = `HTTP Error: ${response.status}`
       try {
         const errorData = await response.json()
         console.error('❌ [API] Error details:', errorData)
@@ -96,7 +108,7 @@ async function fetchApi<T>(
         }
       } catch (e) {
         console.error('❌ [API] Could not parse error response:', e)
-        // אם לא ניתן לקרוא JSON, נשתמש בהודעת ברירת מחדל
+        // If we can't read JSON, use default message
       }
       throw new Error(errorMessage)
     }
@@ -111,20 +123,20 @@ async function fetchApi<T>(
     console.error('❌ [API] Request error:', error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'שגיאה לא ידועה',
+      error: error instanceof Error ? error.message : 'Unknown error',
     }
   }
 }
 
 /**
- * קבלת נתונים מהשרת
+ * Get data from server
  */
 export async function getData<T>(endpoint: string): Promise<ApiResponse<T>> {
   return fetchApi<T>(endpoint, { method: 'GET' })
 }
 
 /**
- * שליחת נתונים לשרת
+ * Send data to server
  */
 export async function postData<T>(
   endpoint: string,
@@ -137,7 +149,7 @@ export async function postData<T>(
 }
 
 /**
- * עדכון נתונים בשרת
+ * Update data on server
  */
 export async function putData<T>(
   endpoint: string,
@@ -150,7 +162,7 @@ export async function putData<T>(
 }
 
 /**
- * מחיקת נתונים מהשרת
+ * Delete data from server
  */
 export async function deleteData<T>(
   endpoint: string
