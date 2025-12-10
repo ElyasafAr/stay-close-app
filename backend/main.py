@@ -61,14 +61,20 @@ allowed_origins.append("http://stay-close-app-front-production.up.railway.app")
 # לוגים לבדיקה
 print(f"[CORS] Allowed origins: {allowed_origins}")
 
+# CORS configuration - allow all origins for now (for debugging)
+# In production, use specific origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
+    allow_origins=["*"],  # Allow all origins temporarily for debugging
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["*"],
 )
+
+# Log CORS configuration
+print(f"[CORS] CORS middleware configured - allowing all origins for debugging")
+print(f"[CORS] Original allowed origins: {allowed_origins}")
 
 # מודלים לנתונים
 class Contact(BaseModel):
