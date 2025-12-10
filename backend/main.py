@@ -68,14 +68,27 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,  # Use the list we built above
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
     expose_headers=["*"],
+    max_age=3600,  # Cache preflight requests for 1 hour
 )
 
 # Log CORS configuration
 print(f"[CORS] CORS middleware configured")
 print(f"[CORS] Allowed origins: {allowed_origins}")
+print(f"[CORS] Allow credentials: True")
+print(f"[CORS] Allow methods: GET, POST, PUT, DELETE, OPTIONS, PATCH")
+
+# Explicit OPTIONS handler for preflight requests (backup)
+@app.options("/{full_path:path}")
+async def options_handler(full_path: str):
+    """Handle OPTIONS requests for CORS preflight"""
+    return {
+        "message": "OK",
+        "allowed_methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+        "allowed_origins": allowed_origins
+    }
 
 # מודלים לנתונים
 class Contact(BaseModel):
