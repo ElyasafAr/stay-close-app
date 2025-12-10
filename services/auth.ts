@@ -1,6 +1,6 @@
 'use client'
 
-import { postData } from './api'
+import { postData, getData } from './api'
 import { 
   signInWithPopup, 
   GoogleAuthProvider, 
