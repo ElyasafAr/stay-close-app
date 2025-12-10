@@ -5,7 +5,7 @@ import { useTranslation } from '@/i18n/useTranslation'
 import { getContacts, Contact } from '@/services/contacts'
 import { generateMessage, MessageRequest } from '@/services/messages'
 import { Loading } from '@/components/Loading'
-import { MdAutoAwesome, MdContentCopy, MdPerson, MdMessage, MdTune, MdEditNote } from 'react-icons/md'
+import { MdAutoAwesome, MdContentCopy, MdPerson, MdMessage, MdTune, MdEditNote, MdShare } from 'react-icons/md'
 import { AiFillHeart, AiFillStar } from 'react-icons/ai'
 import styles from './page.module.css'
 
@@ -67,10 +67,67 @@ export default function MessagesPage() {
     }
   }
 
-  const handleCopy = () => {
-    if (generatedMessage) {
-      navigator.clipboard.writeText(generatedMessage)
-      alert('ההודעה הועתקה ללוח!')
+  const handleCopy = async () => {
+    if (!generatedMessage) return
+
+    try {
+      // Try modern clipboard API first
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(generatedMessage)
+        alert('ההודעה הועתקה ללוח!')
+      } else {
+        // Fallback for older browsers/mobile
+        const textArea = document.createElement('textarea')
+        textArea.value = generatedMessage
+        textArea.style.position = 'fixed'
+        textArea.style.left = '-999999px'
+        textArea.style.top = '-999999px'
+        document.body.appendChild(textArea)
+        textArea.focus()
+        textArea.select()
+        
+        try {
+          const successful = document.execCommand('copy')
+          if (successful) {
+            alert('ההודעה הועתקה ללוח!')
+          } else {
+            throw new Error('Copy command failed')
+          }
+        } catch (err) {
+          // Last resort - show the text for manual copy
+          alert('העתק את ההודעה:\n\n' + generatedMessage)
+        } finally {
+          document.body.removeChild(textArea)
+        }
+      }
+    } catch (err) {
+      console.error('Failed to copy:', err)
+      // Last resort - show the text for manual copy
+      alert('העתק את ההודעה:\n\n' + generatedMessage)
+    }
+  }
+
+  const handleShare = async () => {
+    if (!generatedMessage) return
+
+    try {
+      // Check if Web Share API is available (works on mobile and modern browsers)
+      if (navigator.share) {
+        await navigator.share({
+          text: generatedMessage,
+          title: 'הודעה מותאמת אישית'
+        })
+      } else {
+        // Fallback: copy to clipboard and show message
+        await handleCopy()
+      }
+    } catch (err) {
+      // User cancelled or error occurred
+      if (err instanceof Error && err.name !== 'AbortError') {
+        console.error('Share failed:', err)
+        // Fallback to copy
+        await handleCopy()
+      }
     }
   }
 
@@ -182,10 +239,16 @@ export default function MessagesPage() {
             {generatedMessage ? (
               <div className={styles.messageBox}>
                 <div className={styles.messageContent}>{generatedMessage}</div>
-                <button onClick={handleCopy} className={styles.copyButton}>
-                  <MdContentCopy style={{ fontSize: '20px' }} />
-                  {t('messages.copy')}
-                </button>
+                <div className={styles.buttonGroup}>
+                  <button onClick={handleShare} className={styles.shareButton}>
+                    <MdShare style={{ fontSize: '20px' }} />
+                    {t('messages.share')}
+                  </button>
+                  <button onClick={handleCopy} className={styles.copyButton}>
+                    <MdContentCopy style={{ fontSize: '20px' }} />
+                    {t('messages.copy')}
+                  </button>
+                </div>
               </div>
             ) : (
               <div className={styles.placeholder}>
