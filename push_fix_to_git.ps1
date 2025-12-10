@@ -42,3 +42,4 @@ Write-Host "`n=== Verifying ===" -ForegroundColor Cyan
 $lastCommit = git log --oneline -1
 Write-Host "Last commit: $lastCommit" -ForegroundColor Cyan
 
+

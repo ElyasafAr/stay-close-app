@@ -252,3 +252,4 @@ Access to fetch at '...' has been blocked by CORS policy
 3. **ודא שה-URLs נכונים** - `https://` ולא `http://`
 4. **בדוק את ה-Health Check** - זה אומר לך אם ה-Backend עובד
 
+
