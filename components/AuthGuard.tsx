@@ -11,9 +11,10 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [authenticated, setAuthenticated] = useState(false)
 
+  // דפים שפתוחים לכולם
+  const publicPaths = ['/login', '/register']
+
   useEffect(() => {
-    // דפים שפתוחים לכולם
-    const publicPaths = ['/login', '/register']
     // בדיקה ראשונית
     const checkAuth = () => {
       const isAuth = isAuthenticated()
