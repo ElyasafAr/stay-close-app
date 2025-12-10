@@ -547,26 +547,50 @@ async def generate_message(request: MessageRequest, current_user: dict = Depends
 @app.post("/api/auth/register")
 async def register(user_data: UserRegister):
     """רישום משתמש חדש"""
-    user = register_user(user_data.username, user_data.email, user_data.password)
-    access_token = create_access_token(data={"sub": user["user_id"], "email": user["email"]})
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "user": user
-    }
+    print(f"🔵 [BACKEND] Registration request received: username={user_data.username}, email={user_data.email}")
+    try:
+        user = register_user(user_data.username, user_data.email, user_data.password)
+        print(f"✅ [BACKEND] User registered successfully: user_id={user['user_id']}")
+        access_token = create_access_token(data={"sub": user["user_id"], "email": user["email"]})
+        print(f"✅ [BACKEND] Access token created: token_length={len(access_token)}")
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "user": user
+        }
+    except HTTPException as e:
+        print(f"❌ [BACKEND] Registration failed: {e.detail}")
+        raise
+    except Exception as e:
+        print(f"❌ [BACKEND] Registration error: {str(e)}")
+        import traceback
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"שגיאה ברישום: {str(e)}")
 
 @app.post("/api/auth/login")
 async def login(user_data: UserLogin):
     """התחברות עם שם משתמש וסיסמה"""
-    user = authenticate_user(user_data.username, user_data.password)
-    if not user:
-        raise HTTPException(status_code=400, detail="שם משתמש או סיסמה שגויים")
-    access_token = create_access_token(data={"sub": user["user_id"], "email": user["email"]})
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "user": user
-    }
+    print(f"🔵 [BACKEND] Login request received: username={user_data.username}")
+    try:
+        user = authenticate_user(user_data.username, user_data.password)
+        if not user:
+            print(f"❌ [BACKEND] Login failed: Invalid credentials for username={user_data.username}")
+            raise HTTPException(status_code=400, detail="שם משתמש או סיסמה שגויים")
+        print(f"✅ [BACKEND] User authenticated: user_id={user['user_id']}, email={user.get('email')}")
+        access_token = create_access_token(data={"sub": user["user_id"], "email": user["email"]})
+        print(f"✅ [BACKEND] Access token created: token_length={len(access_token)}")
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "user": user
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ [BACKEND] Login error: {str(e)}")
+        import traceback
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"שגיאה בהתחברות: {str(e)}")
 
 @app.post("/api/auth/google")
 async def google_auth(request: GoogleAuthRequest):
@@ -595,50 +619,41 @@ async def google_auth(request: GoogleAuthRequest):
 @app.post("/api/auth/firebase")
 async def firebase_auth(request: FirebaseAuthRequest):
     """התחברות דרך Firebase Authentication"""
+    print(f"🔵 [BACKEND] Firebase auth request received: token_length={len(request.token) if request.token else 0}")
     try:
         from firebase_config import verify_firebase_token
         
+        print(f"🔵 [BACKEND] Verifying Firebase token...")
         # אימות Firebase token
         firebase_user_info = verify_firebase_token(request.token)
+        print(f"✅ [BACKEND] Firebase token verified: email={firebase_user_info.get('email')}, uid={firebase_user_info.get('user_id')}")
         
+        print(f"🔵 [BACKEND] Creating or getting user...")
         # יצירה או קבלת משתמש במערכת שלנו
         user = create_or_get_firebase_user(firebase_user_info)
+        print(f"✅ [BACKEND] User ready: user_id={user['user_id']}, username={user.get('username')}, email={user.get('email')}")
         
+        print(f"🔵 [BACKEND] Creating JWT token...")
         # יצירת JWT token (לשימוש ב-API שלנו)
         access_token = create_access_token(data={"sub": user["user_id"], "email": user["email"]})
+        print(f"✅ [BACKEND] Access token created: token_length={len(access_token)}")
         
         return {
             "access_token": access_token,
             "token_type": "bearer",
             "user": user
         }
-    except ImportError:
+    except ImportError as e:
+        print(f"❌ [BACKEND] Firebase import error: {str(e)}")
         raise HTTPException(status_code=500, detail="Firebase לא מוגדר. אנא הגדר FIREBASE_SERVICE_ACCOUNT_KEY_PATH או FIREBASE_SERVICE_ACCOUNT_KEY_JSON")
-    except HTTPException:
+    except HTTPException as e:
+        print(f"❌ [BACKEND] Firebase auth HTTP error: {e.detail}")
         raise
     except Exception as e:
+        print(f"❌ [BACKEND] Firebase auth error: {str(e)}")
+        import traceback
+        print(traceback.format_exc())
         raise HTTPException(status_code=400, detail=f"שגיאה באימות Firebase: {str(e)}")
-
-@app.post("/api/auth/firebase")
-async def firebase_auth(request: FirebaseAuthRequest):
-    """התחברות דרך Firebase Authentication"""
-    try:
-        from firebase_config import verify_firebase_token
-        
-        # אימות Firebase token
-        firebase_user_info = verify_firebase_token(request.token)
-        
-        # יצירה או קבלת משתמש במערכת שלנו
-        user = create_or_get_firebase_user(firebase_user_info)
-        
-        # יצירת JWT token (לשימוש ב-API שלנו)
-        access_token = create_access_token(data={"sub": user["user_id"], "email": user["email"]})
-        
-        return {
-            "access_token": access_token,
-            "token_type": "bearer",
-            "user": user
-        }
     except ImportError:
         raise HTTPException(status_code=500, detail="Firebase לא מוגדר. אנא הגדר FIREBASE_SERVICE_ACCOUNT_KEY_PATH או FIREBASE_SERVICE_ACCOUNT_KEY_JSON")
     except HTTPException:

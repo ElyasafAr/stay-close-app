@@ -23,22 +23,36 @@ export default function LoginPage() {
     setLoading(true)
     setError(null)
 
+    console.log('🔵 [LOGIN] Form submitted:', {
+      isLogin,
+      username: formData.username,
+      email: formData.email,
+      hasPassword: !!formData.password
+    })
+
     try {
       if (isLogin) {
+        console.log('🔵 [LOGIN] Attempting login...')
         await login({
           username: formData.username,
           password: formData.password,
         })
+        console.log('✅ [LOGIN] Login successful, redirecting...')
       } else {
+        console.log('🔵 [LOGIN] Attempting registration...')
         await register({
           username: formData.username,
           email: formData.email,
           password: formData.password,
         })
+        console.log('✅ [LOGIN] Registration successful, redirecting...')
       }
       router.replace('/')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'שגיאה')
+      console.error('❌ [LOGIN] Error:', err)
+      const errorMessage = err instanceof Error ? err.message : 'שגיאה'
+      console.error('❌ [LOGIN] Error message:', errorMessage)
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }
@@ -48,11 +62,18 @@ export default function LoginPage() {
     setLoading(true)
     setError(null)
 
+    console.log('🔵 [LOGIN] Google login button clicked')
+
     try {
+      console.log('🔵 [LOGIN] Calling loginWithGoogle...')
       await loginWithGoogle()
+      console.log('✅ [LOGIN] Google login successful, redirecting...')
       router.replace('/')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'שגיאה בהתחברות עם Google')
+      console.error('❌ [LOGIN] Google login error:', err)
+      const errorMessage = err instanceof Error ? err.message : 'שגיאה בהתחברות עם Google'
+      console.error('❌ [LOGIN] Error message:', errorMessage)
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }

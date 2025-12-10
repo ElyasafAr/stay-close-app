@@ -38,69 +38,150 @@ export interface RegisterData {
  * רישום משתמש חדש
  */
 export async function register(data: RegisterData): Promise<AuthResponse> {
-  const response = await postData<AuthResponse>('/api/auth/register', data)
-  if (!response.success || !response.data) {
-    throw new Error(response.error || 'שגיאה ברישום')
-  }
+  console.log('🔵 [AUTH] Starting registration...', { username: data.username, email: data.email })
   
-  // שמירה ב-localStorage
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('auth_token', response.data.access_token)
-    localStorage.setItem('user', JSON.stringify(response.data.user))
+  try {
+    const response = await postData<AuthResponse>('/api/auth/register', data)
+    console.log('🔵 [AUTH] Registration response:', { 
+      success: response.success, 
+      hasData: !!response.data,
+      error: response.error 
+    })
+    
+    if (!response.success || !response.data) {
+      console.error('❌ [AUTH] Registration failed:', response.error)
+      throw new Error(response.error || 'שגיאה ברישום')
+    }
+    
+    console.log('✅ [AUTH] Registration successful:', { 
+      user_id: response.data.user.user_id,
+      username: response.data.user.username,
+      email: response.data.user.email,
+      hasToken: !!response.data.access_token
+    })
+    
+    // שמירה ב-localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('auth_token', response.data.access_token)
+      localStorage.setItem('user', JSON.stringify(response.data.user))
+      console.log('💾 [AUTH] Saved to localStorage')
+    }
+    
+    return response.data
+  } catch (error) {
+    console.error('❌ [AUTH] Registration error:', error)
+    throw error
   }
-  
-  return response.data
 }
 
 /**
  * התחברות עם שם משתמש וסיסמה
  */
 export async function login(data: LoginData): Promise<AuthResponse> {
-  const response = await postData<AuthResponse>('/api/auth/login', data)
-  if (!response.success || !response.data) {
-    throw new Error(response.error || 'שגיאה בהתחברות')
-  }
+  console.log('🔵 [AUTH] Starting login...', { username: data.username })
   
-  // שמירה ב-localStorage
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('auth_token', response.data.access_token)
-    localStorage.setItem('user', JSON.stringify(response.data.user))
+  try {
+    const response = await postData<AuthResponse>('/api/auth/login', data)
+    console.log('🔵 [AUTH] Login response:', { 
+      success: response.success, 
+      hasData: !!response.data,
+      error: response.error 
+    })
+    
+    if (!response.success || !response.data) {
+      console.error('❌ [AUTH] Login failed:', response.error)
+      throw new Error(response.error || 'שגיאה בהתחברות')
+    }
+    
+    console.log('✅ [AUTH] Login successful:', { 
+      user_id: response.data.user.user_id,
+      username: response.data.user.username,
+      email: response.data.user.email,
+      hasToken: !!response.data.access_token
+    })
+    
+    // שמירה ב-localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('auth_token', response.data.access_token)
+      localStorage.setItem('user', JSON.stringify(response.data.user))
+      console.log('💾 [AUTH] Saved to localStorage')
+    }
+    
+    return response.data
+  } catch (error) {
+    console.error('❌ [AUTH] Login error:', error)
+    throw error
   }
-  
-  return response.data
 }
 
 /**
  * התחברות עם Google דרך Firebase
  */
 export async function loginWithGoogle(): Promise<AuthResponse> {
+  console.log('🔵 [AUTH] Starting Google login...')
+  
   try {
+    console.log('🔵 [AUTH] Creating Google provider...')
     const provider = new GoogleAuthProvider()
     provider.setCustomParameters({
       prompt: 'select_account'
     })
     
+    console.log('🔵 [AUTH] Calling signInWithPopup...')
     const result = await signInWithPopup(auth, provider)
+    console.log('✅ [AUTH] Firebase sign-in successful:', {
+      uid: result.user.uid,
+      email: result.user.email,
+      displayName: result.user.displayName
+    })
+    
+    console.log('🔵 [AUTH] Getting Firebase token...')
     const firebaseToken = await result.user.getIdToken()
+    console.log('✅ [AUTH] Firebase token received:', { 
+      tokenLength: firebaseToken.length,
+      tokenPreview: firebaseToken.substring(0, 20) + '...'
+    })
     
     // שליחה לשרת לאימות ויצירת משתמש/קבלת JWT
+    console.log('🔵 [AUTH] Sending token to backend...')
     const response = await postData<AuthResponse>('/api/auth/firebase', {
       token: firebaseToken
     })
     
+    console.log('🔵 [AUTH] Backend response:', { 
+      success: response.success, 
+      hasData: !!response.data,
+      error: response.error 
+    })
+    
     if (!response.success || !response.data) {
+      console.error('❌ [AUTH] Firebase login failed:', response.error)
       throw new Error(response.error || 'שגיאה בהתחברות עם Firebase')
     }
+    
+    console.log('✅ [AUTH] Firebase login successful:', { 
+      user_id: response.data.user.user_id,
+      username: response.data.user.username,
+      email: response.data.user.email,
+      hasToken: !!response.data.access_token
+    })
     
     // שמירה ב-localStorage
     if (typeof window !== 'undefined') {
       localStorage.setItem('auth_token', response.data.access_token)
       localStorage.setItem('firebase_token', firebaseToken)
       localStorage.setItem('user', JSON.stringify(response.data.user))
+      console.log('💾 [AUTH] Saved to localStorage')
     }
     
     return response.data
   } catch (error: any) {
+    console.error('❌ [AUTH] Google login error:', {
+      code: error.code,
+      message: error.message,
+      error: error
+    })
+    
     // טיפול בשגיאות Firebase
     if (error.code === 'auth/popup-closed-by-user') {
       throw new Error('החלון נסגר. אנא נסה שוב.')

@@ -116,18 +116,24 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
 
 def register_user(username: str, email: str, password: str) -> dict:
     """רושם משתמש חדש"""
+    print(f"🔵 [AUTH] register_user called: username={username}, email={email}")
     users = load_users_from_file()
+    print(f"📊 [AUTH] Current users count: {len(users)}")
     
     # בדיקה אם שם המשתמש כבר קיים
     for user_id, user_data in users.items():
         if user_data.get("username") == username:
+            print(f"❌ [AUTH] Username already exists: {username}")
             raise HTTPException(status_code=400, detail="שם משתמש כבר קיים")
         if user_data.get("email") == email:
+            print(f"❌ [AUTH] Email already registered: {email}")
             raise HTTPException(status_code=400, detail="אימייל כבר רשום")
     
     # יצירת משתמש חדש
     user_id = hashlib.sha256(f"{username}{email}{datetime.now()}".encode()).hexdigest()[:16]
+    print(f"🔵 [AUTH] Generated user_id: {user_id}")
     hashed_password = hash_password(password)
+    print(f"✅ [AUTH] Password hashed")
     
     users[user_id] = {
         "id": user_id,
@@ -139,20 +145,35 @@ def register_user(username: str, email: str, password: str) -> dict:
     }
     
     save_users_to_file(users)
+    print(f"✅ [AUTH] User saved to file: user_id={user_id}")
     return {"user_id": user_id, "username": username, "email": email}
 
 def authenticate_user(username: str, password: str) -> Optional[dict]:
     """מאמת משתמש עם שם משתמש וסיסמה"""
+    print(f"🔵 [AUTH] authenticate_user called: username={username}")
     users = load_users_from_file()
+    print(f"📊 [AUTH] Checking against {len(users)} users")
     
     for user_id, user_data in users.items():
-        if user_data.get("username") == username or user_data.get("email") == username:
+        user_username = user_data.get("username")
+        user_email = user_data.get("email")
+        print(f"🔍 [AUTH] Checking user: user_id={user_id}, username={user_username}, email={user_email}")
+        
+        if user_username == username or user_email == username:
+            print(f"✅ [AUTH] Username/email match found, verifying password...")
             if verify_password(password, user_data.get("hashed_password", "")):
+                print(f"✅ [AUTH] Password verified successfully")
                 return {
                     "user_id": user_id,
                     "username": user_data.get("username"),
                     "email": user_data.get("email")
                 }
+            else:
+                print(f"❌ [AUTH] Password verification failed")
+        else:
+            print(f"⏭️ [AUTH] Username/email mismatch, continuing...")
+    
+    print(f"❌ [AUTH] No matching user found")
     return None
 
 def create_or_get_google_user(google_user_info: dict) -> dict:
@@ -191,16 +212,31 @@ def create_or_get_google_user(google_user_info: dict) -> dict:
 
 def create_or_get_firebase_user(firebase_user_info: dict) -> dict:
     """יוצר או מחזיר משתמש Firebase"""
+    print(f"🔵 [AUTH] create_or_get_firebase_user called")
+    print(f"📋 [AUTH] Firebase user info: {firebase_user_info}")
+    
     users = load_users_from_file()
     email = firebase_user_info.get("email")
     uid = firebase_user_info.get("user_id")  # Firebase UID
     
+    print(f"🔍 [AUTH] Looking for user: email={email}, uid={uid}")
+    
     if not email or not uid:
+        print(f"❌ [AUTH] Missing email or UID: email={email}, uid={uid}")
         raise HTTPException(status_code=400, detail="Firebase user info missing email or UID")
+    
+    print(f"📊 [AUTH] Checking against {len(users)} existing users")
     
     # חיפוש משתמש קיים לפי UID או אימייל
     for user_id, user_data in users.items():
-        if user_data.get("firebase_uid") == uid or (user_data.get("email") == email and user_data.get("auth_provider") == "firebase"):
+        existing_uid = user_data.get("firebase_uid")
+        existing_email = user_data.get("email")
+        existing_provider = user_data.get("auth_provider")
+        
+        print(f"🔍 [AUTH] Checking user: user_id={user_id}, firebase_uid={existing_uid}, email={existing_email}, provider={existing_provider}")
+        
+        if existing_uid == uid or (existing_email == email and existing_provider == "firebase"):
+            print(f"✅ [AUTH] Existing user found: user_id={user_id}")
             return {
                 "user_id": user_id,
                 "username": user_data.get("username", email.split("@")[0]),
@@ -208,8 +244,11 @@ def create_or_get_firebase_user(firebase_user_info: dict) -> dict:
             }
     
     # יצירת משתמש חדש
+    print(f"🔵 [AUTH] Creating new Firebase user...")
     username = firebase_user_info.get("name", email.split('@')[0])
     user_id = hashlib.sha256(f"{email}{datetime.now()}".encode()).hexdigest()[:16]
+    
+    print(f"✅ [AUTH] Generated user_id: {user_id}, username: {username}")
     
     users[user_id] = {
         "id": user_id,
@@ -222,6 +261,7 @@ def create_or_get_firebase_user(firebase_user_info: dict) -> dict:
     }
     
     save_users_to_file(users)
+    print(f"✅ [AUTH] New Firebase user saved: user_id={user_id}")
     return {
         "user_id": user_id,
         "username": username,

@@ -14,14 +14,8 @@ export function ReminderChecker() {
       return
     }
 
-    // בקשת הרשאה להתראות
-    requestNotificationPermission().then((granted) => {
-      if (granted) {
-        console.log('✅ הרשאה להתראות ניתנה')
-      } else {
-        console.warn('⚠️ הרשאה להתראות נדחתה')
-      }
-    })
+    // לא מבקשים הרשאה כאן - רק כשמגדירים תזכורת
+    // הבקשה תופיע ב-ReminderModal כשמגדירים תזכורת חדשה
 
     // התחלת בדיקה תקופתית
     const cleanup = startReminderChecker(

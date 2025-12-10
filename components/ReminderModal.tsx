@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { MdClose, MdNotifications } from 'react-icons/md'
 import { Reminder, ReminderCreate, createReminder, updateReminder } from '@/services/reminders'
+import { requestNotificationPermission } from '@/services/notifications'
 import styles from './ReminderModal.module.css'
 
 interface ReminderModalProps {
@@ -26,6 +27,18 @@ export function ReminderModal({ contactId, contactName, existingReminder, onClos
     setError(null)
 
     try {
+      // אם זו תזכורת חדשה ופעילה - נבקש הרשאה להתראות
+      if (!existingReminder && enabled) {
+        console.log('🔵 [REMINDER] Requesting notification permission for new reminder...')
+        const granted = await requestNotificationPermission()
+        if (granted) {
+          console.log('✅ [REMINDER] Notification permission granted')
+        } else {
+          console.warn('⚠️ [REMINDER] Notification permission denied - reminders will not show notifications')
+          // לא נעצור את התהליך - רק נזהיר
+        }
+      }
+
       const reminderData: ReminderCreate = {
         contact_id: contactId,
         interval_type: intervalType,
