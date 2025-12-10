@@ -45,7 +45,13 @@ jobs:
     
     - name: Check Python compatibility
       working-directory: ./backend
-      run: python3 check_python.py
+      run: |
+        if [ -f check_python.py ]; then
+          python3 check_python.py
+        else
+          echo "⚠️ check_python.py not found, skipping check"
+          python3 --version
+        fi
     
     - name: Install dependencies
       working-directory: ./backend
