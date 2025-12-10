@@ -1,0 +1,61 @@
+{
+  "app": {
+    "name": "Stay Close",
+    "title": "Stay Close - אפליקציית קרבה",
+    "description": "אפליקציה לניהול קשרים וקרבה עם אנשים חשובים בחייך"
+  },
+  "navigation": {
+    "home": "בית",
+    "settings": "הגדרות",
+    "about": "אודות",
+    "contacts": "אנשי קשר",
+    "messages": "הודעות"
+  },
+  "home": {
+    "title": "ברוכים הבאים",
+    "subtitle": "נהלו את הקשרים החשובים שלכם",
+    "description": "אפליקציית Stay Close מאפשרת לכם לשמור על קשר עם האנשים החשובים בחייכם ולנהל את הקשרים שלכם בצורה יעילה ונוחה."
+  },
+  "settings": {
+    "title": "הגדרות",
+    "language": "שפה",
+    "theme": "ערכת נושא",
+    "notifications": "התראות",
+    "save": "שמור",
+    "cancel": "ביטול",
+    "saved": "ההגדרות נשמרו בהצלחה"
+  },
+  "messages": {
+    "title": "יצירת הודעות מעוצבות",
+    "subtitle": "צרו הודעות אישיות וחמות עם עזרת AI",
+    "selectContact": "בחר איש קשר",
+    "messageType": "סוג הודעה",
+    "tone": "טון ההודעה",
+    "additionalContext": "הקשר נוסף (אופציונלי)",
+    "contextPlaceholder": "הוסף פרטים נוספים שיעזרו ל-AI ליצור הודעה מותאמת אישית...",
+    "generate": "צור הודעה עם AI",
+    "generating": "יוצר הודעה...",
+    "generatedMessage": "ההודעה שנוצרה",
+    "copy": "העתק ללוח",
+    "placeholder": "ההודעה תופיע כאן לאחר שתיצור אותה",
+    "types": {
+      "checkin": "בודק איך אתה",
+      "birthday": "יום הולדת",
+      "holiday": "חג",
+      "custom": "מותאם אישית"
+    },
+    "tones": {
+      "friendly": "ידידותי",
+      "warm": "חם",
+      "casual": "קליל",
+      "formal": "רשמי"
+    }
+  },
+  "common": {
+    "loading": "טוען...",
+    "error": "שגיאה",
+    "success": "הצלחה",
+    "close": "סגור"
+  }
+}
+

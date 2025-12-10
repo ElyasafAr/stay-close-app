@@ -1,0 +1,202 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useTranslation } from '@/i18n/useTranslation'
+import { getContacts, Contact } from '@/services/contacts'
+import { generateMessage, MessageRequest } from '@/services/messages'
+import { Loading } from '@/components/Loading'
+import { MdAutoAwesome, MdContentCopy, MdPerson, MdMessage, MdTune, MdEditNote } from 'react-icons/md'
+import { AiFillHeart, AiFillStar } from 'react-icons/ai'
+import styles from './page.module.css'
+
+export default function MessagesPage() {
+  const { t } = useTranslation()
+  const [contacts, setContacts] = useState<Contact[]>([])
+  const [loading, setLoading] = useState(true)
+  const [generating, setGenerating] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [generatedMessage, setGeneratedMessage] = useState<string | null>(null)
+  const [selectedContact, setSelectedContact] = useState<number | null>(null)
+  const [messageConfig, setMessageConfig] = useState<MessageRequest>({
+    contact_id: 0,
+    message_type: 'checkin',
+    tone: 'friendly',
+    additional_context: '',
+    language: 'he',
+  })
+
+  useEffect(() => {
+    loadContacts()
+  }, [])
+
+  const loadContacts = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const data = await getContacts()
+      setContacts(data)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'שגיאה בטעינת אנשי קשר')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleGenerate = async () => {
+    if (!selectedContact) {
+      setError('אנא בחר איש קשר')
+      return
+    }
+
+    try {
+      setGenerating(true)
+      setError(null)
+      setGeneratedMessage(null)
+
+      const request: MessageRequest = {
+        ...messageConfig,
+        contact_id: selectedContact,
+      }
+
+      const result = await generateMessage(request)
+      setGeneratedMessage(result.message)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'שגיאה ביצירת הודעה')
+    } finally {
+      setGenerating(false)
+    }
+  }
+
+  const handleCopy = () => {
+    if (generatedMessage) {
+      navigator.clipboard.writeText(generatedMessage)
+      alert('ההודעה הועתקה ללוח!')
+    }
+  }
+
+  if (loading) {
+    return <Loading />
+  }
+
+  return (
+    <main className={styles.main}>
+      <div className={styles.container}>
+        <h1 className={styles.title}>{t('messages.title')}</h1>
+        <p className={styles.subtitle}>{t('messages.subtitle')}</p>
+
+        {error && (
+          <div className={styles.error}>
+            <strong>שגיאה:</strong> {error}
+            <br />
+            <small>
+              טיפ: ודא שה-backend רץ, שיש GROQ_API_KEY מוגדר, ויש לפחות איש קשר אחד.
+            </small>
+          </div>
+        )}
+
+        <div className={styles.content}>
+          <div className={styles.configPanel}>
+            <h2 className={styles.sectionTitle}>
+              <MdPerson style={{ fontSize: '24px', color: '#a8d5e2' }} />
+              {t('messages.selectContact')}
+            </h2>
+            <select
+              value={selectedContact || ''}
+              onChange={(e) => setSelectedContact(Number(e.target.value))}
+              className={styles.select}
+            >
+              <option value="">-- בחר איש קשר --</option>
+              {contacts.map((contact) => (
+                <option key={contact.id} value={contact.id}>
+                  {contact.name}
+                </option>
+              ))}
+            </select>
+
+            <h2 className={styles.sectionTitle}>
+              <MdMessage style={{ fontSize: '24px', color: '#a8d5e2' }} />
+              {t('messages.messageType')}
+            </h2>
+            <select
+              value={messageConfig.message_type}
+              onChange={(e) => setMessageConfig({
+                ...messageConfig,
+                message_type: e.target.value as MessageRequest['message_type'],
+              })}
+              className={styles.select}
+            >
+              <option value="checkin">{t('messages.types.checkin')}</option>
+              <option value="birthday">{t('messages.types.birthday')}</option>
+              <option value="holiday">{t('messages.types.holiday')}</option>
+              <option value="custom">{t('messages.types.custom')}</option>
+            </select>
+
+            <h2 className={styles.sectionTitle}>
+              <MdTune style={{ fontSize: '24px', color: '#a8d5e2' }} />
+              {t('messages.tone')}
+            </h2>
+            <select
+              value={messageConfig.tone}
+              onChange={(e) => setMessageConfig({
+                ...messageConfig,
+                tone: e.target.value as MessageRequest['tone'],
+              })}
+              className={styles.select}
+            >
+              <option value="friendly">{t('messages.tones.friendly')}</option>
+              <option value="warm">{t('messages.tones.warm')}</option>
+              <option value="casual">{t('messages.tones.casual')}</option>
+              <option value="formal">{t('messages.tones.formal')}</option>
+            </select>
+
+            <h2 className={styles.sectionTitle}>
+              <MdEditNote style={{ fontSize: '24px', color: '#a8d5e2' }} />
+              {t('messages.additionalContext')}
+            </h2>
+            <textarea
+              value={messageConfig.additional_context || ''}
+              onChange={(e) => setMessageConfig({
+                ...messageConfig,
+                additional_context: e.target.value,
+              })}
+              placeholder={t('messages.contextPlaceholder')}
+              className={styles.textarea}
+              rows={3}
+            />
+
+            <button
+              onClick={handleGenerate}
+              disabled={!selectedContact || generating}
+              className={styles.generateButton}
+            >
+              <MdAutoAwesome style={{ fontSize: '20px' }} />
+              {generating ? t('messages.generating') : t('messages.generate')}
+            </button>
+          </div>
+
+          <div className={styles.messagePanel}>
+            <h2 className={styles.sectionTitle}>
+              <AiFillStar style={{ fontSize: '24px', color: '#ffd6a5' }} />
+              {t('messages.generatedMessage')}
+            </h2>
+            {generatedMessage ? (
+              <div className={styles.messageBox}>
+                <div className={styles.messageContent}>{generatedMessage}</div>
+                <button onClick={handleCopy} className={styles.copyButton}>
+                  <MdContentCopy style={{ fontSize: '20px' }} />
+                  {t('messages.copy')}
+                </button>
+              </div>
+            ) : (
+              <div className={styles.placeholder}>
+                <div className={styles.placeholderIcon}>💙</div>
+                {t('messages.placeholder')}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </main>
+  )
+}
+

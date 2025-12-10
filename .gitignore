@@ -1,0 +1,77 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Next.js
+.next/
+out/
+build/
+dist/
+
+# Environment variables
+.env
+.env.local
+.env*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+coverage/
+.nyc_output/
+__tests__/
+*.test.ts
+*.test.tsx
+*.test.js
+*.test.jsx
+backend/test_*.py
+backend/check_*.py
+backend/*test*.py
+jest.setup.js
+jest.config.js
+
+# Backup and temporary files
+app/layout-backup.tsx
+app/page-simple.tsx
+app/test/
+
+# Misc
+*.pem
+.cache/
+
+# Data files (לא מעלים נתונים!)
+contacts.json
+backend/contacts.json
+backend/users.json
+backend/reminders.json
+
+# Firebase Service Account Keys (חשוב מאוד - לא להעלות!)
+*serviceAccountKey.json
+*firebase-adminsdk*.json
+service-account*.json
+
+# Installation scripts (לא נדרש ב-production)
+backend/install*.ps1
+backend/install*.bat
+backend/quick_install.bat
+backend/install_all.py
+
+# Docker (לא נדרש ב-Railway)
+Dockerfile
+docker-compose.yml
+backend/Dockerfile
