@@ -48,13 +48,26 @@ allowed_origins = [
 if os.getenv("FRONTEND_URL"):
     frontend_url = os.getenv("FRONTEND_URL")
     allowed_origins.append(frontend_url)
+    # אם ה-URL לא מכיל https://, נוסיף אותו
+    if not frontend_url.startswith("http"):
+        allowed_origins.append(f"https://{frontend_url}")
+        allowed_origins.append(f"http://{frontend_url}")
+
+# הוספת Railway Frontend URLs
+# נוסיף את ה-Frontend URL של Railway ישירות
+allowed_origins.append("https://stay-close-app-front-production.up.railway.app")
+allowed_origins.append("http://stay-close-app-front-production.up.railway.app")
+
+# לוגים לבדיקה
+print(f"[CORS] Allowed origins: {allowed_origins}")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # מודלים לנתונים
