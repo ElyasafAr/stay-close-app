@@ -58,17 +58,19 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     const intervalId = setInterval(() => {
       const isAuth = isAuthenticated()
       if (isAuth !== authenticated) {
-        console.log(`🔄 [AUTHGUARD] Auth status changed: ${authenticated} -> ${isAuth}`)
+        console.log(`🔄 [AUTHGUARD] Auth status changed: ${authenticated} -> ${isAuth}, pathname=${pathname}`)
         setAuthenticated(isAuth)
+        // רק אם המשתמש התחבר ובדף login - העבר לבית
+        // אבל לא נזרוק אותו החוצה אם הוא בדף אחר (יכול להיות שהוא כבר בדף הבית)
         if (isAuth && pathname === '/login') {
           console.log('🔄 [AUTHGUARD] User authenticated, redirecting from /login to /')
-          router.replace('/')
+          router.push('/')
         } else if (!isAuth && !publicPaths.includes(pathname)) {
           console.log('🔄 [AUTHGUARD] User not authenticated, redirecting to /login')
-          router.replace('/login')
+          router.push('/login')
         }
       }
-    }, 100) // בדיקה כל 100ms - יותר תכוף כדי לתפוס שינויים מהר יותר
+    }, 200) // בדיקה כל 200ms - לא יותר מדי תכוף כדי לא לגרום ל-loops
 
     return () => {
       unsubscribe()
