@@ -40,8 +40,9 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
     // Listener למצב ההתחברות של Firebase
     const unsubscribe = onAuthStateChange((user) => {
-      // בדיקה גם של localStorage (למקרה של התחברות רגילה)
-      const isAuth = !!user || isAuthenticated()
+      // תמיד לבדוק את localStorage ישירות (גם עבור התחברות רגילה)
+      const isAuth = isAuthenticated()
+      console.log(`🔍 [AUTHGUARD] onAuthStateChange: Firebase user=${!!user}, localStorage auth=${isAuth}`)
       setAuthenticated(isAuth)
 
       if (!isAuth && !publicPaths.includes(pathname)) {
@@ -53,17 +54,21 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
     // בדיקה תקופתית (למקרה שהשינוי קרה באותו חלון - התחברות רגילה)
     // זה חשוב כי storage events לא עובדים באותו חלון
+    // וגם כי onAuthStateChange לא עובד עם התחברות רגילה
     const intervalId = setInterval(() => {
       const isAuth = isAuthenticated()
       if (isAuth !== authenticated) {
+        console.log(`🔄 [AUTHGUARD] Auth status changed: ${authenticated} -> ${isAuth}`)
         setAuthenticated(isAuth)
         if (isAuth && pathname === '/login') {
+          console.log('🔄 [AUTHGUARD] User authenticated, redirecting from /login to /')
           router.replace('/')
         } else if (!isAuth && !publicPaths.includes(pathname)) {
+          console.log('🔄 [AUTHGUARD] User not authenticated, redirecting to /login')
           router.replace('/login')
         }
       }
-    }, 300) // בדיקה כל 300ms
+    }, 100) // בדיקה כל 100ms - יותר תכוף כדי לתפוס שינויים מהר יותר
 
     return () => {
       unsubscribe()
