@@ -63,14 +63,52 @@ def get_db():
 
 def init_db():
     """
-    Initialize database - create all tables
+    Initialize database - create all tables and run migrations
     Call this once when starting the application
     """
     print("🔵 [DATABASE] Initializing database...")
     try:
         Base.metadata.create_all(bind=engine)
         print("✅ [DATABASE] Database tables created successfully")
+        
+        # Run migrations for schema changes
+        _run_migrations()
     except Exception as e:
         print(f"❌ [DATABASE] Error creating tables: {e}")
         raise
+
+def _run_migrations():
+    """
+    Run database migrations for schema changes
+    """
+    from sqlalchemy import text
+    
+    db = SessionLocal()
+    try:
+        # Migration: Add default_tone column to contacts if it doesn't exist
+        check_query = text("""
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name='contacts' AND column_name='default_tone';
+        """)
+        
+        result = db.execute(check_query).fetchone()
+        
+        if not result:
+            print("🔵 [DATABASE] Running migration: Adding default_tone column...")
+            alter_query = text("""
+                ALTER TABLE contacts 
+                ADD COLUMN default_tone VARCHAR DEFAULT 'friendly';
+            """)
+            db.execute(alter_query)
+            db.commit()
+            print("✅ [DATABASE] Migration completed: default_tone column added")
+        else:
+            print("✅ [DATABASE] Schema is up to date")
+    except Exception as e:
+        db.rollback()
+        print(f"⚠️  [DATABASE] Migration warning: {e}")
+        # Don't raise - allow app to continue even if migration fails
+    finally:
+        db.close()
 

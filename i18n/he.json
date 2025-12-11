@@ -40,10 +40,20 @@
     "copy": "העתק ללוח",
     "placeholder": "ההודעה תופיע כאן לאחר שתיצור אותה",
     "types": {
+      "custom": "מותאם אישית",
       "checkin": "בודק איך אתה",
       "birthday": "יום הולדת",
       "holiday": "חג",
-      "custom": "מותאם אישית"
+      "congratulations": "ברכות",
+      "thank_you": "תודה",
+      "apology": "התנצלות",
+      "support": "תמיכה ועידוד",
+      "invitation": "הזמנה",
+      "thinking_of_you": "חושב עליך",
+      "anniversary": "יום נישואים/יום שנה",
+      "get_well": "החלמה מהירה",
+      "new_job": "ברכות על עבודה חדשה",
+      "graduation": "סיום לימודים"
     },
     "tones": {
       "friendly": "ידידותי",
