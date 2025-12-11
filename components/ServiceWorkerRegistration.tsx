@@ -85,21 +85,51 @@ export function ServiceWorkerRegistration() {
                   if (vapidKeyResponse.success && vapidKeyResponse.data) {
                     console.log('✅ [SW] VAPID key received:', {
                       hasPublicKey: !!vapidKeyResponse.data.publicKey,
-                      keyLength: vapidKeyResponse.data.publicKey?.length
+                      keyLength: vapidKeyResponse.data.publicKey?.length,
+                      keyPreview: vapidKeyResponse.data.publicKey?.substring(0, 20) + '...'
                     })
                     const { publicKey } = vapidKeyResponse.data
                     
-                    // המרה מ-base64 ל-Uint8Array
+                    // בדיקה שהמפתח לא ריק
+                    if (!publicKey || publicKey.trim().length === 0) {
+                      throw new Error('VAPID public key is empty')
+                    }
+                    
+                    // המרה מ-base64url ל-Uint8Array
                     console.log('🔍 [SW] Converting VAPID key to Uint8Array...')
+                    console.log('🔍 [SW] Key format check:', {
+                      hasHyphens: publicKey.includes('-'),
+                      hasUnderscores: publicKey.includes('_'),
+                      hasEquals: publicKey.includes('=')
+                    })
+                    
                     const applicationServerKey = urlBase64ToUint8Array(publicKey)
-                    console.log('✅ [SW] Key converted, length:', applicationServerKey.length)
+                    console.log('✅ [SW] Key converted successfully, length:', applicationServerKey.length)
                     
                     // יצירת Push subscription
                     console.log('🔍 [SW] Creating push subscription...')
-                    subscription = await registration.pushManager.subscribe({
-                      userVisibleOnly: true,
-                      applicationServerKey: applicationServerKey as BufferSource
+                    console.log('🔍 [SW] ApplicationServerKey details:', {
+                      type: applicationServerKey.constructor.name,
+                      length: applicationServerKey.length,
+                      isUint8Array: applicationServerKey instanceof Uint8Array,
+                      firstBytes: Array.from(applicationServerKey.slice(0, 10))
                     })
+                    
+                    // ניסיון ליצור subscription
+                    try {
+                      subscription = await registration.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: applicationServerKey
+                      })
+                    } catch (subscribeError) {
+                      console.error('❌ [SW] Subscribe error details:', {
+                        error: subscribeError instanceof Error ? subscribeError.message : String(subscribeError),
+                        name: subscribeError instanceof Error ? subscribeError.name : undefined,
+                        keyLength: applicationServerKey.length,
+                        keyType: applicationServerKey.constructor.name
+                      })
+                      throw subscribeError
+                    }
                     console.log('✅ [SW] Push subscription created!', {
                       endpoint: subscription.endpoint.substring(0, 50) + '...'
                     })
@@ -192,20 +222,40 @@ export function ServiceWorkerRegistration() {
 }
 
 /**
- * המרת VAPID public key מ-base64 ל-Uint8Array
+ * המרת VAPID public key מ-base64url ל-Uint8Array
+ * VAPID keys הם בפורמט base64url (URL-safe base64)
  */
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
-  const padding = '='.repeat((4 - base64String.length % 4) % 4)
+  // הוספת padding אם צריך (base64url לא כולל padding)
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
+  
+  // המרה מ-base64url ל-base64 רגיל
+  // base64url משתמש ב-'-' במקום '+' וב-'_' במקום '/'
   const base64 = (base64String + padding)
-    .replace(/\-/g, '+')
+    .replace(/-/g, '+')
     .replace(/_/g, '/')
 
-  const rawData = window.atob(base64)
-  const outputArray = new Uint8Array(rawData.length)
-
-  for (let i = 0; i < rawData.length; ++i) {
-    outputArray[i] = rawData.charCodeAt(i)
+  try {
+    // המרה מ-base64 ל-binary string
+    const rawData = window.atob(base64)
+    
+    // יצירת Uint8Array מהבינארי
+    const outputArray = new Uint8Array(rawData.length)
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i)
+    }
+    
+    console.log('🔍 [SW] Key conversion details:', {
+      originalLength: base64String.length,
+      base64Length: base64.length,
+      outputLength: outputArray.length,
+      firstBytes: Array.from(outputArray.slice(0, 5))
+    })
+    
+    return outputArray
+  } catch (error) {
+    console.error('❌ [SW] Error converting VAPID key:', error)
+    throw new Error(`Failed to convert VAPID key: ${error instanceof Error ? error.message : String(error)}`)
   }
-  return outputArray
 }
 

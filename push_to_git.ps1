@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Fix: Use API service instead of direct fetch for VAPID key endpoint"
+$commitMessage = "Fix: Improve VAPID key conversion and add detailed error logging"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files
