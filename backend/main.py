@@ -920,93 +920,96 @@ async def check_reminders(
         user_id = current_user["user_id"]
         now = datetime.now()
         print(f"🔍 [CHECK] Checking reminders for user {user_id} at {now}")
-    
-    # Get all enabled reminders for user
-    # For one_time: check scheduled_datetime and one_time_triggered
-    # For others: check next_trigger
-    all_reminders = db.query(DBReminder).filter(
-        DBReminder.user_id == user_id,
-        DBReminder.enabled == True
-    ).all()
-    
-    triggered_reminders = []
-    for db_reminder in all_reminders:
-        reminder_type = db_reminder.reminder_type or 'recurring'
-        should_trigger = False
         
-        if reminder_type == 'one_time':
-            # התראה חד-פעמית - בדוק אם התאריך הגיע ולא הופעלה
-            if (db_reminder.scheduled_datetime and 
-                db_reminder.scheduled_datetime <= now and 
-                not db_reminder.one_time_triggered):
-                should_trigger = True
-                db_reminder.one_time_triggered = True
-                db_reminder.last_triggered = now
-                # לא מחשבים next_trigger להתראה חד-פעמית
-        else:
-            # התראות אחרות - בדוק next_trigger
-            if db_reminder.next_trigger and db_reminder.next_trigger <= now:
-                should_trigger = True
-                db_reminder.last_triggered = now
-                
-                # Parse weekdays if needed
-                weekdays = None
+        # Get all enabled reminders for user
+        # For one_time: check scheduled_datetime and one_time_triggered
+        # For others: check next_trigger
+        all_reminders = db.query(DBReminder).filter(
+            DBReminder.user_id == user_id,
+            DBReminder.enabled == True
+        ).all()
+        
+        triggered_reminders = []
+        for db_reminder in all_reminders:
+            reminder_type = db_reminder.reminder_type or 'recurring'
+            should_trigger = False
+            
+            if reminder_type == 'one_time':
+                # התראה חד-פעמית - בדוק אם התאריך הגיע ולא הופעלה
+                if (db_reminder.scheduled_datetime and 
+                    db_reminder.scheduled_datetime <= now and 
+                    not db_reminder.one_time_triggered):
+                    should_trigger = True
+                    db_reminder.one_time_triggered = True
+                    db_reminder.last_triggered = now
+                    # לא מחשבים next_trigger להתראה חד-פעמית
+            else:
+                # התראות אחרות - בדוק next_trigger
+                if db_reminder.next_trigger and db_reminder.next_trigger <= now:
+                    should_trigger = True
+                    db_reminder.last_triggered = now
+                    
+                    # Parse weekdays if needed
+                    weekdays = None
+                    if db_reminder.weekdays:
+                        try:
+                            weekdays = json.loads(db_reminder.weekdays)
+                        except (json.JSONDecodeError, TypeError):
+                            weekdays = None
+                    
+                    # Calculate next trigger
+                    db_reminder.next_trigger = calculate_next_trigger_advanced(
+                        reminder_type=reminder_type,
+                        interval_type=db_reminder.interval_type,
+                        interval_value=db_reminder.interval_value,
+                        scheduled_datetime=db_reminder.scheduled_datetime,
+                        weekdays=weekdays,
+                        specific_time=db_reminder.specific_time,
+                        last_triggered=now
+                    )
+            
+            if should_trigger:
+                # Parse weekdays for response
+                weekdays_parsed = None
                 if db_reminder.weekdays:
                     try:
-                        weekdays = json.loads(db_reminder.weekdays)
+                        weekdays_parsed = json.loads(db_reminder.weekdays)
                     except (json.JSONDecodeError, TypeError):
-                        weekdays = None
+                        weekdays_parsed = None
                 
-                # Calculate next trigger
-                db_reminder.next_trigger = calculate_next_trigger_advanced(
-                    reminder_type=reminder_type,
-                    interval_type=db_reminder.interval_type,
-                    interval_value=db_reminder.interval_value,
-                    scheduled_datetime=db_reminder.scheduled_datetime,
-                    weekdays=weekdays,
-                    specific_time=db_reminder.specific_time,
-                    last_triggered=now
-                )
-        
-        if should_trigger:
-            # Parse weekdays for response
-            weekdays_parsed = None
-            if db_reminder.weekdays:
+                # Convert SQLAlchemy model to Pydantic model
                 try:
-                    weekdays_parsed = json.loads(db_reminder.weekdays)
-                except (json.JSONDecodeError, TypeError):
-                    weekdays_parsed = None
-            
-            # Convert SQLAlchemy model to Pydantic model
-            try:
-                reminder_obj = Reminder(
-                    id=db_reminder.id,
-                    user_id=db_reminder.user_id,
-                    contact_id=db_reminder.contact_id,
-                    reminder_type=reminder_type,
-                    interval_type=db_reminder.interval_type,
-                    interval_value=db_reminder.interval_value,
-                    scheduled_datetime=db_reminder.scheduled_datetime,
-                    weekdays=weekdays_parsed,
-                    specific_time=db_reminder.specific_time,
-                    one_time_triggered=db_reminder.one_time_triggered or False,
-                    last_triggered=db_reminder.last_triggered,
-                    next_trigger=db_reminder.next_trigger,
-                    enabled=db_reminder.enabled,
-                    created_at=db_reminder.created_at
-                )
-                triggered_reminders.append(reminder_obj)
-            except Exception as e:
-                print(f"❌ [CHECK] Error creating Reminder object: {e}")
-                print(f"   Reminder ID: {db_reminder.id}, Type: {reminder_type}")
-                raise
-    
-    if triggered_reminders:
-        db.commit()
-        print(f"✅ [DATABASE] Updated {len(triggered_reminders)} triggered reminders for user {user_id}")
-    
-    print(f"✅ [CHECK] Returning {len(triggered_reminders)} triggered reminders")
-    return triggered_reminders
+                    reminder_obj = Reminder(
+                        id=db_reminder.id,
+                        user_id=db_reminder.user_id,
+                        contact_id=db_reminder.contact_id,
+                        reminder_type=reminder_type,
+                        interval_type=db_reminder.interval_type,
+                        interval_value=db_reminder.interval_value,
+                        scheduled_datetime=db_reminder.scheduled_datetime,
+                        weekdays=weekdays_parsed,
+                        specific_time=db_reminder.specific_time,
+                        one_time_triggered=db_reminder.one_time_triggered or False,
+                        last_triggered=db_reminder.last_triggered,
+                        next_trigger=db_reminder.next_trigger,
+                        enabled=db_reminder.enabled,
+                        created_at=db_reminder.created_at
+                    )
+                    triggered_reminders.append(reminder_obj)
+                except Exception as e:
+                    print(f"❌ [CHECK] Error creating Reminder object: {e}")
+                    print(f"   Reminder ID: {db_reminder.id}, Type: {reminder_type}")
+                    import traceback
+                    traceback.print_exc()
+                    # Don't raise - just skip this reminder and continue
+                    continue
+        
+        if triggered_reminders:
+            db.commit()
+            print(f"✅ [DATABASE] Updated {len(triggered_reminders)} triggered reminders for user {user_id}")
+        
+        print(f"✅ [CHECK] Returning {len(triggered_reminders)} triggered reminders")
+        return triggered_reminders
     except Exception as e:
         print(f"❌ [CHECK] Error in check_reminders: {e}")
         import traceback
