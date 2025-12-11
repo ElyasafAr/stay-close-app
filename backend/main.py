@@ -1263,7 +1263,27 @@ async def get_vapid_public_key():
             detail="VAPID keys not configured. Please set VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY environment variables"
         )
     
-    return {"publicKey": VAPID_PUBLIC_KEY}
+    # בדיקה שהמפתח תקין
+    key_length = len(VAPID_PUBLIC_KEY)
+    expected_length = 88  # VAPID public key should be ~88 chars (65 bytes * 4/3)
+    
+    # ניקוי המפתח מרווחים ותווים לא תקינים
+    cleaned_key = VAPID_PUBLIC_KEY.strip()
+    
+    # בדיקה שהמפתח בפורמט base64url
+    import re
+    if not re.match(r'^[A-Za-z0-9_-]+$', cleaned_key):
+        print(f"⚠️ [VAPID] Key contains invalid characters. Length: {key_length}")
+        # ננסה לנקות את המפתח
+        cleaned_key = re.sub(r'[^A-Za-z0-9_-]', '', cleaned_key)
+    
+    if key_length != len(cleaned_key):
+        print(f"⚠️ [VAPID] Key was cleaned. Original length: {key_length}, Cleaned length: {len(cleaned_key)}")
+    
+    if len(cleaned_key) != expected_length:
+        print(f"⚠️ [VAPID] Key length is {len(cleaned_key)}, expected ~{expected_length}. This may cause issues.")
+    
+    return {"publicKey": cleaned_key}
 
 @app.get("/api/health")
 async def health_check():

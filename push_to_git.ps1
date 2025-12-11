@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Fix: Debug page to use API service and improve VAPID key validation"
+$commitMessage = "Fix: Add VAPID key validation and cleaning in backend endpoint"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files
