@@ -89,13 +89,18 @@ def migrate_contacts(db: Session):
                 created_at = datetime.now()
             
             # Create new contact
+            # Migrate old 'notes' to 'personal_context' for backward compatibility
+            personal_context = contact_data.get('personal_context') or contact_data.get('notes')
             contact = Contact(
                 id=contact_data.get('id'),
                 user_id=contact_data.get('user_id', ''),
                 name=contact_data.get('name', ''),
                 email=contact_data.get('email'),
                 phone=contact_data.get('phone'),
-                notes=contact_data.get('notes'),
+                relationship=contact_data.get('relationship'),
+                how_we_met=contact_data.get('how_we_met'),
+                shared_interests=contact_data.get('shared_interests'),
+                personal_context=personal_context,
                 created_at=created_at
             )
             db.add(contact)

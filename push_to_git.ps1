@@ -17,10 +17,11 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Fix: Ensure all frontend files (i18n, services, components) are pushed to GitHub"
+$commitMessage = "Fix build: Ensure all i18n, services, and components files are in Git"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files
+# Empty array = add ALL changes (recommended for fixing build issues)
 $filesToAdd = @()
 # ============================================
 
@@ -50,9 +51,10 @@ if ($filesToAdd.Count -eq 0) {
     }
 }
 
-# Force add critical directories to ensure they're tracked
+# Always force add critical directories to ensure they're tracked
 Write-Host "Force adding critical directories..." -ForegroundColor Cyan
 git add -f i18n/ services/ components/ lib/ state/ 2>&1 | Out-Null
+Write-Host "✅ Critical directories force-added" -ForegroundColor Green
 
 # Check status after adding
 Write-Host ""
@@ -94,15 +96,30 @@ if ($hasChanges) {
         Write-Host "Checking if critical files exist in Git..." -ForegroundColor Yellow
         
         # Verify critical files are in Git
-        $criticalFiles = @("i18n/useTranslation.ts", "services/contacts.ts", "services/reminders.ts", "components/Loading.tsx")
+        $criticalFiles = @(
+            "i18n/useTranslation.ts",
+            "i18n/he.json",
+            "services/contacts.ts",
+            "services/reminders.ts",
+            "services/messages.ts",
+            "services/api.ts",
+            "services/auth.ts",
+            "components/Loading.tsx",
+            "components/AuthGuard.tsx",
+            "tsconfig.json"
+        )
         foreach ($file in $criticalFiles) {
-            $inGit = git ls-files --error-unmatch $file 2>&1
-            if ($LASTEXITCODE -eq 0) {
-                Write-Host "✅ $file is in Git" -ForegroundColor Green
+            if (Test-Path $file) {
+                $inGit = git ls-files --error-unmatch $file 2>&1
+                if ($LASTEXITCODE -eq 0) {
+                    Write-Host "✅ $file is in Git" -ForegroundColor Green
+                } else {
+                    Write-Host "❌ $file is NOT in Git!" -ForegroundColor Red
+                    Write-Host "Adding $file..." -ForegroundColor Yellow
+                    git add -f $file
+                }
             } else {
-                Write-Host "❌ $file is NOT in Git!" -ForegroundColor Red
-                Write-Host "Adding $file..." -ForegroundColor Yellow
-                git add -f $file
+                Write-Host "⚠️  $file not found locally!" -ForegroundColor Yellow
             }
         }
         
