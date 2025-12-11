@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Feature: Add timezone support for reminders - send user timezone from frontend and convert to UTC on backend"
+$commitMessage = "Fix: Add timezone to check_reminders calculation and fix serialization to return dict instead of Pydantic objects"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files

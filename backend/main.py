@@ -1097,7 +1097,16 @@ async def check_reminders(
             return []
         
         print(f"✅ [CHECK] Returning {len(triggered_reminders)} triggered reminders")
-        return triggered_reminders
+        # Convert to dict to avoid serialization issues
+        result = []
+        for r in triggered_reminders:
+            try:
+                result.append(r.model_dump() if hasattr(r, 'model_dump') else r.dict())
+            except Exception as e:
+                print(f"⚠️ [CHECK] Error serializing reminder {r.id}: {e}")
+                continue
+        
+        return result
     except HTTPException:
         # Re-raise HTTP exceptions as-is
         raise
