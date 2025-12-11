@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Fix: Add timezone to check_reminders calculation and fix serialization to return dict instead of Pydantic objects"
+$commitMessage = "Fix: Convert VAPID private key to PEM format for pywebpush, ensure timezone is sent from frontend, and fix check_reminders serialization"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files
