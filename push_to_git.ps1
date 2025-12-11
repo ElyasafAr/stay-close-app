@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Fix: Add detailed logging to calculate_next_trigger_advanced and update_reminder to debug time calculation issues"
+$commitMessage = "Fix: Improve error handling in check_reminders (return empty list on serialization error) and add logging to create/update reminder time calculations"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files

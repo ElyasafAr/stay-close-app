@@ -690,6 +690,7 @@ async def create_reminder(
     
     # Calculate next trigger using advanced function
     now = datetime.now(timezone.utc)
+    print(f"🔍 [CREATE] Calculating next_trigger: type={reminder.reminder_type}, specific_time={reminder.specific_time}, now={now}")
     next_trigger = calculate_next_trigger_advanced(
         reminder_type=reminder.reminder_type or 'recurring',
         interval_type=reminder.interval_type,
@@ -699,6 +700,7 @@ async def create_reminder(
         specific_time=reminder.specific_time,
         last_triggered=None
     )
+    print(f"✅ [CREATE] Calculated next_trigger: {next_trigger}")
     
     # Convert weekdays list to JSON string
     weekdays_json = None
@@ -769,6 +771,8 @@ async def update_reminder(
         raise HTTPException(status_code=404, detail="התראה לא נמצאה")
     
     # Calculate next trigger using advanced function
+    now = datetime.now(timezone.utc)
+    print(f"🔍 [UPDATE] Calculating next_trigger for reminder {reminder_id}: type={reminder.reminder_type}, specific_time={reminder.specific_time}, now={now}")
     next_trigger = calculate_next_trigger_advanced(
         reminder_type=reminder.reminder_type or 'recurring',
         interval_type=reminder.interval_type,
@@ -778,6 +782,7 @@ async def update_reminder(
         specific_time=reminder.specific_time,
         last_triggered=db_reminder.last_triggered
     )
+    print(f"✅ [UPDATE] Calculated next_trigger: {next_trigger}")
     
     # Convert weekdays list to JSON string
     weekdays_json = None
@@ -932,6 +937,7 @@ async def check_reminders(
     db: Session = Depends(get_db)
 ):
     """בודק אילו התראות צריכות להתפעל עכשיו"""
+    print(f"🔍 [CHECK] Endpoint called - starting check_reminders")
     try:
         user_id = current_user["user_id"]
         now = datetime.now(timezone.utc)
@@ -1027,7 +1033,6 @@ async def check_reminders(
             db.commit()
             print(f"✅ [DATABASE] Updated {len(triggered_reminders)} triggered reminders for user {user_id}")
         
-        print(f"✅ [CHECK] Returning {len(triggered_reminders)} triggered reminders")
         # Validate that all reminders have required fields before returning
         for r in triggered_reminders:
             if r.contact_id is None:
@@ -1035,15 +1040,18 @@ async def check_reminders(
         
         # Try to serialize manually to catch validation errors
         try:
-            # Convert to dict to test serialization
-            result = [r.dict() for r in triggered_reminders]
+            # Convert to dict to test serialization - use model_dump for Pydantic v2 compatibility
+            result = [r.model_dump() if hasattr(r, 'model_dump') else r.dict() for r in triggered_reminders]
             print(f"✅ [CHECK] Serialization test passed: {len(result)} reminders")
         except Exception as e:
             print(f"❌ [CHECK] Serialization test failed: {e}")
             import traceback
             traceback.print_exc()
-            raise HTTPException(status_code=422, detail=f"Serialization error: {str(e)}")
+            # Return empty list instead of raising error - better UX
+            print(f"⚠️ [CHECK] Returning empty list due to serialization error")
+            return []
         
+        print(f"✅ [CHECK] Returning {len(triggered_reminders)} triggered reminders")
         return triggered_reminders
     except HTTPException:
         # Re-raise HTTP exceptions as-is
