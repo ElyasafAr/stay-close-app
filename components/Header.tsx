@@ -197,13 +197,6 @@ export function Header() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '8px',
-                fontSize: '0.95rem',
-                fontWeight: 700,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
               }}
             >
               <MdLogout />

@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Fix: Add dark theme to messages/settings pages, fix mobile navigation menu, improve AuthGuard authentication check"
+$commitMessage = "Fix: Remove duplicate style properties in Header.tsx causing TypeScript build error"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files
