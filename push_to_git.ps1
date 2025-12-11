@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Fix: Move TypeScript and @types/react to dependencies (required for build)"
+$commitMessage = "Fix: Remove duplicate npm ci from railway.json buildCommand"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files
