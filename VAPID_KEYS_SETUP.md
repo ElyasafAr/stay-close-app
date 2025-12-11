@@ -28,11 +28,29 @@ python generate_vapid_keys.py
 
 הסקריפט יציג את ה-keys. העתק אותם ל-Railway environment variables.
 
-### אפשרות 2: Online Generator
+### אפשרות 2: Online Generator (מומלץ לבדיקה מהירה)
 
+יש כמה אתרים שיכולים ליצור VAPID keys:
+
+**א. web-push-codelab.glitch.me:**
 1. לך ל-https://web-push-codelab.glitch.me/
 2. לחץ על "Generate VAPID Keys"
 3. העתק את ה-keys
+
+**ב. keynate.com (מומלץ):**
+1. לך ל-https://push-notification-key-generator.keynate.com/
+2. לחץ על "Generate Keys"
+3. העתק את ה-Public Key וה-Private Key
+4. ⚠️ **חשוב:** ודא שהמפתחות בפורמט base64url (לא PEM)
+
+**ג. vapidkeys.com:**
+1. לך ל-https://vapidkeys.com/
+2. לחץ על "Generate New Keys"
+3. העתק את ה-keys
+
+**⚠️ הערה חשובה:**
+- המפתחות שנוצרים באתרים האלה אמורים להיות בפורמט base64url (כמו המפתחות ש-`generate_vapid_keys.py` יוצר)
+- אם האתר נותן מפתחות בפורמט PEM, תצטרך להמיר אותם ל-base64url
 
 ### אפשרות 3: Node.js
 
