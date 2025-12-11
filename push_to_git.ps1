@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Fix: Move hamburger button to right side (RTL), fix user dropdown overflow on mobile"
+$commitMessage = "Fix: Ensure all frontend files (i18n, services, components) are included in build"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files
@@ -53,8 +53,13 @@ if ($filesToAdd.Count -eq 0) {
 
 # Always force add critical directories to ensure they're tracked
 Write-Host "Force adding critical directories..." -ForegroundColor Cyan
-git add -f i18n/ services/ components/ lib/ state/ 2>&1 | Out-Null
-Write-Host "✅ Critical directories force-added" -ForegroundColor Green
+git add -f i18n/ services/ components/ lib/ state/ types/ 2>&1 | Out-Null
+# Also add specific critical files explicitly to ensure they're tracked
+Write-Host "Force adding specific critical files..." -ForegroundColor Cyan
+git add -f i18n/useTranslation.ts i18n/he.json 2>&1 | Out-Null
+git add -f services/contacts.ts services/reminders.ts services/messages.ts services/api.ts services/auth.ts 2>&1 | Out-Null
+git add -f components/Loading.tsx components/AuthGuard.tsx components/Header.tsx components/ReminderChecker.tsx components/ReminderModal.tsx 2>&1 | Out-Null
+Write-Host "✅ Critical directories and files force-added" -ForegroundColor Green
 
 # Check status after adding
 Write-Host ""
