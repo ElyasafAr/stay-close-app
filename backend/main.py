@@ -916,8 +916,10 @@ async def check_reminders(
     db: Session = Depends(get_db)
 ):
     """בודק אילו התראות צריכות להתפעל עכשיו"""
-    user_id = current_user["user_id"]
-    now = datetime.now()
+    try:
+        user_id = current_user["user_id"]
+        now = datetime.now()
+        print(f"🔍 [CHECK] Checking reminders for user {user_id} at {now}")
     
     # Get all enabled reminders for user
     # For one_time: check scheduled_datetime and one_time_triggered
@@ -976,28 +978,40 @@ async def check_reminders(
                     weekdays_parsed = None
             
             # Convert SQLAlchemy model to Pydantic model
-            triggered_reminders.append(Reminder(
-                id=db_reminder.id,
-                user_id=db_reminder.user_id,
-                contact_id=db_reminder.contact_id,
-                reminder_type=reminder_type,
-                interval_type=db_reminder.interval_type,
-                interval_value=db_reminder.interval_value,
-                scheduled_datetime=db_reminder.scheduled_datetime,
-                weekdays=weekdays_parsed,
-                specific_time=db_reminder.specific_time,
-                one_time_triggered=db_reminder.one_time_triggered or False,
-                last_triggered=db_reminder.last_triggered,
-                next_trigger=db_reminder.next_trigger,
-                enabled=db_reminder.enabled,
-                created_at=db_reminder.created_at
-            ))
+            try:
+                reminder_obj = Reminder(
+                    id=db_reminder.id,
+                    user_id=db_reminder.user_id,
+                    contact_id=db_reminder.contact_id,
+                    reminder_type=reminder_type,
+                    interval_type=db_reminder.interval_type,
+                    interval_value=db_reminder.interval_value,
+                    scheduled_datetime=db_reminder.scheduled_datetime,
+                    weekdays=weekdays_parsed,
+                    specific_time=db_reminder.specific_time,
+                    one_time_triggered=db_reminder.one_time_triggered or False,
+                    last_triggered=db_reminder.last_triggered,
+                    next_trigger=db_reminder.next_trigger,
+                    enabled=db_reminder.enabled,
+                    created_at=db_reminder.created_at
+                )
+                triggered_reminders.append(reminder_obj)
+            except Exception as e:
+                print(f"❌ [CHECK] Error creating Reminder object: {e}")
+                print(f"   Reminder ID: {db_reminder.id}, Type: {reminder_type}")
+                raise
     
     if triggered_reminders:
         db.commit()
         print(f"✅ [DATABASE] Updated {len(triggered_reminders)} triggered reminders for user {user_id}")
     
+    print(f"✅ [CHECK] Returning {len(triggered_reminders)} triggered reminders")
     return triggered_reminders
+    except Exception as e:
+        print(f"❌ [CHECK] Error in check_reminders: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error checking reminders: {str(e)}")
 
 # ========== MESSAGES ENDPOINTS ==========
 
