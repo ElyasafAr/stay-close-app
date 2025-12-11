@@ -1026,6 +1026,18 @@ async def check_reminders(
         for r in triggered_reminders:
             if r.contact_id is None:
                 print(f"⚠️ [CHECK] Warning: Reminder {r.id} has None contact_id")
+        
+        # Try to serialize manually to catch validation errors
+        try:
+            # Convert to dict to test serialization
+            result = [r.dict() for r in triggered_reminders]
+            print(f"✅ [CHECK] Serialization test passed: {len(result)} reminders")
+        except Exception as e:
+            print(f"❌ [CHECK] Serialization test failed: {e}")
+            import traceback
+            traceback.print_exc()
+            raise HTTPException(status_code=422, detail=f"Serialization error: {str(e)}")
+        
         return triggered_reminders
     except HTTPException:
         # Re-raise HTTP exceptions as-is

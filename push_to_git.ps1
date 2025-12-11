@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Fix: Improve next_trigger calculation for daily/weekly reminders and add detailed background job logging"
+$commitMessage = "Fix: Add serialization test and more logging to check_reminders endpoint"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files
