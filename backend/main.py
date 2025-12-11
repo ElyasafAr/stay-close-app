@@ -931,7 +931,7 @@ async def delete_push_token(
 
 # ========== REMINDERS CHECK ENDPOINT ==========
 
-@app.get("/api/reminders/check", response_model=List[Reminder])
+@app.get("/api/reminders/check")
 async def check_reminders(
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
