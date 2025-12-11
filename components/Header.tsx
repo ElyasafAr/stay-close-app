@@ -117,18 +117,6 @@ export function Header() {
               ))}
             </div>
             
-            <button
-              className={styles.mobileMenuButton}
-              onClick={(e) => {
-                e.stopPropagation()
-                setShowMobileMenu(!showMobileMenu)
-              }}
-              aria-label="תפריט ניווט"
-              type="button"
-            >
-              <MdMenu />
-            </button>
-            
             {user && (
               <div className={styles.userMenu}>
                 <button

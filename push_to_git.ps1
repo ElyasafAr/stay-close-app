@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Fix: Add dark theme to About page, remove language selector, fix mobile menu z-index and touch events"
+$commitMessage = "Fix: Move hamburger button to right side (RTL), fix user dropdown overflow on mobile"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files
