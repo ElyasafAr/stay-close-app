@@ -43,19 +43,40 @@ export function Header() {
     }
   }
 
-  // Close mobile menu when clicking outside
+  // Close mobile menu when clicking outside and prevent body scroll
   useEffect(() => {
-    if (!showMobileMenu) return
+    if (showMobileMenu) {
+      // Prevent body scroll when menu is open
+      document.body.style.overflow = 'hidden'
+      document.body.style.position = 'fixed'
+      document.body.style.width = '100%'
+    } else {
+      // Restore body scroll when menu is closed
+      document.body.style.overflow = ''
+      document.body.style.position = ''
+      document.body.style.width = ''
+    }
 
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
       const target = event.target as HTMLElement
       if (!target.closest(`.${styles.mobileMenu}`) && !target.closest(`.${styles.mobileMenuButton}`)) {
         setShowMobileMenu(false)
       }
     }
 
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    if (showMobileMenu) {
+      document.addEventListener('mousedown', handleClickOutside)
+      document.addEventListener('touchstart', handleClickOutside)
+    }
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('touchstart', handleClickOutside)
+      // Cleanup body styles
+      document.body.style.overflow = ''
+      document.body.style.position = ''
+      document.body.style.width = ''
+    }
   }, [showMobileMenu])
 
   // Close mobile menu when route changes
@@ -98,8 +119,12 @@ export function Header() {
             
             <button
               className={styles.mobileMenuButton}
-              onClick={() => setShowMobileMenu(!showMobileMenu)}
+              onClick={(e) => {
+                e.stopPropagation()
+                setShowMobileMenu(!showMobileMenu)
+              }}
               aria-label="תפריט ניווט"
+              type="button"
             >
               <MdMenu />
             </button>
@@ -136,17 +161,31 @@ export function Header() {
       {/* Mobile Menu Overlay */}
       <div
         className={`${styles.mobileMenuOverlay} ${showMobileMenu ? styles.open : ''}`}
-        onClick={() => setShowMobileMenu(false)}
+        onClick={(e) => {
+          e.stopPropagation()
+          setShowMobileMenu(false)
+        }}
+        onTouchStart={(e) => {
+          e.stopPropagation()
+          setShowMobileMenu(false)
+        }}
       />
 
       {/* Mobile Menu */}
-      <div className={`${styles.mobileMenu} ${showMobileMenu ? styles.open : ''}`}>
+      <div 
+        className={`${styles.mobileMenu} ${showMobileMenu ? styles.open : ''}`}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className={styles.mobileMenuHeader}>
           <h2>{t('app.name')}</h2>
           <button
             className={styles.mobileMenuClose}
-            onClick={() => setShowMobileMenu(false)}
+            onClick={(e) => {
+              e.stopPropagation()
+              setShowMobileMenu(false)
+            }}
             aria-label="סגור תפריט"
+            type="button"
           >
             <MdClose />
           </button>
@@ -158,7 +197,10 @@ export function Header() {
               key={link.href}
               href={link.href}
               className={`${styles.mobileNavLink} ${pathname === link.href ? styles.active : ''}`}
-              onClick={() => setShowMobileMenu(false)}
+              onClick={(e) => {
+                e.stopPropagation()
+                setShowMobileMenu(false)
+              }}
             >
               {link.label}
             </Link>

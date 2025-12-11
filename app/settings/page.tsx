@@ -45,22 +45,6 @@ export default function SettingsPage() {
         
         <div className={styles.settingsForm}>
           <div className={styles.settingItem}>
-            <label htmlFor="language">
-              <MdLanguage style={{ fontSize: '24px', color: '#a8d5e2' }} />
-              {t('settings.language')}
-            </label>
-            <select
-              id="language"
-              value={settings.language || 'he'}
-              onChange={(e) => updateSettings({ language: e.target.value })}
-              className={styles.select}
-            >
-              <option value="he">עברית</option>
-              <option value="en">English</option>
-            </select>
-          </div>
-
-          <div className={styles.settingItem}>
             <label htmlFor="theme">
               <MdPalette style={{ fontSize: '24px', color: '#a8d5e2' }} />
               {t('settings.theme')}

@@ -1,9 +1,10 @@
 .main {
   min-height: 100vh;
   padding: 24px 16px 24px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: var(--bg-gradient);
   direction: rtl;
   animation: fadeIn 0.5s ease;
+  transition: background var(--transition-normal);
 }
 
 .container {
@@ -15,36 +16,51 @@
   font-size: 2.5rem;
   font-weight: 800;
   margin-bottom: 32px;
-  background: linear-gradient(135deg, #7fb8c9 0%, #a8d5e2 100%);
+  background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   text-align: right;
+  transition: all var(--transition-normal);
+}
+
+html.dark .title {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+  filter: brightness(1.2);
 }
 
 .content {
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--bg-card);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   padding: 48px 32px;
-  border-radius: 28px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
   animation: slideUp 0.5s ease;
   text-align: right;
+  border: 1px solid var(--border-color);
+  transition: all var(--transition-normal);
+}
+
+html.dark .content {
+  background: var(--bg-card);
+  border: 1px solid rgba(96, 165, 250, 0.15);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
 .paragraph {
   font-size: 1.1rem;
   line-height: 1.9;
-  color: #495057;
+  color: var(--text-primary);
   margin-bottom: 24px;
   font-weight: 500;
+  transition: color var(--transition-normal);
 }
 
 .paragraph:last-child {
   margin-bottom: 0;
   font-weight: 600;
-  color: #718096;
+  color: var(--text-secondary);
 }
 
 .icon {
