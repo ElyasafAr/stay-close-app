@@ -8,9 +8,7 @@ import { getData, postData, putData, deleteData } from './api'
 export interface Contact {
   id?: number
   name: string
-  email?: string
-  phone?: string
-  notes?: string
+  default_tone?: string  // טון ברירת מחדל להודעות
   created_at?: string
 }
 

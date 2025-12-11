@@ -128,17 +128,13 @@ class Contact(BaseModel):
     id: Optional[int] = None
     user_id: Optional[str] = None  # ID של המשתמש
     name: str
-    email: Optional[str] = None
-    phone: Optional[str] = None
-    notes: Optional[str] = None
+    default_tone: Optional[str] = 'friendly'  # טון ברירת מחדל להודעות
     created_at: Optional[datetime] = None
 
 class ContactCreate(BaseModel):
     """מודל ליצירת קשר חדש"""
     name: str
-    email: Optional[str] = None
-    phone: Optional[str] = None
-    notes: Optional[str] = None
+    default_tone: Optional[str] = 'friendly'  # טון ברירת מחדל להודעות
 
 # מודלים לאימות
 class UserRegister(BaseModel):
@@ -246,9 +242,7 @@ async def get_contacts(
         id=c.id,
         user_id=c.user_id,
         name=c.name,
-        email=c.email,
-        phone=c.phone,
-        notes=c.notes,
+        default_tone=c.default_tone,
         created_at=c.created_at
     ) for c in db_contacts]
 
@@ -268,9 +262,7 @@ async def get_contact(
         id=db_contact.id,
         user_id=db_contact.user_id,
         name=db_contact.name,
-        email=db_contact.email,
-        phone=db_contact.phone,
-        notes=db_contact.notes,
+        default_tone=db_contact.default_tone,
         created_at=db_contact.created_at
     )
 
@@ -287,9 +279,7 @@ async def create_contact(
     db_contact = DBContact(
         user_id=user_id,
         name=contact.name,
-        email=contact.email,
-        phone=contact.phone,
-        notes=contact.notes,
+        default_tone=contact.default_tone or 'friendly',
         created_at=datetime.now()
     )
     db.add(db_contact)
@@ -302,9 +292,7 @@ async def create_contact(
         id=db_contact.id,
         user_id=db_contact.user_id,
         name=db_contact.name,
-        email=db_contact.email,
-        phone=db_contact.phone,
-        notes=db_contact.notes,
+        default_tone=db_contact.default_tone,
         created_at=db_contact.created_at
     )
 
@@ -325,9 +313,7 @@ async def update_contact(
     
     # Update contact fields
     db_contact.name = contact.name
-    db_contact.email = contact.email
-    db_contact.phone = contact.phone
-    db_contact.notes = contact.notes
+    db_contact.default_tone = contact.default_tone or 'friendly'
     
     db.commit()
     db.refresh(db_contact)
@@ -338,9 +324,7 @@ async def update_contact(
         id=db_contact.id,
         user_id=db_contact.user_id,
         name=db_contact.name,
-        email=db_contact.email,
-        phone=db_contact.phone,
-        notes=db_contact.notes,
+        default_tone=db_contact.default_tone,
         created_at=db_contact.created_at
     )
 
@@ -596,11 +580,12 @@ async def generate_message(
         raise HTTPException(status_code=500, detail="מפתח API לא מוגדר. אנא הגדר XAI_API_KEY או GROQ_API_KEY בקובץ .env")
     
     # בניית ה-prompt
+    # Use contact's default tone if no tone specified in request
+    tone = request.tone or contact.default_tone or 'friendly'
+    
     prompt = f"""צור הודעה בעברית {request.message_type} עבור {contact.name}.
-טון: {request.tone}
+טון: {tone}
 """
-    if contact.notes:
-        prompt += f"הערות: {contact.notes}\n"
     if request.additional_context:
         prompt += f"הקשר נוסף: {request.additional_context}\n"
     

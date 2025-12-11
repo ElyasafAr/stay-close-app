@@ -31,9 +31,7 @@ class Contact(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     user_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     name = Column(String, nullable=False)
-    email = Column(String, nullable=True)
-    phone = Column(String, nullable=True)
-    notes = Column(Text, nullable=True)
+    default_tone = Column(String, nullable=True, default='friendly')  # Default tone for messages: 'friendly', 'warm', 'casual', 'formal'
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     
     # Relationships

@@ -20,7 +20,7 @@ export default function MessagesPage() {
   const [messageConfig, setMessageConfig] = useState<MessageRequest>({
     contact_id: 0,
     message_type: 'checkin',
-    tone: 'friendly',
+    tone: 'friendly',  // Will be updated when contact is selected
     additional_context: '',
     language: 'he',
   })
@@ -28,6 +28,19 @@ export default function MessagesPage() {
   useEffect(() => {
     loadContacts()
   }, [])
+
+  // Update default tone when contact is selected
+  useEffect(() => {
+    if (selectedContact) {
+      const contact = contacts.find(c => c.id === selectedContact)
+      if (contact && contact.default_tone) {
+        setMessageConfig(prev => ({
+          ...prev,
+          tone: contact.default_tone as MessageRequest['tone']
+        }))
+      }
+    }
+  }, [selectedContact, contacts])
 
   const loadContacts = async () => {
     try {

@@ -6,8 +6,7 @@ import { getContacts, createContact, deleteContact, Contact } from '@/services/c
 import { getReminders, deleteReminder, Reminder } from '@/services/reminders'
 import { Loading } from '@/components/Loading'
 import { ReminderModal } from '@/components/ReminderModal'
-import { MdAdd, MdEmail, MdPhone, MdDelete, MdNotifications, MdNotificationsOff } from 'react-icons/md'
-import { AiFillHeart } from 'react-icons/ai'
+import { MdAdd, MdDelete, MdNotifications, MdNotificationsOff, MdTune } from 'react-icons/md'
 import styles from './page.module.css'
 
 export default function ContactsPage() {
@@ -20,9 +19,7 @@ export default function ContactsPage() {
   const [reminderModal, setReminderModal] = useState<{ contactId: number; contactName: string; reminder?: Reminder } | null>(null)
   const [formData, setFormData] = useState({
     name: '',
-    email: '',
-    phone: '',
-    notes: '',
+    default_tone: 'friendly',
   })
 
   useEffect(() => {
@@ -73,7 +70,7 @@ export default function ContactsPage() {
     try {
       setError(null)
       await createContact(formData)
-      setFormData({ name: '', email: '', phone: '', notes: '' })
+      setFormData({ name: '', default_tone: 'friendly' })
       setShowForm(false)
       await loadContacts()
     } catch (err) {
@@ -126,26 +123,17 @@ export default function ContactsPage() {
               required
               className={styles.input}
             />
-            <input
-              type="email"
-              placeholder="אימייל"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            <label className={styles.label}>טון הודעה ברירת מחדל</label>
+            <select
+              value={formData.default_tone}
+              onChange={(e) => setFormData({ ...formData, default_tone: e.target.value })}
               className={styles.input}
-            />
-            <input
-              type="tel"
-              placeholder="טלפון"
-              value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              className={styles.input}
-            />
-            <textarea
-              placeholder="הערות (אופציונלי)"
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              className={styles.textarea}
-            />
+            >
+              <option value="friendly">ידידותי</option>
+              <option value="warm">חם</option>
+              <option value="casual">קליל</option>
+              <option value="formal">פורמלי</option>
+            </select>
             <div className={styles.formActions}>
               <button type="button" onClick={() => setShowForm(false)} className={styles.cancelButton}>
                 ביטול
@@ -177,22 +165,16 @@ export default function ContactsPage() {
                     {contact.name}
                   </h3>
                 </div>
-                {contact.email && (
+                {contact.default_tone && (
                   <p className={styles.contactInfo}>
-                    <MdEmail style={{ fontSize: '18px', color: '#a8d5e2' }} />
-                    {contact.email}
-                  </p>
-                )}
-                {contact.phone && (
-                  <p className={styles.contactInfo}>
-                    <MdPhone style={{ fontSize: '18px', color: '#a8d5e2' }} />
-                    {contact.phone}
-                  </p>
-                )}
-                {contact.notes && (
-                  <p className={styles.contactNotes}>
-                    <AiFillHeart style={{ fontSize: '14px', color: '#f4a5ae', marginLeft: '4px' }} />
-                    {contact.notes}
+                    <MdTune style={{ fontSize: '18px', color: '#a8d5e2' }} />
+                    טון ברירת מחדל: {
+                      contact.default_tone === 'friendly' ? 'ידידותי' :
+                      contact.default_tone === 'warm' ? 'חם' :
+                      contact.default_tone === 'casual' ? 'קליל' :
+                      contact.default_tone === 'formal' ? 'פורמלי' :
+                      contact.default_tone
+                    }
                   </p>
                 )}
                 {contact.id && getReminderForContact(contact.id) && (
