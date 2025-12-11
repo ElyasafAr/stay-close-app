@@ -43,10 +43,22 @@ def get_user_by_username(db: Session, username: str) -> Optional[User]:
 
 def hash_password(password: str) -> str:
     """מצפין סיסמה"""
+    # bcrypt מוגבל ל-72 bytes, אז נחתוך את הסיסמה אם היא ארוכה מדי
+    # נשתמש ב-UTF-8 encoding כדי לחשב את האורך הנכון
+    password_bytes = password.encode('utf-8')
+    if len(password_bytes) > 72:
+        # חיתוך ל-72 bytes
+        password_bytes = password_bytes[:72]
+        password = password_bytes.decode('utf-8', errors='ignore')
     return pwd_context.hash(password)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """בודק סיסמה"""
+    # חיתוך הסיסמה ל-72 bytes (כמו ב-hash_password) כדי שיתאים
+    password_bytes = plain_password.encode('utf-8')
+    if len(password_bytes) > 72:
+        password_bytes = password_bytes[:72]
+        plain_password = password_bytes.decode('utf-8', errors='ignore')
     return pwd_context.verify(plain_password, hashed_password)
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
