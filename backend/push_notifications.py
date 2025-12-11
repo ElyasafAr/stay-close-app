@@ -20,8 +20,8 @@ VAPID_CLAIMS = {
     "sub": "mailto:admin@stayclose.app"  # Email של בעל המפתח
 }
 
-def _convert_vapid_key_to_pem():
-    """ממיר את ה-VAPID private key מ-base64url ל-PEM string"""
+def _load_vapid_private_key():
+    """טוען את ה-VAPID private key מ-base64url ל-EllipticCurvePrivateKey object"""
     if not VAPID_PRIVATE_KEY_RAW:
         return None
     
@@ -42,23 +42,16 @@ def _convert_vapid_key_to_pem():
             backend=default_backend()
         )
         
-        # המרה ל-PEM string (הפורמט ש-pywebpush מצפה)
-        pem_string = private_key.private_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PrivateFormat.PKCS8,
-            encryption_algorithm=serialization.NoEncryption()
-        ).decode('utf-8')
-        
-        print(f"✅ [PUSH] VAPID private key converted to PEM format (length: {len(pem_string)})")
-        return pem_string
+        print(f"✅ [PUSH] VAPID private key loaded successfully (type: {type(private_key).__name__})")
+        return private_key
     except Exception as e:
-        print(f"❌ [PUSH] Error converting VAPID private key to PEM: {e}")
+        print(f"❌ [PUSH] Error loading VAPID private key: {e}")
         import traceback
         traceback.print_exc()
         return None
 
-# המרת המפתח ל-PEM string (הפורמט ש-pywebpush מצפה)
-VAPID_PRIVATE_KEY_PEM = _convert_vapid_key_to_pem()
+# טעינת המפתח כ-object (pywebpush יכול לקבל גם object וגם PEM string)
+VAPID_PRIVATE_KEY = _load_vapid_private_key()
 
 def send_push_notification(
     push_token: str,
@@ -78,7 +71,7 @@ def send_push_notification(
     Returns:
         True אם הצליח, False אחרת
     """
-    if not VAPID_PUBLIC_KEY or not VAPID_PRIVATE_KEY_PEM:
+    if not VAPID_PUBLIC_KEY or not VAPID_PRIVATE_KEY:
         print("⚠️ [PUSH] VAPID keys not configured - skipping push notification")
         return False
     
@@ -91,7 +84,8 @@ def send_push_notification(
         subscription = json.loads(push_token)
         
         # Send push notification
-        # pywebpush expects the private key as a PEM string
+        # pywebpush can accept either EllipticCurvePrivateKey object or PEM string
+        # We'll pass the object directly to avoid parsing issues
         webpush(
             subscription_info=subscription,
             data=json.dumps({
@@ -99,7 +93,7 @@ def send_push_notification(
                 "body": body,
                 "data": data or {}
             }),
-            vapid_private_key=VAPID_PRIVATE_KEY_PEM,  # PEM string format
+            vapid_private_key=VAPID_PRIVATE_KEY,  # EllipticCurvePrivateKey object
             vapid_claims=VAPID_CLAIMS
         )
         

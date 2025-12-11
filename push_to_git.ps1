@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Fix: Remove duplicate check_reminders code that caused IndentationError"
+$commitMessage = "Fix: Pass VAPID private key as EllipticCurvePrivateKey object instead of PEM string to pywebpush"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files
