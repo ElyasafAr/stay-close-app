@@ -159,7 +159,7 @@ class FirebaseAuthRequest(BaseModel):
 class MessageRequest(BaseModel):
     """מודל לבקשת יצירת הודעה"""
     contact_id: int
-    message_type: str  # 'birthday', 'holiday', 'checkin', 'custom'
+    message_type: str  # 'custom', 'checkin', 'birthday', 'holiday', 'congratulations', 'thank_you', 'apology', 'support', 'invitation', 'thinking_of_you', 'anniversary', 'get_well', 'new_job', 'graduation', 'achievement', 'encouragement', 'condolences', 'farewell', 'new_beginning', 'special_thanks', 'moving', 'wedding', 'pregnancy', 'birth', 'promotion', 'retirement', 'reunion', 'appreciation', 'miss_you', 'good_luck', 'celebration'
     tone: str  # 'friendly', 'formal', 'casual', 'warm'
     additional_context: Optional[str] = None
     language: str = "he"  # עברית או אנגלית
@@ -583,7 +583,42 @@ async def generate_message(
     # Use contact's default tone if no tone specified in request
     tone = request.tone or contact.default_tone or 'friendly'
     
-    prompt = f"""צור הודעה בעברית {request.message_type} עבור {contact.name}.
+    # Translate message type to Hebrew for better AI understanding
+    message_type_hebrew = {
+        'custom': 'מותאם אישית',
+        'checkin': 'בודק איך אתה',
+        'birthday': 'יום הולדת',
+        'holiday': 'חג',
+        'congratulations': 'ברכות',
+        'thank_you': 'תודה',
+        'apology': 'התנצלות',
+        'support': 'תמיכה ועידוד',
+        'invitation': 'הזמנה',
+        'thinking_of_you': 'חושב עליך',
+        'anniversary': 'יום נישואים/יום שנה',
+        'get_well': 'החלמה מהירה',
+        'new_job': 'ברכות על עבודה חדשה',
+        'graduation': 'סיום לימודים',
+        'achievement': 'ברכה על הישג',
+        'encouragement': 'עידוד',
+        'condolences': 'ניחומים',
+        'farewell': 'פרידה',
+        'new_beginning': 'התחלה חדשה',
+        'special_thanks': 'תודה מיוחדת',
+        'moving': 'ברכה על מעבר דירה',
+        'wedding': 'ברכה על נישואים',
+        'pregnancy': 'ברכה על היריון',
+        'birth': 'ברכה על לידה',
+        'promotion': 'ברכה על קידום',
+        'retirement': 'ברכה על פרישה',
+        'reunion': 'ברכה על מפגש',
+        'appreciation': 'הערכה',
+        'miss_you': 'מתגעגע',
+        'good_luck': 'מזל טוב',
+        'celebration': 'ברכה על חגיגה'
+    }.get(request.message_type, request.message_type)
+    
+    prompt = f"""צור הודעה בעברית מסוג {message_type_hebrew} עבור {contact.name}.
 טון: {tone}
 """
     if request.additional_context:

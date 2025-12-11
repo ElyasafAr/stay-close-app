@@ -19,7 +19,7 @@ export default function MessagesPage() {
   const [selectedContact, setSelectedContact] = useState<number | null>(null)
   const [messageConfig, setMessageConfig] = useState<MessageRequest>({
     contact_id: 0,
-    message_type: 'checkin',
+    message_type: 'custom',
     tone: 'friendly',  // Will be updated when contact is selected
     additional_context: '',
     language: 'he',
@@ -195,10 +195,37 @@ export default function MessagesPage() {
               })}
               className={styles.select}
             >
+              <option value="custom">{t('messages.types.custom')}</option>
               <option value="checkin">{t('messages.types.checkin')}</option>
               <option value="birthday">{t('messages.types.birthday')}</option>
               <option value="holiday">{t('messages.types.holiday')}</option>
-              <option value="custom">{t('messages.types.custom')}</option>
+              <option value="congratulations">{t('messages.types.congratulations')}</option>
+              <option value="thank_you">{t('messages.types.thank_you')}</option>
+              <option value="apology">{t('messages.types.apology')}</option>
+              <option value="support">{t('messages.types.support')}</option>
+              <option value="invitation">{t('messages.types.invitation')}</option>
+              <option value="thinking_of_you">{t('messages.types.thinking_of_you')}</option>
+              <option value="anniversary">{t('messages.types.anniversary')}</option>
+              <option value="get_well">{t('messages.types.get_well')}</option>
+              <option value="new_job">{t('messages.types.new_job')}</option>
+              <option value="graduation">{t('messages.types.graduation')}</option>
+              <option value="achievement">{t('messages.types.achievement')}</option>
+              <option value="encouragement">{t('messages.types.encouragement')}</option>
+              <option value="condolences">{t('messages.types.condolences')}</option>
+              <option value="farewell">{t('messages.types.farewell')}</option>
+              <option value="new_beginning">{t('messages.types.new_beginning')}</option>
+              <option value="special_thanks">{t('messages.types.special_thanks')}</option>
+              <option value="moving">{t('messages.types.moving')}</option>
+              <option value="wedding">{t('messages.types.wedding')}</option>
+              <option value="pregnancy">{t('messages.types.pregnancy')}</option>
+              <option value="birth">{t('messages.types.birth')}</option>
+              <option value="promotion">{t('messages.types.promotion')}</option>
+              <option value="retirement">{t('messages.types.retirement')}</option>
+              <option value="reunion">{t('messages.types.reunion')}</option>
+              <option value="appreciation">{t('messages.types.appreciation')}</option>
+              <option value="miss_you">{t('messages.types.miss_you')}</option>
+              <option value="good_luck">{t('messages.types.good_luck')}</option>
+              <option value="celebration">{t('messages.types.celebration')}</option>
             </select>
 
             <h2 className={styles.sectionTitle}>

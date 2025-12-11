@@ -6,7 +6,7 @@ import { postData } from './api'
 
 export interface MessageRequest {
   contact_id: number
-  message_type: 'custom' | 'checkin' | 'birthday' | 'holiday' | 'congratulations' | 'thank_you' | 'apology' | 'support' | 'invitation' | 'thinking_of_you' | 'anniversary' | 'get_well' | 'new_job' | 'graduation'
+  message_type: 'custom' | 'checkin' | 'birthday' | 'holiday' | 'congratulations' | 'thank_you' | 'apology' | 'support' | 'invitation' | 'thinking_of_you' | 'anniversary' | 'get_well' | 'new_job' | 'graduation' | 'achievement' | 'encouragement' | 'condolences' | 'farewell' | 'new_beginning' | 'special_thanks' | 'moving' | 'wedding' | 'pregnancy' | 'birth' | 'promotion' | 'retirement' | 'reunion' | 'appreciation' | 'miss_you' | 'good_luck' | 'celebration'
   tone: 'friendly' | 'formal' | 'casual' | 'warm'
   additional_context?: string
   language?: string
