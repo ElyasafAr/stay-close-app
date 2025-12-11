@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Fix: Update railway.json to ensure devDependencies are installed during build"
+$commitMessage = "Fix: Move TypeScript and @types/react to dependencies (required for build)"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files
