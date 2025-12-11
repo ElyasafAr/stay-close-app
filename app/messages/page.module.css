@@ -109,7 +109,7 @@
 .generateButton {
   width: 100%;
   padding: 18px 24px;
-  background: linear-gradient(135deg, #a8d5e2 0%, #7fb8c9 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
   color: white;
   border: none;
   border-radius: 9999px;
@@ -118,17 +118,31 @@
   cursor: pointer;
   transition: all 300ms ease;
   margin-top: 24px;
-  box-shadow: 0 4px 16px rgba(127, 184, 201, 0.3);
+  box-shadow: var(--shadow-md);
   min-height: 56px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .generateButton:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(127, 184, 201, 0.4);
+  box-shadow: var(--shadow-lg);
+  filter: brightness(1.1);
+}
+
+/* Dark theme button */
+html.dark .generateButton {
+  color: #0d1117;
+  text-shadow: none;
+  box-shadow: 0 4px 16px rgba(79, 195, 247, 0.4);
+}
+
+html.dark .generateButton:hover:not(:disabled) {
+  box-shadow: 0 6px 24px rgba(79, 195, 247, 0.6);
+  filter: brightness(1.15);
 }
 
 .generateButton:disabled {
@@ -138,15 +152,22 @@
 }
 
 .messageBox {
-  background: linear-gradient(135deg, #ffe8cc 0%, #ffd6a5 100%);
+  background: linear-gradient(135deg, var(--color-accent-light) 0%, var(--color-accent) 100%);
   padding: 32px;
   border-radius: 24px;
   border: none;
   min-height: 200px;
-  box-shadow: 0 4px 20px rgba(255, 214, 165, 0.3);
+  box-shadow: var(--shadow-md);
   position: relative;
   overflow: hidden;
   animation: scaleIn 0.5s ease;
+  color: var(--text-primary);
+}
+
+/* Dark theme message box */
+html.dark .messageBox {
+  background: linear-gradient(135deg, rgba(255, 183, 77, 0.15) 0%, rgba(255, 167, 38, 0.2) 100%);
+  border: 2px solid rgba(255, 183, 77, 0.3);
 }
 
 .messageBox::before {
@@ -170,7 +191,7 @@
 .messageContent {
   font-size: 1.2rem;
   line-height: 1.9;
-  color: #2d3748;
+  color: var(--text-primary);
   margin-bottom: 24px;
   text-align: right;
   white-space: pre-wrap;

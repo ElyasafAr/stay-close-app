@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Fix settings page: Apply theme and language changes immediately"
+$commitMessage = "Improve dark/light theme design: Better contrast, mobile navigation menu, enhanced UI/UX"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files

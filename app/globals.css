@@ -79,41 +79,41 @@ body {
   --transition-slow: 500ms ease;
 }
 
-/* Dark theme variables */
+/* Dark theme variables - Enhanced contrast and visibility */
 html.dark {
-  /* Dark theme colors */
-  --color-primary: #7fb8c9;
-  --color-primary-light: #a8d5e2;
-  --color-primary-dark: #5a9fb0;
+  /* Dark theme colors - Brighter and more vibrant for better contrast */
+  --color-primary: #4fc3f7;
+  --color-primary-light: #81d4fa;
+  --color-primary-dark: #29b6f6;
   
-  --color-secondary: #e87a87;
-  --color-secondary-light: #f4a5ae;
-  --color-secondary-dark: #d65a6a;
+  --color-secondary: #f48fb1;
+  --color-secondary-light: #f8bbd0;
+  --color-secondary-dark: #ec407a;
   
-  --color-accent: #ffc470;
-  --color-accent-light: #ffd6a5;
-  --color-accent-dark: #ffb84d;
+  --color-accent: #ffb74d;
+  --color-accent-light: #ffcc80;
+  --color-accent-dark: #ffa726;
   
-  --color-success: #7dd3a0;
-  --color-warning: #ffd93d;
-  --color-error: #ff6b7a;
+  --color-success: #66bb6a;
+  --color-warning: #ffca28;
+  --color-error: #ef5350;
   
-  /* Dark backgrounds */
-  --bg-primary: #1a202c;
-  --bg-secondary: #2d3748;
-  --bg-card: #2d3748;
-  --bg-gradient: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+  /* Dark backgrounds - Much darker for clear contrast */
+  --bg-primary: #0d1117;
+  --bg-secondary: #161b22;
+  --bg-card: #1c2128;
+  --bg-gradient: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #1c2128 100%);
   
-  /* Dark text */
-  --text-primary: #f7fafc;
-  --text-secondary: #cbd5e0;
-  --text-light: #a0aec0;
+  /* Dark text - Very light for maximum contrast */
+  --text-primary: #f0f6fc;
+  --text-secondary: #c9d1d9;
+  --text-light: #8b949e;
   
-  /* Dark shadows */
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
-  --shadow-xl: 0 12px 32px rgba(0, 0, 0, 0.6);
+  /* Dark shadows - Stronger for depth */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.7);
+  --shadow-xl: 0 12px 32px rgba(0, 0, 0, 0.8);
 }
 
 /* Light theme (explicit) */
@@ -282,21 +282,53 @@ input:focus, textarea:focus, select:focus {
   background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
   color: white;
   box-shadow: var(--shadow-md);
+  font-weight: 700;
+  /* Ensure high contrast in both themes */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .btn-primary:hover {
   box-shadow: var(--shadow-lg);
   transform: translateY(-2px);
+  filter: brightness(1.1);
 }
 
 .btn-secondary {
   background: var(--color-secondary-light);
   color: var(--color-secondary-dark);
+  border: 2px solid var(--color-secondary);
+  font-weight: 700;
 }
 
 .btn-secondary:hover {
   background: var(--color-secondary);
   color: white;
+  border-color: var(--color-secondary-dark);
+  filter: brightness(1.1);
+}
+
+/* Dark theme button adjustments for better contrast */
+html.dark .btn-primary {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  color: #0d1117;
+  text-shadow: none;
+  box-shadow: 0 4px 16px rgba(79, 195, 247, 0.4);
+}
+
+html.dark .btn-primary:hover {
+  box-shadow: 0 6px 24px rgba(79, 195, 247, 0.6);
+  filter: brightness(1.15);
+}
+
+html.dark .btn-secondary {
+  background: var(--color-secondary);
+  color: white;
+  border-color: var(--color-secondary-dark);
+}
+
+html.dark .btn-secondary:hover {
+  background: var(--color-secondary-dark);
+  filter: brightness(1.1);
 }
 
 /* קלטים */
@@ -313,6 +345,18 @@ input:focus, textarea:focus, select:focus {
 .input:focus {
   border-color: var(--color-primary);
   box-shadow: 0 0 0 4px rgba(168, 213, 226, 0.2);
+}
+
+/* Dark theme input adjustments */
+html.dark .input {
+  border-color: var(--color-primary-dark);
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
+html.dark .input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(79, 195, 247, 0.3);
 }
 
 /* טיפוגרפיה */
