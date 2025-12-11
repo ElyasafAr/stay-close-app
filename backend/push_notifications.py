@@ -28,19 +28,54 @@ VAPID_CLAIMS = {
 }
 
 def _load_vapid_private_key():
-    """ממיר את ה-VAPID private key מ-base64url לפורמט ש-pywebpush יכול להשתמש בו"""
+    """ממיר את ה-VAPID private key לפורמט PEM ש-pywebpush יכול להשתמש בו"""
     if not VAPID_PRIVATE_KEY_RAW:
         return None
     
+    key_str = VAPID_PRIVATE_KEY_RAW.strip()
+    
+    # בדיקה אם המפתח כבר בפורמט PEM
+    if key_str.startswith('-----BEGIN'):
+        print(f"✅ [PUSH] VAPID private key is already in PEM format (length: {len(key_str)})")
+        return key_str
+    
     try:
+        # ננסה לטעון כ-PEM (אם יש newlines או פורמט PEM אחר)
+        if '\n' in key_str or 'BEGIN' in key_str:
+            # נסה לטעון כ-PEM
+            try:
+                private_key = serialization.load_pem_private_key(
+                    key_str.encode('utf-8'),
+                    password=None,
+                    backend=default_backend()
+                )
+                pem_string = private_key.private_bytes(
+                    encoding=serialization.Encoding.PEM,
+                    format=serialization.PrivateFormat.PKCS8,
+                    encryption_algorithm=serialization.NoEncryption()
+                ).decode('utf-8')
+                print(f"✅ [PUSH] VAPID private key loaded from PEM string (length: {len(pem_string)})")
+                return pem_string
+            except Exception as e:
+                print(f"⚠️ [PUSH] Failed to load as PEM: {e}, trying base64url...")
+        
         # אם יש py-vapid, נשתמש בו (יותר אמין)
         if HAS_PY_VAPID:
             try:
                 # py-vapid יכול לטעון מפתח מ-base64url string ישירות
-                vapid = Vapid01.from_string(VAPID_PRIVATE_KEY_RAW)
-                # Vapid01 object יש לו method לשליחה ישירה, אבל pywebpush מצפה ל-PEM
-                # נמיר ל-PEM דרך cryptography
-                private_key = vapid.key
+                vapid = Vapid01.from_string(key_str)
+                # Vapid01 object - נמיר ל-PEM דרך cryptography
+                # נשתמש ב-private_key property
+                if hasattr(vapid, 'private_key'):
+                    private_key = vapid.private_key
+                elif hasattr(vapid, 'key'):
+                    private_key = vapid.key
+                else:
+                    # ננסה לגשת ישירות
+                    private_key = vapid._key if hasattr(vapid, '_key') else None
+                    if not private_key:
+                        raise AttributeError("Cannot find private key in Vapid01 object")
+                
                 pem_string = private_key.private_bytes(
                     encoding=serialization.Encoding.PEM,
                     format=serialization.PrivateFormat.PKCS8,
@@ -53,20 +88,33 @@ def _load_vapid_private_key():
         
         # Fallback: המרה ידנית מ-base64url ל-PEM
         # הוספת padding אם חסר
-        key_str = VAPID_PRIVATE_KEY_RAW
         padding = len(key_str) % 4
         if padding:
             key_str += '=' * (4 - padding)
         
         # המרה מ-base64url ל-bytes (DER format)
-        key_bytes = base64.urlsafe_b64decode(key_str)
+        try:
+            key_bytes = base64.urlsafe_b64decode(key_str)
+        except Exception as e:
+            # ננסה base64 רגיל
+            print(f"⚠️ [PUSH] Failed base64url decode: {e}, trying standard base64...")
+            key_bytes = base64.b64decode(key_str)
         
-        # טעינת המפתח הפרטי מ-DER
-        private_key = serialization.load_der_private_key(
-            key_bytes,
-            password=None,
-            backend=default_backend()
-        )
+        # ננסה לטעון כ-DER
+        try:
+            private_key = serialization.load_der_private_key(
+                key_bytes,
+                password=None,
+                backend=default_backend()
+            )
+        except Exception as e:
+            # ננסה לטעון כ-PEM bytes
+            print(f"⚠️ [PUSH] Failed DER load: {e}, trying PEM bytes...")
+            private_key = serialization.load_pem_private_key(
+                key_bytes,
+                password=None,
+                backend=default_backend()
+            )
         
         # המרה ל-PEM string - pywebpush מצפה ל-PEM string
         pem_string = private_key.private_bytes(
