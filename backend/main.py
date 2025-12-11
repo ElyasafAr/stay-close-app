@@ -999,6 +999,9 @@ async def check_reminders(
                 except Exception as e:
                     print(f"❌ [CHECK] Error creating Reminder object: {e}")
                     print(f"   Reminder ID: {db_reminder.id}, Type: {reminder_type}")
+                    print(f"   Reminder data: id={db_reminder.id}, contact_id={db_reminder.contact_id}, enabled={db_reminder.enabled}")
+                    print(f"   scheduled_datetime={db_reminder.scheduled_datetime}, next_trigger={db_reminder.next_trigger}")
+                    print(f"   last_triggered={db_reminder.last_triggered}, created_at={db_reminder.created_at}")
                     import traceback
                     traceback.print_exc()
                     # Don't raise - just skip this reminder and continue
@@ -1009,12 +1012,23 @@ async def check_reminders(
             print(f"✅ [DATABASE] Updated {len(triggered_reminders)} triggered reminders for user {user_id}")
         
         print(f"✅ [CHECK] Returning {len(triggered_reminders)} triggered reminders")
+        # Validate that all reminders have required fields before returning
+        for r in triggered_reminders:
+            if r.contact_id is None:
+                print(f"⚠️ [CHECK] Warning: Reminder {r.id} has None contact_id")
         return triggered_reminders
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
     except Exception as e:
         print(f"❌ [CHECK] Error in check_reminders: {e}")
         import traceback
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"Error checking reminders: {str(e)}")
+        # Return 422 with detailed error message for validation errors
+        error_detail = str(e)
+        if "validation" in error_detail.lower() or "pydantic" in error_detail.lower():
+            raise HTTPException(status_code=422, detail=f"Validation error: {error_detail}")
+        raise HTTPException(status_code=500, detail=f"Error checking reminders: {error_detail}")
 
 # ========== MESSAGES ENDPOINTS ==========
 

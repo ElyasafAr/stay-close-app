@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Fix: Complete timezone fix - all datetime.now() replaced with datetime.now(timezone.utc)"
+$commitMessage = "Fix: Add detailed logging to check_reminders endpoint to debug 422 errors"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files
