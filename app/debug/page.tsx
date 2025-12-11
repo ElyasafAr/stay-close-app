@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { getData } from '@/services/api'
 
 export default function DebugPage() {
   const [debugInfo, setDebugInfo] = useState<any>({})
@@ -115,17 +116,15 @@ export default function DebugPage() {
 
   const checkBackend = async () => {
     try {
-      const response = await fetch('/api/push/vapid-public-key')
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      const response = await getData<{ publicKey: string }>('/api/push/vapid-public-key')
+      
+      if (response.success && response.data) {
+        const keyLength = response.data.publicKey.length
+        const expectedLength = 88 // VAPID public key should be ~88 chars in base64url
+        alert(`Backend VAPID Key: ✅ קיים\nאורך: ${keyLength} תווים\n${keyLength === expectedLength ? '✅ אורך תקין' : '⚠️ אורך לא תקין (צפוי ~88)'}`)
+      } else {
+        alert('Backend VAPID Key: ❌ חסר או שגיאה - ' + (response.error || 'Unknown error'))
       }
-      const contentType = response.headers.get('content-type')
-      if (!contentType || !contentType.includes('application/json')) {
-        const text = await response.text()
-        throw new Error(`Expected JSON but got ${contentType}. Response: ${text.substring(0, 100)}`)
-      }
-      const data = await response.json()
-      alert('Backend VAPID Key: ' + (data.publicKey ? '✅ קיים (אורך: ' + data.publicKey.length + ')' : '❌ חסר'))
     } catch (error) {
       alert('❌ שגיאה: ' + (error instanceof Error ? error.message : String(error)))
     }

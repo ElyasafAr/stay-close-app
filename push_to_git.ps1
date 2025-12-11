@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Fix: TypeScript error - ArrayBuffer type assertion for PushManager subscribe"
+$commitMessage = "Fix: Debug page to use API service and improve VAPID key validation"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files
