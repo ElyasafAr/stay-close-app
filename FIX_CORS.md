@@ -98,3 +98,4 @@ print(f"[CORS] Allowed origins: {allowed_origins}")
 5. **צריך לראות** את ה-Frontend URL ברשימה!
 
 
+

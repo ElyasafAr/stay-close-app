@@ -17,4 +17,6 @@ firebase-admin
 sqlalchemy==2.0.23
 psycopg2-binary==2.9.9
 alembic==1.12.1
+schedule==1.2.0
+pywebpush==1.14.0
 

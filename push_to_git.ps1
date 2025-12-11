@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Feature: Advanced reminders system - support for one-time, weekly, daily, and recurring reminders"
+$commitMessage = "Feature: Complete push notifications system with Background Job, Service Worker, and PWA support"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files

@@ -102,3 +102,4 @@ Access to fetch blocked by CORS
 פשוט תסתכל על הלוגים ותראה איפה זה נכשל!
 
 
+

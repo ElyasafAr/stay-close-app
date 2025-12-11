@@ -174,6 +174,34 @@ def _run_migrations():
             
             db.commit()
             print("✅ [DATABASE] Migration completed: Advanced reminder fields added")
+        
+        # Migration 3: Add push_tokens table if it doesn't exist
+        check_push_tokens = text("""
+            SELECT table_name 
+            FROM information_schema.tables 
+            WHERE table_name='push_tokens';
+        """)
+        
+        result_push_tokens = db.execute(check_push_tokens).fetchone()
+        
+        if not result_push_tokens:
+            print("🔵 [DATABASE] Running migration: Creating push_tokens table...")
+            create_table = text("""
+                CREATE TABLE push_tokens (
+                    id SERIAL PRIMARY KEY,
+                    user_id VARCHAR NOT NULL,
+                    token TEXT NOT NULL UNIQUE,
+                    device_info TEXT,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                );
+                CREATE INDEX idx_push_tokens_user_id ON push_tokens(user_id);
+                CREATE INDEX idx_push_tokens_token ON push_tokens(token);
+            """)
+            db.execute(create_table)
+            db.commit()
+            print("✅ [DATABASE] Migration completed: push_tokens table created")
         else:
             print("✅ [DATABASE] Schema is up to date")
     except Exception as e:

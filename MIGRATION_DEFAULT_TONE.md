@@ -87,3 +87,4 @@ python add_default_tone_column.py
 - אם העמודה כבר קיימת, ה-migration ידלג
 - ערך ברירת מחדל: `'friendly'`
 
+

@@ -21,12 +21,16 @@ from datetime import datetime, timedelta
 import requests
 from dotenv import load_dotenv
 from sqlalchemy.orm import Session
-from database import get_db, init_db
-from models import User, Contact as DBContact, Reminder as DBReminder
+from database import get_db, init_db, SessionLocal
+from models import User, Contact as DBContact, Reminder as DBReminder, PushToken
 from auth import (
     register_user, authenticate_user, create_access_token,
     get_current_user, create_or_get_google_user, create_or_get_firebase_user, verify_token
 )
+import threading
+import schedule
+import time
+from push_notifications import send_push_notification
 
 # טעינת משתני סביבה מקובץ .env
 load_dotenv()
@@ -36,6 +40,123 @@ app = FastAPI(
     description="API לאפליקציית Stay Close",
     version="1.0.0"
 )
+
+# Background Job - בודק התראות ושולח Push Notifications
+def check_and_send_reminders():
+    """Background Job - בודק התראות כל דקה ושולח Push Notifications"""
+    db = SessionLocal()
+    try:
+        now = datetime.now()
+        
+        # מצא כל ההתראות שצריכות להתפעל
+        all_reminders = db.query(DBReminder).filter(
+            DBReminder.enabled == True
+        ).all()
+        
+        triggered_count = 0
+        for db_reminder in all_reminders:
+            reminder_type = db_reminder.reminder_type or 'recurring'
+            should_trigger = False
+            
+            if reminder_type == 'one_time':
+                # התראה חד-פעמית
+                if (db_reminder.scheduled_datetime and 
+                    db_reminder.scheduled_datetime <= now and 
+                    not db_reminder.one_time_triggered):
+                    should_trigger = True
+                    db_reminder.one_time_triggered = True
+                    db_reminder.last_triggered = now
+            else:
+                # התראות אחרות
+                if db_reminder.next_trigger and db_reminder.next_trigger <= now:
+                    should_trigger = True
+                    db_reminder.last_triggered = now
+                    
+                    # Parse weekdays if needed
+                    weekdays = None
+                    if db_reminder.weekdays:
+                        try:
+                            weekdays = json.loads(db_reminder.weekdays)
+                        except (json.JSONDecodeError, TypeError):
+                            weekdays = None
+                    
+                    # Calculate next trigger
+                    db_reminder.next_trigger = calculate_next_trigger_advanced(
+                        reminder_type=reminder_type,
+                        interval_type=db_reminder.interval_type,
+                        interval_value=db_reminder.interval_value,
+                        scheduled_datetime=db_reminder.scheduled_datetime,
+                        weekdays=weekdays,
+                        specific_time=db_reminder.specific_time,
+                        last_triggered=now
+                    )
+            
+            if should_trigger:
+                triggered_count += 1
+                
+                # קבל את איש הקשר
+                contact = db.query(DBContact).filter(DBContact.id == db_reminder.contact_id).first()
+                if not contact:
+                    continue
+                
+                # בניית טקסט התראה
+                reminder_text = ''
+                if reminder_type == 'one_time':
+                    reminder_text = 'תאריך ספציפי'
+                elif reminder_type == 'recurring':
+                    if db_reminder.interval_type == 'hours':
+                        interval_text = f'{db_reminder.interval_value} שעות'
+                    else:
+                        interval_text = f'{db_reminder.interval_value} ימים'
+                    reminder_text = f'כל {interval_text}'
+                elif reminder_type == 'weekly':
+                    weekday_names = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת']
+                    if weekdays:
+                        days = ', '.join([weekday_names[d] for d in weekdays])
+                    else:
+                        days = ''
+                    time_part = f' בשעה {db_reminder.specific_time}' if db_reminder.specific_time else ''
+                    reminder_text = f'{days}{time_part}'
+                elif reminder_type == 'daily':
+                    reminder_text = f'כל יום בשעה {db_reminder.specific_time or "12:00"}'
+                
+                # מצא Push Tokens של המשתמש
+                push_tokens = db.query(PushToken).filter(
+                    PushToken.user_id == db_reminder.user_id
+                ).all()
+                
+                # שלח Push Notification לכל ה-tokens
+                for push_token in push_tokens:
+                    send_push_notification(
+                        push_token=push_token.token,
+                        title="זמן לשלוח הודעה! 💌",
+                        body=f"הגיע הזמן לשלוח הודעה ל-{contact.name}\n({reminder_text})",
+                        data={
+                            "reminder_id": db_reminder.id,
+                            "contact_id": contact.id,
+                            "contact_name": contact.name
+                        }
+                    )
+        
+        if triggered_count > 0:
+            db.commit()
+            print(f"✅ [BACKGROUND] Processed {triggered_count} reminders and sent push notifications")
+        
+    except Exception as e:
+        db.rollback()
+        print(f"❌ [BACKGROUND] Error checking reminders: {e}")
+        import traceback
+        print(traceback.format_exc())
+    finally:
+        db.close()
+
+def background_job_loop():
+    """לולאה של Background Job"""
+    schedule.every(1).minutes.do(check_and_send_reminders)
+    print("✅ [BACKGROUND] Background job started - checking reminders every minute")
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
 
 # Initialize database on startup
 @app.on_event("startup")
@@ -47,6 +168,14 @@ async def startup_event():
     except Exception as e:
         print(f"⚠️ [STARTUP] Database initialization warning: {e}")
         print("   Application will continue, but database operations may fail")
+    
+    # Start Background Job
+    try:
+        thread = threading.Thread(target=background_job_loop, daemon=True)
+        thread.start()
+        print("✅ [STARTUP] Background job thread started")
+    except Exception as e:
+        print(f"⚠️ [STARTUP] Failed to start background job: {e}")
 
 # הגדרת CORS כדי לאפשר גישה מה-frontend
 # במצב פיתוח - מאפשרים את כל ה-localhost ports
@@ -702,6 +831,85 @@ async def delete_reminder(
     print(f"✅ [DATABASE] Deleted reminder {reminder_id} for user {user_id}")
     return {"message": "התראה נמחקה בהצלחה"}
 
+# ========== PUSH TOKENS ENDPOINTS ==========
+
+class PushTokenCreate(BaseModel):
+    """מודל ליצירת Push Token"""
+    token: str  # JSON string של Push subscription
+    device_info: Optional[dict] = None
+
+@app.post("/api/push-tokens")
+async def register_push_token(
+    push_token: PushTokenCreate,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """רישום Push Token למשתמש"""
+    user_id = current_user["user_id"]
+    
+    # בדוק אם Token כבר קיים
+    existing_token = db.query(PushToken).filter(
+        PushToken.token == push_token.token
+    ).first()
+    
+    if existing_token:
+        # עדכן את ה-user_id אם שונה
+        if existing_token.user_id != user_id:
+            existing_token.user_id = user_id
+        # עדכן device_info
+        if push_token.device_info:
+            existing_token.device_info = json.dumps(push_token.device_info)
+        existing_token.updated_at = datetime.now()
+        db.commit()
+        print(f"✅ [PUSH] Updated push token for user {user_id}")
+        return {"message": "Push token עודכן בהצלחה"}
+    
+    # יצירת Push Token חדש
+    device_info_json = None
+    if push_token.device_info:
+        device_info_json = json.dumps(push_token.device_info)
+    
+    db_push_token = PushToken(
+        user_id=user_id,
+        token=push_token.token,
+        device_info=device_info_json,
+        created_at=datetime.now(),
+        updated_at=datetime.now()
+    )
+    db.add(db_push_token)
+    db.commit()
+    db.refresh(db_push_token)
+    
+    print(f"✅ [PUSH] Registered push token for user {user_id}")
+    return {"message": "Push token נרשם בהצלחה", "id": db_push_token.id}
+
+@app.delete("/api/push-tokens/{token_id}")
+async def delete_push_token(
+    token_id: int,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """מחיקת Push Token"""
+    user_id = current_user["user_id"]
+    
+    # Get token to delete
+    db_token = db.query(PushToken).filter(
+        PushToken.id == token_id,
+        PushToken.user_id == user_id
+    ).first()
+    
+    if not db_token:
+        raise HTTPException(status_code=404, detail="Push token לא נמצא")
+    
+    # Delete token
+    db.delete(db_token)
+    db.commit()
+    
+    print(f"✅ [PUSH] Deleted push token {token_id} for user {user_id}")
+    return {"message": "Push token נמחק בהצלחה"}
+
+# ========== REMINDERS CHECK ENDPOINT ==========
+
 @app.get("/api/reminders/check", response_model=List[Reminder])
 async def check_reminders(
     current_user: dict = Depends(get_current_user),
@@ -1043,6 +1251,19 @@ async def firebase_auth(request: FirebaseAuthRequest, db: Session = Depends(get_
 async def get_me(current_user: dict = Depends(get_current_user)):
     """קבלת פרטי המשתמש הנוכחי"""
     return current_user
+
+@app.get("/api/push/vapid-public-key")
+async def get_vapid_public_key():
+    """קבלת VAPID public key ל-Push Notifications"""
+    from push_notifications import VAPID_PUBLIC_KEY
+    
+    if not VAPID_PUBLIC_KEY:
+        raise HTTPException(
+            status_code=500, 
+            detail="VAPID keys not configured. Please set VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY environment variables"
+        )
+    
+    return {"publicKey": VAPID_PUBLIC_KEY}
 
 @app.get("/api/health")
 async def health_check():

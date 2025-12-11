@@ -253,3 +253,4 @@ Access to fetch at '...' has been blocked by CORS policy
 4. **בדוק את ה-Health Check** - זה אומר לך אם ה-Backend עובד
 
 
+
