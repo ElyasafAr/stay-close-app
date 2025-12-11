@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Fix: TypeScript error in ServiceWorkerRegistration - applicationServerKey type"
+$commitMessage = "Debug: Add detailed logging and debug page for Service Worker and Push Notifications"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files

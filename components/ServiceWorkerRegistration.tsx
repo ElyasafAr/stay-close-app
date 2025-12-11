@@ -9,88 +9,153 @@ import { postData } from '@/services/api'
  */
 export function ServiceWorkerRegistration() {
   useEffect(() => {
+    console.log('🔍 [SW] ServiceWorkerRegistration component mounted')
+    
     if (typeof window === 'undefined') {
+      console.log('⚠️ [SW] Window is undefined (SSR)')
       return
     }
 
     // רק אם המשתמש מחובר
-    if (!isAuthenticated()) {
+    const authenticated = isAuthenticated()
+    console.log('🔍 [SW] User authenticated:', authenticated)
+    if (!authenticated) {
+      console.log('⚠️ [SW] User not authenticated - skipping registration')
       return
     }
 
     const registerServiceWorker = async () => {
+      console.log('🔍 [SW] Starting registration process...')
+      console.log('🔍 [SW] Service Worker support:', 'serviceWorker' in navigator)
+      console.log('🔍 [SW] Push Manager support:', 'PushManager' in window)
+      
       if ('serviceWorker' in navigator) {
         try {
           // רישום Service Worker
+          console.log('🔍 [SW] Attempting to register /sw.js...')
           const registration = await navigator.serviceWorker.register('/sw.js', {
             scope: '/'
           })
           
-          console.log('✅ [SW] Service Worker registered:', registration.scope)
+          console.log('✅ [SW] Service Worker registered successfully!')
+          console.log('   Scope:', registration.scope)
+          console.log('   Active:', registration.active?.state)
+          console.log('   Installing:', registration.installing?.state)
+          console.log('   Waiting:', registration.waiting?.state)
 
           // בדיקה אם יש Push Notifications support
           if ('PushManager' in window) {
+            console.log('🔍 [SW] PushManager is available')
+            
+            // בדיקת הרשאות נוכחיות
+            const currentPermission = Notification.permission
+            console.log('🔍 [SW] Current notification permission:', currentPermission)
+            
             // קבלת Push subscription
+            console.log('🔍 [SW] Checking for existing subscription...')
             let subscription = await registration.pushManager.getSubscription()
+            
+            if (subscription) {
+              console.log('✅ [SW] Found existing subscription:', {
+                endpoint: subscription.endpoint.substring(0, 50) + '...',
+                keys: Object.keys(subscription.getKey ? subscription.getKey('p256dh') || {} : {})
+              })
+            } else {
+              console.log('ℹ️ [SW] No existing subscription found')
+            }
             
             // אם אין subscription, נבקש הרשאה ונצור אחד
             if (!subscription) {
+              console.log('🔍 [SW] Requesting notification permission...')
               // בקשת הרשאה
               const permission = await Notification.requestPermission()
+              console.log('🔍 [SW] Permission result:', permission)
               
               if (permission === 'granted') {
+                console.log('✅ [SW] Permission granted! Fetching VAPID key...')
                 // קבלת VAPID public key מה-backend
                 try {
+                  console.log('🔍 [SW] Fetching /api/push/vapid-public-key...')
                   const vapidKeyResponse = await fetch('/api/push/vapid-public-key')
+                  console.log('🔍 [SW] VAPID key response status:', vapidKeyResponse.status)
+                  
                   if (vapidKeyResponse.ok) {
-                    const { publicKey } = await vapidKeyResponse.json()
+                    const vapidData = await vapidKeyResponse.json()
+                    console.log('✅ [SW] VAPID key received:', {
+                      hasPublicKey: !!vapidData.publicKey,
+                      keyLength: vapidData.publicKey?.length
+                    })
+                    const { publicKey } = vapidData
                     
                     // המרה מ-base64 ל-Uint8Array
+                    console.log('🔍 [SW] Converting VAPID key to Uint8Array...')
                     const applicationServerKey = urlBase64ToUint8Array(publicKey)
+                    console.log('✅ [SW] Key converted, length:', applicationServerKey.length)
                     
                     // יצירת Push subscription
-                    // PushManager מצפה ל-BufferSource - Uint8Array הוא ArrayBufferView שהוא BufferSource
+                    console.log('🔍 [SW] Creating push subscription...')
                     subscription = await registration.pushManager.subscribe({
                       userVisibleOnly: true,
                       applicationServerKey: applicationServerKey as BufferSource
                     })
+                    console.log('✅ [SW] Push subscription created!', {
+                      endpoint: subscription.endpoint.substring(0, 50) + '...'
+                    })
                     
                     // שליחת subscription ל-backend
-                    await postData('/api/push-tokens', {
+                    console.log('🔍 [SW] Sending subscription to backend...')
+                    const tokenData = {
                       token: JSON.stringify(subscription),
                       device_info: {
                         platform: 'web',
                         userAgent: navigator.userAgent,
                         language: navigator.language
                       }
+                    }
+                    console.log('🔍 [SW] Token data:', {
+                      tokenLength: tokenData.token.length,
+                      deviceInfo: tokenData.device_info
                     })
                     
-                    console.log('✅ [SW] Push subscription created and sent to backend')
+                    const backendResponse = await postData('/api/push-tokens', tokenData)
+                    console.log('✅ [SW] Push subscription sent to backend successfully!', backendResponse)
+                  } else {
+                    console.error('❌ [SW] Failed to get VAPID key:', vapidKeyResponse.status, await vapidKeyResponse.text())
                   }
                 } catch (error) {
                   console.error('❌ [SW] Error creating push subscription:', error)
+                  console.error('❌ [SW] Error details:', {
+                    message: error instanceof Error ? error.message : String(error),
+                    stack: error instanceof Error ? error.stack : undefined
+                  })
                 }
               } else {
-                console.warn('⚠️ [SW] Notification permission denied')
+                console.warn('⚠️ [SW] Notification permission denied:', permission)
               }
             } else {
               // יש כבר subscription - נשלח ל-backend (למקרה שלא נשמר)
+              console.log('🔍 [SW] Sending existing subscription to backend...')
               try {
-                await postData('/api/push-tokens', {
+                const tokenData = {
                   token: JSON.stringify(subscription),
                   device_info: {
                     platform: 'web',
                     userAgent: navigator.userAgent,
                     language: navigator.language
                   }
-                })
-                console.log('✅ [SW] Existing push subscription sent to backend')
+                }
+                const backendResponse = await postData('/api/push-tokens', tokenData)
+                console.log('✅ [SW] Existing push subscription sent to backend:', backendResponse)
               } catch (error) {
                 console.error('❌ [SW] Error sending existing subscription:', error)
+                console.error('❌ [SW] Error details:', {
+                  message: error instanceof Error ? error.message : String(error),
+                  stack: error instanceof Error ? error.stack : undefined
+                })
               }
             }
           } else {
-            console.warn('⚠️ [SW] Push Notifications not supported')
+            console.warn('⚠️ [SW] Push Notifications not supported in this browser')
           }
 
           // עדכון Service Worker אם יש גרסה חדשה
@@ -107,9 +172,14 @@ export function ServiceWorkerRegistration() {
 
         } catch (error) {
           console.error('❌ [SW] Service Worker registration failed:', error)
+          console.error('❌ [SW] Error details:', {
+            message: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined,
+            name: error instanceof Error ? error.name : undefined
+          })
         }
       } else {
-        console.warn('⚠️ [SW] Service Workers not supported')
+        console.warn('⚠️ [SW] Service Workers not supported in this browser')
       }
     }
 
