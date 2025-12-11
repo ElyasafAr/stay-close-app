@@ -82,31 +82,50 @@ export default function DebugPage() {
   }, [])
 
   const testNotification = async () => {
-    if (Notification.permission === 'granted') {
-      new Notification('🧪 Test Notification', {
-        body: 'אם אתה רואה את זה, ההתראות עובדות!',
-        icon: '/icon-192x192.png',
-        tag: 'test',
-      })
-    } else {
-      const permission = await Notification.requestPermission()
+    try {
+      let permission = Notification.permission
+      
+      if (permission === 'default') {
+        permission = await Notification.requestPermission()
+      }
+      
       if (permission === 'granted') {
-        new Notification('🧪 Test Notification', {
+        const notification = new Notification('🧪 Test Notification', {
           body: 'אם אתה רואה את זה, ההתראות עובדות!',
           icon: '/icon-192x192.png',
+          badge: '/icon-192x192.png',
           tag: 'test',
+          requireInteraction: false,
         })
+        
+        notification.onclick = () => {
+          console.log('Test notification clicked')
+          notification.close()
+        }
+        
+        setTimeout(() => notification.close(), 5000)
       } else {
-        alert('הרשאת התראות נדחתה')
+        alert('הרשאת התראות נדחתה. אנא אפשר התראות בהגדרות הדפדפן.')
       }
+    } catch (error) {
+      console.error('Error showing notification:', error)
+      alert('שגיאה בהצגת התראה: ' + (error instanceof Error ? error.message : String(error)))
     }
   }
 
   const checkBackend = async () => {
     try {
       const response = await fetch('/api/push/vapid-public-key')
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+      const contentType = response.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text()
+        throw new Error(`Expected JSON but got ${contentType}. Response: ${text.substring(0, 100)}`)
+      }
       const data = await response.json()
-      alert('Backend VAPID Key: ' + (data.publicKey ? '✅ קיים' : '❌ חסר'))
+      alert('Backend VAPID Key: ' + (data.publicKey ? '✅ קיים (אורך: ' + data.publicKey.length + ')' : '❌ חסר'))
     } catch (error) {
       alert('❌ שגיאה: ' + (error instanceof Error ? error.message : String(error)))
     }

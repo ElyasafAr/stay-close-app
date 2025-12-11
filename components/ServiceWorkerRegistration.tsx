@@ -116,11 +116,17 @@ export function ServiceWorkerRegistration() {
                     })
                     
                     // ניסיון ליצור subscription
-                    // PushManager מצפה ל-BufferSource - Uint8Array הוא ArrayBufferView שהוא BufferSource
+                    // PushManager מצפה ל-BufferSource - צריך להשתמש ב-ArrayBuffer
                     try {
+                      // המרה ל-ArrayBuffer (נדרש ל-PushManager)
+                      const keyBuffer = applicationServerKey.buffer.slice(
+                        applicationServerKey.byteOffset,
+                        applicationServerKey.byteOffset + applicationServerKey.byteLength
+                      )
+                      
                       subscription = await registration.pushManager.subscribe({
                         userVisibleOnly: true,
-                        applicationServerKey: applicationServerKey as unknown as BufferSource
+                        applicationServerKey: keyBuffer
                       })
                     } catch (subscribeError) {
                       console.error('❌ [SW] Subscribe error details:', {
