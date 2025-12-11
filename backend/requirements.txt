@@ -14,4 +14,7 @@ cryptography
 bcrypt
 email-validator
 firebase-admin
+sqlalchemy==2.0.23
+psycopg2-binary==2.9.9
+alembic==1.12.1
 

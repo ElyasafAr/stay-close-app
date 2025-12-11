@@ -20,6 +20,9 @@ import json
 from datetime import datetime, timedelta
 import requests
 from dotenv import load_dotenv
+from sqlalchemy.orm import Session
+from database import get_db, init_db
+from models import User, Contact as DBContact, Reminder as DBReminder
 from auth import (
     register_user, authenticate_user, create_access_token,
     get_current_user, create_or_get_google_user, create_or_get_firebase_user, verify_token
@@ -33,6 +36,17 @@ app = FastAPI(
     description="API לאפליקציית Stay Close",
     version="1.0.0"
 )
+
+# Initialize database on startup
+@app.on_event("startup")
+async def startup_event():
+    """Initialize database when application starts"""
+    try:
+        init_db()
+        print("✅ [STARTUP] Database initialized successfully")
+    except Exception as e:
+        print(f"⚠️ [STARTUP] Database initialization warning: {e}")
+        print("   Application will continue, but database operations may fail")
 
 # הגדרת CORS כדי לאפשר גישה מה-frontend
 # במצב פיתוח - מאפשרים את כל ה-localhost ports
@@ -174,130 +188,44 @@ class ReminderCreate(BaseModel):
     interval_value: int
     enabled: bool = True
 
-# קובץ לשמירת נתונים
-CONTACTS_FILE = "contacts.json"
-REMINDERS_FILE = "reminders.json"
+# Database functions - using PostgreSQL instead of JSON files
+def get_contacts_from_db(db: Session, user_id: str) -> List[DBContact]:
+    """Get all contacts for a user from PostgreSQL"""
+    return db.query(DBContact).filter(DBContact.user_id == user_id).all()
 
-# מאגר נתונים - נטען מ-JSON file
-contacts_db: List[Contact] = []
-reminders_db: List[Reminder] = []
+def get_contact_by_id(db: Session, contact_id: int, user_id: str) -> Optional[DBContact]:
+    """Get a specific contact by ID (ensuring it belongs to the user)"""
+    return db.query(DBContact).filter(
+        DBContact.id == contact_id,
+        DBContact.user_id == user_id
+    ).first()
 
-def load_contacts_from_file(user_id: Optional[str] = None):
-    """טוען אנשי קשר מקובץ JSON (לפי משתמש אם צוין)"""
-    global contacts_db
-    if os.path.exists(CONTACTS_FILE):
-        try:
-            with open(CONTACTS_FILE, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-                # המרת created_at מ-string ל-datetime
-                for item in data:
-                    if item.get('created_at') and isinstance(item['created_at'], str):
-                        try:
-                            item['created_at'] = datetime.fromisoformat(item['created_at'])
-                        except:
-                            item['created_at'] = None
-                # סינון לפי משתמש אם צוין
-                if user_id:
-                    data = [item for item in data if item.get('user_id') == user_id]
-                contacts_db = [Contact(**item) for item in data]
-                print(f"✅ נטענו {len(contacts_db)} אנשי קשר מקובץ JSON")
-        except Exception as e:
-            print(f"⚠️ שגיאה בטעינת קובץ: {e}")
-            contacts_db = []
-    else:
-        contacts_db = []
-        print("ℹ️ קובץ contacts.json לא קיים - מתחיל עם רשימה ריקה")
+def get_reminders_from_db(db: Session, user_id: str) -> List[DBReminder]:
+    """Get all reminders for a user from PostgreSQL"""
+    return db.query(DBReminder).filter(DBReminder.user_id == user_id).all()
 
-def save_contacts_to_file():
-    """שומר אנשי קשר לקובץ JSON"""
-    try:
-        # המרה ל-dict עבור JSON
-        data = []
-        for contact in contacts_db:
-            contact_dict = {
-                "id": contact.id,
-                "user_id": contact.user_id,  # שמירת user_id
-                "name": contact.name,
-                "email": contact.email,
-                "phone": contact.phone,
-                "notes": contact.notes,
-                "created_at": contact.created_at.isoformat() if contact.created_at else None
-            }
-            data.append(contact_dict)
-        
-        with open(CONTACTS_FILE, 'w', encoding='utf-8') as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-        print(f"💾 נשמרו {len(contacts_db)} אנשי קשר לקובץ JSON")
-    except Exception as e:
-        print(f"❌ שגיאה בשמירת קובץ: {e}")
+def get_reminder_by_id(db: Session, reminder_id: int, user_id: str) -> Optional[DBReminder]:
+    """Get a specific reminder by ID (ensuring it belongs to the user)"""
+    return db.query(DBReminder).filter(
+        DBReminder.id == reminder_id,
+        DBReminder.user_id == user_id
+    ).first()
 
-def load_reminders_from_file(user_id: Optional[str] = None):
-    """טוען התראות מקובץ JSON (לפי משתמש אם צוין)"""
-    global reminders_db
-    if os.path.exists(REMINDERS_FILE):
-        try:
-            with open(REMINDERS_FILE, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-                # המרת תאריכים מ-string ל-datetime
-                for item in data:
-                    for date_field in ['last_triggered', 'next_trigger', 'created_at']:
-                        if item.get(date_field) and isinstance(item[date_field], str):
-                            try:
-                                item[date_field] = datetime.fromisoformat(item[date_field])
-                            except:
-                                item[date_field] = None
-                # סינון לפי משתמש אם צוין
-                if user_id:
-                    data = [item for item in data if item.get('user_id') == user_id]
-                reminders_db = [Reminder(**item) for item in data]
-                print(f"✅ נטענו {len(reminders_db)} התראות מקובץ JSON")
-        except Exception as e:
-            print(f"⚠️ שגיאה בטעינת קובץ התראות: {e}")
-            reminders_db = []
-    else:
-        reminders_db = []
-        print("ℹ️ קובץ reminders.json לא קיים - מתחיל עם רשימה ריקה")
-
-def save_reminders_to_file():
-    """שומר התראות לקובץ JSON"""
-    try:
-        data = []
-        for reminder in reminders_db:
-            reminder_dict = {
-                "id": reminder.id,
-                "user_id": reminder.user_id,
-                "contact_id": reminder.contact_id,
-                "interval_type": reminder.interval_type,
-                "interval_value": reminder.interval_value,
-                "last_triggered": reminder.last_triggered.isoformat() if reminder.last_triggered else None,
-                "next_trigger": reminder.next_trigger.isoformat() if reminder.next_trigger else None,
-                "enabled": reminder.enabled,
-                "created_at": reminder.created_at.isoformat() if reminder.created_at else None
-            }
-            data.append(reminder_dict)
-        
-        with open(REMINDERS_FILE, 'w', encoding='utf-8') as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-        print(f"💾 נשמרו {len(reminders_db)} התראות לקובץ JSON")
-    except Exception as e:
-        print(f"❌ שגיאה בשמירת קובץ התראות: {e}")
-
-def calculate_next_trigger(reminder: Reminder) -> datetime:
+def calculate_next_trigger(interval_type: str, interval_value: int, last_triggered: Optional[datetime] = None) -> datetime:
     """מחשב את זמן ההתראה הבאה"""
     now = datetime.now()
-    if reminder.interval_type == 'hours':
-        delta = timedelta(hours=reminder.interval_value)
+    if interval_type == 'hours':
+        delta = timedelta(hours=interval_value)
     else:  # days
-        delta = timedelta(days=reminder.interval_value)
+        delta = timedelta(days=interval_value)
     
-    if reminder.last_triggered:
-        return reminder.last_triggered + delta
+    if last_triggered:
+        return last_triggered + delta
     else:
         return now + delta
 
-# טעינת נתונים בעת הפעלת השרת
-load_contacts_from_file()
-load_reminders_from_file()
+# Database is initialized on startup via startup_event
+# No need to load from JSON files anymore
 
 @app.get("/")
 async def root():
@@ -306,28 +234,57 @@ async def root():
 # ========== CONTACTS ENDPOINTS ==========
 
 @app.get("/api/contacts", response_model=List[Contact])
-async def get_contacts(current_user: dict = Depends(get_current_user)):
+async def get_contacts(
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """קבלת רשימת כל אנשי הקשר של המשתמש הנוכחי"""
     user_id = current_user["user_id"]
-    user_contacts = [c for c in contacts_db if c.user_id == user_id]
-    return user_contacts
+    db_contacts = get_contacts_from_db(db, user_id)
+    # Convert SQLAlchemy models to Pydantic models
+    return [Contact(
+        id=c.id,
+        user_id=c.user_id,
+        name=c.name,
+        email=c.email,
+        phone=c.phone,
+        notes=c.notes,
+        created_at=c.created_at
+    ) for c in db_contacts]
 
 @app.get("/api/contacts/{contact_id}", response_model=Contact)
-async def get_contact(contact_id: int, current_user: dict = Depends(get_current_user)):
+async def get_contact(
+    contact_id: int,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """קבלת איש קשר ספציפי לפי ID"""
     user_id = current_user["user_id"]
-    contact = next((c for c in contacts_db if c.id == contact_id and c.user_id == user_id), None)
-    if not contact:
+    db_contact = get_contact_by_id(db, contact_id, user_id)
+    if not db_contact:
         raise HTTPException(status_code=404, detail="איש קשר לא נמצא")
-    return contact
+    # Convert SQLAlchemy model to Pydantic model
+    return Contact(
+        id=db_contact.id,
+        user_id=db_contact.user_id,
+        name=db_contact.name,
+        email=db_contact.email,
+        phone=db_contact.phone,
+        notes=db_contact.notes,
+        created_at=db_contact.created_at
+    )
 
 @app.post("/api/contacts", response_model=Contact)
-async def create_contact(contact: ContactCreate, current_user: dict = Depends(get_current_user)):
+async def create_contact(
+    contact: ContactCreate,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """יצירת איש קשר חדש (של המשתמש הנוכחי)"""
     user_id = current_user["user_id"]
-    new_id = max([c.id for c in contacts_db], default=0) + 1
-    new_contact = Contact(
-        id=new_id,
+    
+    # Create new contact in database
+    db_contact = DBContact(
         user_id=user_id,
         name=contact.name,
         email=contact.email,
@@ -335,92 +292,150 @@ async def create_contact(contact: ContactCreate, current_user: dict = Depends(ge
         notes=contact.notes,
         created_at=datetime.now()
     )
-    contacts_db.append(new_contact)
-    save_contacts_to_file()  # שמירה אוטומטית
-    return new_contact
+    db.add(db_contact)
+    db.commit()
+    db.refresh(db_contact)
+    
+    print(f"✅ [DATABASE] Created contact {db_contact.id} for user {user_id}")
+    # Convert SQLAlchemy model to Pydantic model
+    return Contact(
+        id=db_contact.id,
+        user_id=db_contact.user_id,
+        name=db_contact.name,
+        email=db_contact.email,
+        phone=db_contact.phone,
+        notes=db_contact.notes,
+        created_at=db_contact.created_at
+    )
 
 @app.put("/api/contacts/{contact_id}", response_model=Contact)
-async def update_contact(contact_id: int, contact: ContactCreate, current_user: dict = Depends(get_current_user)):
+async def update_contact(
+    contact_id: int,
+    contact: ContactCreate,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """עדכון איש קשר קיים"""
     user_id = current_user["user_id"]
-    index = next((i for i, c in enumerate(contacts_db) if c.id == contact_id and c.user_id == user_id), None)
-    if index is None:
+    
+    # Get existing contact
+    db_contact = get_contact_by_id(db, contact_id, user_id)
+    if not db_contact:
         raise HTTPException(status_code=404, detail="איש קשר לא נמצא")
     
-    updated_contact = Contact(
-        id=contact_id,
-        user_id=user_id,
-        name=contact.name,
-        email=contact.email,
-        phone=contact.phone,
-        notes=contact.notes,
-        created_at=contacts_db[index].created_at
+    # Update contact fields
+    db_contact.name = contact.name
+    db_contact.email = contact.email
+    db_contact.phone = contact.phone
+    db_contact.notes = contact.notes
+    
+    db.commit()
+    db.refresh(db_contact)
+    
+    print(f"✅ [DATABASE] Updated contact {contact_id} for user {user_id}")
+    # Convert SQLAlchemy model to Pydantic model
+    return Contact(
+        id=db_contact.id,
+        user_id=db_contact.user_id,
+        name=db_contact.name,
+        email=db_contact.email,
+        phone=db_contact.phone,
+        notes=db_contact.notes,
+        created_at=db_contact.created_at
     )
-    contacts_db[index] = updated_contact
-    save_contacts_to_file()  # שמירה אוטומטית
-    return updated_contact
 
 @app.delete("/api/contacts/{contact_id}")
-async def delete_contact(contact_id: int, current_user: dict = Depends(get_current_user)):
+async def delete_contact(
+    contact_id: int,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """מחיקת איש קשר"""
     user_id = current_user["user_id"]
-    index = next((i for i, c in enumerate(contacts_db) if c.id == contact_id and c.user_id == user_id), None)
-    if index is None:
+    
+    # Get contact to delete
+    db_contact = get_contact_by_id(db, contact_id, user_id)
+    if not db_contact:
         raise HTTPException(status_code=404, detail="איש קשר לא נמצא")
     
-    contacts_db.pop(index)
-    save_contacts_to_file()  # שמירה אוטומטית
+    # Delete contact (cascade will delete related reminders automatically)
+    db.delete(db_contact)
+    db.commit()
     
-    # מחיקת כל ההתראות הקשורות לאיש קשר זה
-    reminders_db[:] = [r for r in reminders_db if not (r.contact_id == contact_id and r.user_id == user_id)]
-    save_reminders_to_file()
-    
+    print(f"✅ [DATABASE] Deleted contact {contact_id} for user {user_id}")
     return {"message": "איש קשר נמחק בהצלחה"}
 
 # ========== REMINDERS ENDPOINTS ==========
 
 @app.get("/api/reminders", response_model=List[Reminder])
-async def get_reminders(current_user: dict = Depends(get_current_user)):
+async def get_reminders(
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """קבלת רשימת כל ההתראות של המשתמש הנוכחי"""
     user_id = current_user["user_id"]
-    user_reminders = [r for r in reminders_db if r.user_id == user_id]
-    return user_reminders
+    db_reminders = get_reminders_from_db(db, user_id)
+    # Convert SQLAlchemy models to Pydantic models
+    return [Reminder(
+        id=r.id,
+        user_id=r.user_id,
+        contact_id=r.contact_id,
+        interval_type=r.interval_type,
+        interval_value=r.interval_value,
+        last_triggered=r.last_triggered,
+        next_trigger=r.next_trigger,
+        enabled=r.enabled,
+        created_at=r.created_at
+    ) for r in db_reminders]
 
 @app.get("/api/reminders/{reminder_id}", response_model=Reminder)
-async def get_reminder(reminder_id: int, current_user: dict = Depends(get_current_user)):
+async def get_reminder(
+    reminder_id: int,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """קבלת התראה ספציפית לפי ID"""
     user_id = current_user["user_id"]
-    reminder = next((r for r in reminders_db if r.id == reminder_id and r.user_id == user_id), None)
-    if not reminder:
+    db_reminder = get_reminder_by_id(db, reminder_id, user_id)
+    if not db_reminder:
         raise HTTPException(status_code=404, detail="התראה לא נמצאה")
-    return reminder
+    # Convert SQLAlchemy model to Pydantic model
+    return Reminder(
+        id=db_reminder.id,
+        user_id=db_reminder.user_id,
+        contact_id=db_reminder.contact_id,
+        interval_type=db_reminder.interval_type,
+        interval_value=db_reminder.interval_value,
+        last_triggered=db_reminder.last_triggered,
+        next_trigger=db_reminder.next_trigger,
+        enabled=db_reminder.enabled,
+        created_at=db_reminder.created_at
+    )
 
 @app.post("/api/reminders", response_model=Reminder)
-async def create_reminder(reminder: ReminderCreate, current_user: dict = Depends(get_current_user)):
+async def create_reminder(
+    reminder: ReminderCreate,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """יצירת התראה חדשה"""
     user_id = current_user["user_id"]
     
     # בדיקה שאיש הקשר קיים ושייך למשתמש
-    contact = next((c for c in contacts_db if c.id == reminder.contact_id and c.user_id == user_id), None)
+    contact = get_contact_by_id(db, reminder.contact_id, user_id)
     if not contact:
         raise HTTPException(status_code=404, detail="איש קשר לא נמצא")
     
-    new_id = max([r.id for r in reminders_db], default=0) + 1
+    # Calculate next trigger
     now = datetime.now()
-    next_trigger = calculate_next_trigger(Reminder(
-        id=None,
-        user_id=user_id,
-        contact_id=reminder.contact_id,
+    next_trigger = calculate_next_trigger(
         interval_type=reminder.interval_type,
         interval_value=reminder.interval_value,
-        last_triggered=None,
-        next_trigger=None,
-        enabled=reminder.enabled,
-        created_at=now
-    ))
+        last_triggered=None
+    )
     
-    new_reminder = Reminder(
-        id=new_id,
+    # Create new reminder in database
+    db_reminder = DBReminder(
         user_id=user_id,
         contact_id=reminder.contact_id,
         interval_type=reminder.interval_type,
@@ -430,89 +445,148 @@ async def create_reminder(reminder: ReminderCreate, current_user: dict = Depends
         enabled=reminder.enabled,
         created_at=now
     )
-    reminders_db.append(new_reminder)
-    save_reminders_to_file()
-    return new_reminder
+    db.add(db_reminder)
+    db.commit()
+    db.refresh(db_reminder)
+    
+    print(f"✅ [DATABASE] Created reminder {db_reminder.id} for user {user_id}")
+    # Convert SQLAlchemy model to Pydantic model
+    return Reminder(
+        id=db_reminder.id,
+        user_id=db_reminder.user_id,
+        contact_id=db_reminder.contact_id,
+        interval_type=db_reminder.interval_type,
+        interval_value=db_reminder.interval_value,
+        last_triggered=db_reminder.last_triggered,
+        next_trigger=db_reminder.next_trigger,
+        enabled=db_reminder.enabled,
+        created_at=db_reminder.created_at
+    )
 
 @app.put("/api/reminders/{reminder_id}", response_model=Reminder)
-async def update_reminder(reminder_id: int, reminder: ReminderCreate, current_user: dict = Depends(get_current_user)):
+async def update_reminder(
+    reminder_id: int,
+    reminder: ReminderCreate,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """עדכון התראה קיימת"""
     user_id = current_user["user_id"]
-    index = next((i for i, r in enumerate(reminders_db) if r.id == reminder_id and r.user_id == user_id), None)
-    if index is None:
+    
+    # Get existing reminder
+    db_reminder = get_reminder_by_id(db, reminder_id, user_id)
+    if not db_reminder:
         raise HTTPException(status_code=404, detail="התראה לא נמצאה")
     
-    old_reminder = reminders_db[index]
-    next_trigger = calculate_next_trigger(Reminder(
-        id=reminder_id,
-        user_id=user_id,
-        contact_id=reminder.contact_id,
+    # Calculate next trigger
+    next_trigger = calculate_next_trigger(
         interval_type=reminder.interval_type,
         interval_value=reminder.interval_value,
-        last_triggered=old_reminder.last_triggered,
-        next_trigger=None,
-        enabled=reminder.enabled,
-        created_at=old_reminder.created_at
-    ))
-    
-    updated_reminder = Reminder(
-        id=reminder_id,
-        user_id=user_id,
-        contact_id=reminder.contact_id,
-        interval_type=reminder.interval_type,
-        interval_value=reminder.interval_value,
-        last_triggered=old_reminder.last_triggered,
-        next_trigger=next_trigger,
-        enabled=reminder.enabled,
-        created_at=old_reminder.created_at
+        last_triggered=db_reminder.last_triggered
     )
-    reminders_db[index] = updated_reminder
-    save_reminders_to_file()
-    return updated_reminder
+    
+    # Update reminder fields
+    db_reminder.contact_id = reminder.contact_id
+    db_reminder.interval_type = reminder.interval_type
+    db_reminder.interval_value = reminder.interval_value
+    db_reminder.next_trigger = next_trigger
+    db_reminder.enabled = reminder.enabled
+    
+    db.commit()
+    db.refresh(db_reminder)
+    
+    print(f"✅ [DATABASE] Updated reminder {reminder_id} for user {user_id}")
+    # Convert SQLAlchemy model to Pydantic model
+    return Reminder(
+        id=db_reminder.id,
+        user_id=db_reminder.user_id,
+        contact_id=db_reminder.contact_id,
+        interval_type=db_reminder.interval_type,
+        interval_value=db_reminder.interval_value,
+        last_triggered=db_reminder.last_triggered,
+        next_trigger=db_reminder.next_trigger,
+        enabled=db_reminder.enabled,
+        created_at=db_reminder.created_at
+    )
 
 @app.delete("/api/reminders/{reminder_id}")
-async def delete_reminder(reminder_id: int, current_user: dict = Depends(get_current_user)):
+async def delete_reminder(
+    reminder_id: int,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """מחיקת התראה"""
     user_id = current_user["user_id"]
-    index = next((i for i, r in enumerate(reminders_db) if r.id == reminder_id and r.user_id == user_id), None)
-    if index is None:
+    
+    # Get reminder to delete
+    db_reminder = get_reminder_by_id(db, reminder_id, user_id)
+    if not db_reminder:
         raise HTTPException(status_code=404, detail="התראה לא נמצאה")
     
-    reminders_db.pop(index)
-    save_reminders_to_file()
+    # Delete reminder
+    db.delete(db_reminder)
+    db.commit()
+    
+    print(f"✅ [DATABASE] Deleted reminder {reminder_id} for user {user_id}")
     return {"message": "התראה נמחקה בהצלחה"}
 
 @app.get("/api/reminders/check", response_model=List[Reminder])
-async def check_reminders(current_user: dict = Depends(get_current_user)):
+async def check_reminders(
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """בודק אילו התראות צריכות להתפעל עכשיו"""
     user_id = current_user["user_id"]
     now = datetime.now()
-    triggered_reminders = []
     
-    for reminder in reminders_db:
-        if (reminder.user_id == user_id and 
-            reminder.enabled and 
-            reminder.next_trigger and 
-            reminder.next_trigger <= now):
-            triggered_reminders.append(reminder)
-            # עדכון זמן ההתראה הבאה
-            reminder.last_triggered = now
-            reminder.next_trigger = calculate_next_trigger(reminder)
+    # Get all enabled reminders for user
+    reminders = db.query(DBReminder).filter(
+        DBReminder.user_id == user_id,
+        DBReminder.enabled == True,
+        DBReminder.next_trigger <= now
+    ).all()
+    
+    triggered_reminders = []
+    for db_reminder in reminders:
+        # Update next trigger time
+        db_reminder.last_triggered = now
+        db_reminder.next_trigger = calculate_next_trigger(
+            interval_type=db_reminder.interval_type,
+            interval_value=db_reminder.interval_value,
+            last_triggered=now
+        )
+        # Convert SQLAlchemy model to Pydantic model
+        triggered_reminders.append(Reminder(
+            id=db_reminder.id,
+            user_id=db_reminder.user_id,
+            contact_id=db_reminder.contact_id,
+            interval_type=db_reminder.interval_type,
+            interval_value=db_reminder.interval_value,
+            last_triggered=db_reminder.last_triggered,
+            next_trigger=db_reminder.next_trigger,
+            enabled=db_reminder.enabled,
+            created_at=db_reminder.created_at
+        ))
     
     if triggered_reminders:
-        save_reminders_to_file()
+        db.commit()
+        print(f"✅ [DATABASE] Updated {len(triggered_reminders)} triggered reminders for user {user_id}")
     
     return triggered_reminders
 
 # ========== MESSAGES ENDPOINTS ==========
 
 @app.post("/api/messages/generate")
-async def generate_message(request: MessageRequest, current_user: dict = Depends(get_current_user)):
+async def generate_message(
+    request: MessageRequest,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """יצירת הודעה מותאמת אישית באמצעות AI"""
     user_id = current_user["user_id"]
     
     # בדיקה שאיש הקשר קיים ושייך למשתמש
-    contact = next((c for c in contacts_db if c.id == request.contact_id and c.user_id == user_id), None)
+    contact = get_contact_by_id(db, request.contact_id, user_id)
     if not contact:
         raise HTTPException(status_code=404, detail="איש קשר לא נמצא")
     
@@ -596,11 +670,11 @@ async def generate_message(request: MessageRequest, current_user: dict = Depends
 # ========== AUTH ENDPOINTS ==========
 
 @app.post("/api/auth/register")
-async def register(user_data: UserRegister):
+async def register(user_data: UserRegister, db: Session = Depends(get_db)):
     """רישום משתמש חדש"""
     print(f"🔵 [BACKEND] Registration request received: username={user_data.username}, email={user_data.email}")
     try:
-        user = register_user(user_data.username, user_data.email, user_data.password)
+        user = register_user(user_data.username, user_data.email, user_data.password, db)
         print(f"✅ [BACKEND] User registered successfully: user_id={user['user_id']}")
         access_token = create_access_token(data={"sub": user["user_id"], "email": user["email"]})
         print(f"✅ [BACKEND] Access token created: token_length={len(access_token)}")
@@ -619,11 +693,11 @@ async def register(user_data: UserRegister):
         raise HTTPException(status_code=500, detail=f"שגיאה ברישום: {str(e)}")
 
 @app.post("/api/auth/login")
-async def login(user_data: UserLogin):
+async def login(user_data: UserLogin, db: Session = Depends(get_db)):
     """התחברות עם שם משתמש וסיסמה"""
     print(f"🔵 [BACKEND] Login request received: username={user_data.username}")
     try:
-        user = authenticate_user(user_data.username, user_data.password)
+        user = authenticate_user(user_data.username, user_data.password, db)
         if not user:
             print(f"❌ [BACKEND] Login failed: Invalid credentials for username={user_data.username}")
             raise HTTPException(status_code=400, detail="שם משתמש או סיסמה שגויים")
@@ -644,7 +718,7 @@ async def login(user_data: UserLogin):
         raise HTTPException(status_code=500, detail=f"שגיאה בהתחברות: {str(e)}")
 
 @app.post("/api/auth/google")
-async def google_auth(request: GoogleAuthRequest):
+async def google_auth(request: GoogleAuthRequest, db: Session = Depends(get_db)):
     """התחברות דרך Google OAuth"""
     try:
         google_url = f"https://www.googleapis.com/oauth2/v3/tokeninfo?id_token={request.token}"
@@ -654,7 +728,7 @@ async def google_auth(request: GoogleAuthRequest):
             raise HTTPException(status_code=401, detail="Google token לא תקין")
 
         google_user_info = response.json()
-        user = create_or_get_google_user(google_user_info)
+        user = create_or_get_google_user(google_user_info, db)
         access_token = create_access_token(data={"sub": user["user_id"], "email": user["email"]})
 
         return {
@@ -668,7 +742,7 @@ async def google_auth(request: GoogleAuthRequest):
         raise HTTPException(status_code=400, detail=f"שגיאה באימות Google: {str(e)}")
 
 @app.post("/api/auth/firebase")
-async def firebase_auth(request: FirebaseAuthRequest):
+async def firebase_auth(request: FirebaseAuthRequest, db: Session = Depends(get_db)):
     """התחברות דרך Firebase Authentication"""
     print(f"🔵 [BACKEND] Firebase auth request received: token_length={len(request.token) if request.token else 0}")
     try:
@@ -681,7 +755,7 @@ async def firebase_auth(request: FirebaseAuthRequest):
         
         print(f"🔵 [BACKEND] Creating or getting user...")
         # יצירה או קבלת משתמש במערכת שלנו
-        user = create_or_get_firebase_user(firebase_user_info)
+        user = create_or_get_firebase_user(firebase_user_info, db)
         print(f"✅ [BACKEND] User ready: user_id={user['user_id']}, username={user.get('username')}, email={user.get('email')}")
         
         print(f"🔵 [BACKEND] Creating JWT token...")
