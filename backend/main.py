@@ -641,6 +641,190 @@ async def delete_contact(
 
 # ========== REMINDERS ENDPOINTS ==========
 
+# IMPORTANT: /api/reminders/check must be defined BEFORE /api/reminders/{reminder_id}
+# Otherwise FastAPI will try to match "check" as a reminder_id and cause 422 errors
+@app.get("/api/reminders/check")
+async def check_reminders(
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """בודק אילו התראות צריכות להתפעל עכשיו"""
+    print(f"🔍 [CHECK] Endpoint called - starting check_reminders")
+    try:
+        user_id = current_user["user_id"]
+        now = datetime.now(timezone.utc)
+        print(f"🔍 [CHECK] Checking reminders for user {user_id} at {now}")
+        
+        # Get all enabled reminders for user
+        # For one_time: check scheduled_datetime and one_time_triggered
+        # For others: check next_trigger
+        all_reminders = db.query(DBReminder).filter(
+            DBReminder.user_id == user_id,
+            DBReminder.enabled == True
+        ).all()
+        
+        triggered_reminders = []
+        for db_reminder in all_reminders:
+            reminder_type = db_reminder.reminder_type or 'recurring'
+            
+            # Check if reminder should trigger
+            should_trigger = False
+            
+            if reminder_type == 'one_time':
+                # One-time reminder: check scheduled_datetime and one_time_triggered
+                if db_reminder.scheduled_datetime and not db_reminder.one_time_triggered:
+                    # Check if scheduled time has passed (with 1 minute tolerance)
+                    time_diff = (now - db_reminder.scheduled_datetime).total_seconds()
+                    if -60 <= time_diff <= 60:  # Within 1 minute window
+                        should_trigger = True
+            else:
+                # Recurring, weekly, or daily: check next_trigger
+                if db_reminder.next_trigger:
+                    # Check if next_trigger time has passed (with 1 minute tolerance)
+                    time_diff = (now - db_reminder.next_trigger).total_seconds()
+                    if -60 <= time_diff <= 60:  # Within 1 minute window
+                        should_trigger = True
+            
+            if should_trigger:
+                print(f"✅ [CHECK] Reminder {db_reminder.id} should trigger (type={reminder_type})")
+                
+                # Get contact info for notification
+                contact = get_contact_by_id(db, db_reminder.contact_id, user_id)
+                if not contact:
+                    print(f"⚠️ [CHECK] Contact {db_reminder.contact_id} not found for reminder {db_reminder.id}")
+                    continue
+                
+                # Send push notification
+                push_tokens = db.query(PushToken).filter(PushToken.user_id == user_id).all()
+                if push_tokens:
+                    notification_title = f"תזכורת: {contact.name}"
+                    notification_body = f"זמן להתקשר ל-{contact.name}!"
+                    
+                    for push_token in push_tokens:
+                        send_push_notification(
+                            push_token.token,
+                            notification_title,
+                            notification_body,
+                            data={"reminder_id": db_reminder.id, "contact_id": contact.id}
+                        )
+                else:
+                    print(f"⚠️ [CHECK] No push tokens found for user {user_id}")
+                
+                # Update reminder
+                if reminder_type == 'one_time':
+                    db_reminder.one_time_triggered = True
+                    db_reminder.next_trigger = None
+                else:
+                    # Calculate next trigger
+                    # Parse weekdays from JSON if exists
+                    weekdays = None
+                    if db_reminder.weekdays:
+                        try:
+                            weekdays = json.loads(db_reminder.weekdays)
+                        except (json.JSONDecodeError, TypeError):
+                            weekdays = None
+                    
+                    # Use stored timezone or default to None
+                    user_timezone = db_reminder.timezone
+                    
+                    next_trigger = calculate_next_trigger_advanced(
+                        reminder_type=reminder_type,
+                        interval_type=db_reminder.interval_type,
+                        interval_value=db_reminder.interval_value,
+                        scheduled_datetime=db_reminder.scheduled_datetime,
+                        weekdays=weekdays,
+                        specific_time=db_reminder.specific_time,
+                        last_triggered=now,
+                        user_timezone=user_timezone
+                    )
+                    db_reminder.last_triggered = now
+                    db_reminder.next_trigger = next_trigger
+                
+                # Create Reminder object for response
+                try:
+                    # Parse weekdays from JSON string if exists
+                    weekdays = None
+                    if db_reminder.weekdays:
+                        try:
+                            weekdays = json.loads(db_reminder.weekdays)
+                        except (json.JSONDecodeError, TypeError):
+                            weekdays = None
+                    
+                    reminder_obj = Reminder(
+                        id=db_reminder.id,
+                        user_id=db_reminder.user_id,
+                        contact_id=db_reminder.contact_id,
+                        reminder_type=reminder_type,
+                        interval_type=db_reminder.interval_type,
+                        interval_value=db_reminder.interval_value,
+                        scheduled_datetime=db_reminder.scheduled_datetime,
+                        weekdays=weekdays,
+                        specific_time=db_reminder.specific_time,
+                        one_time_triggered=db_reminder.one_time_triggered or False,
+                        timezone=db_reminder.timezone,
+                        last_triggered=db_reminder.last_triggered,
+                        next_trigger=db_reminder.next_trigger,
+                        enabled=db_reminder.enabled,
+                        created_at=db_reminder.created_at
+                    )
+                    
+                    triggered_reminders.append(reminder_obj)
+                except Exception as e:
+                    print(f"❌ [CHECK] Error creating Reminder object: {e}")
+                    print(f"   Reminder ID: {db_reminder.id}, Type: {reminder_type}")
+                    print(f"   Reminder data: id={db_reminder.id}, contact_id={db_reminder.contact_id}, enabled={db_reminder.enabled}")
+                    print(f"   scheduled_datetime={db_reminder.scheduled_datetime}, next_trigger={db_reminder.next_trigger}")
+                    print(f"   last_triggered={db_reminder.last_triggered}, created_at={db_reminder.created_at}")
+                    import traceback
+                    traceback.print_exc()
+                    # Don't raise - just skip this reminder and continue
+                    continue
+        
+        if triggered_reminders:
+            db.commit()
+            print(f"✅ [DATABASE] Updated {len(triggered_reminders)} triggered reminders for user {user_id}")
+        
+        # Validate that all reminders have required fields before returning
+        for r in triggered_reminders:
+            if r.contact_id is None:
+                print(f"⚠️ [CHECK] Warning: Reminder {r.id} has None contact_id")
+        
+        # Try to serialize manually to catch validation errors
+        try:
+            # Convert to dict to test serialization - use model_dump for Pydantic v2 compatibility
+            result = [r.model_dump() if hasattr(r, 'model_dump') else r.dict() for r in triggered_reminders]
+            print(f"✅ [CHECK] Serialization test passed: {len(result)} reminders")
+        except Exception as e:
+            print(f"❌ [CHECK] Serialization test failed: {e}")
+            import traceback
+            traceback.print_exc()
+            # Return empty list instead of raising error - better UX
+            return []
+        
+        print(f"✅ [CHECK] Returning {len(triggered_reminders)} triggered reminders")
+        # Convert to dict to avoid serialization issues
+        result = []
+        for r in triggered_reminders:
+            try:
+                result.append(r.model_dump() if hasattr(r, 'model_dump') else r.dict())
+            except Exception as e:
+                print(f"⚠️ [CHECK] Error serializing reminder {r.id}: {e}")
+                continue
+        
+        return result
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
+    except Exception as e:
+        print(f"❌ [CHECK] Error in check_reminders: {e}")
+        import traceback
+        traceback.print_exc()
+        # Return 422 with detailed error message for validation errors
+        error_detail = str(e)
+        if "validation" in error_detail.lower() or "pydantic" in error_detail.lower():
+            raise HTTPException(status_code=422, detail=f"Validation error: {error_detail}")
+        raise HTTPException(status_code=500, detail=f"Error checking reminders: {error_detail}")
+
 @app.get("/api/reminders", response_model=List[Reminder])
 async def get_reminders(
     current_user: dict = Depends(get_current_user),
@@ -974,29 +1158,8 @@ async def delete_push_token(
     return {"message": "Push token נמחק בהצלחה"}
 
 # ========== REMINDERS CHECK ENDPOINT ==========
-
-@app.get("/api/reminders/check")
-async def check_reminders(
-    current_user: dict = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """בודק אילו התראות צריכות להתפעל עכשיו"""
-    print(f"🔍 [CHECK] Endpoint called - starting check_reminders")
-    try:
-        user_id = current_user["user_id"]
-        now = datetime.now(timezone.utc)
-        print(f"🔍 [CHECK] Checking reminders for user {user_id} at {now}")
-        
-        # Get all enabled reminders for user
-        # For one_time: check scheduled_datetime and one_time_triggered
-        # For others: check next_trigger
-        all_reminders = db.query(DBReminder).filter(
-            DBReminder.user_id == user_id,
-            DBReminder.enabled == True
-        ).all()
-        
-        triggered_reminders = []
-        for db_reminder in all_reminders:
+# NOTE: This endpoint is now defined above, before /api/reminders/{reminder_id}
+# to prevent FastAPI from matching "check" as a reminder_id parameter
             reminder_type = db_reminder.reminder_type or 'recurring'
             should_trigger = False
             
@@ -1035,6 +1198,30 @@ async def check_reminders(
                     )
             
             if should_trigger:
+                print(f"✅ [CHECK] Reminder {db_reminder.id} should trigger (type={reminder_type})")
+                
+                # Get contact info for notification
+                contact = get_contact_by_id(db, db_reminder.contact_id, user_id)
+                if not contact:
+                    print(f"⚠️ [CHECK] Contact {db_reminder.contact_id} not found for reminder {db_reminder.id}")
+                    continue
+                
+                # Send push notification
+                push_tokens = db.query(PushToken).filter(PushToken.user_id == user_id).all()
+                if push_tokens:
+                    notification_title = f"תזכורת: {contact.name}"
+                    notification_body = f"זמן להתקשר ל-{contact.name}!"
+                    
+                    for push_token in push_tokens:
+                        send_push_notification(
+                            push_token.token,
+                            notification_title,
+                            notification_body,
+                            data={"reminder_id": db_reminder.id, "contact_id": contact.id}
+                        )
+                else:
+                    print(f"⚠️ [CHECK] No push tokens found for user {user_id}")
+                
                 # Parse weekdays for response
                 weekdays_parsed = None
                 if db_reminder.weekdays:

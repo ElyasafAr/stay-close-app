@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Fix: Convert VAPID private key to PEM string format for pywebpush (fixes 'Could not deserialize key data' error)"
+$commitMessage = "Fix: Move /api/reminders/check before /api/reminders/{id} to prevent 422 error, fix VAPID key PEM conversion, and add push notifications to check_reminders"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files
