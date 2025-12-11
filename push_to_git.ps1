@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Fix: Convert VAPID private key to PEM format for pywebpush, ensure timezone is sent from frontend, and fix check_reminders serialization"
+$commitMessage = "Fix: Convert VAPID private key to PEM string format for pywebpush (fixes 'Could not deserialize key data' error)"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files
