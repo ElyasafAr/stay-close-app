@@ -1055,6 +1055,7 @@ async def check_reminders(
                         scheduled_datetime=db_reminder.scheduled_datetime,
                         weekdays=weekdays_parsed,
                         specific_time=db_reminder.specific_time,
+                        timezone=db_reminder.timezone,
                         one_time_triggered=db_reminder.one_time_triggered or False,
                         last_triggered=db_reminder.last_triggered,
                         next_trigger=db_reminder.next_trigger,
