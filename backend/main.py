@@ -160,7 +160,7 @@ class MessageRequest(BaseModel):
     """מודל לבקשת יצירת הודעה"""
     contact_id: int
     message_type: str  # 'custom', 'checkin', 'birthday', 'holiday', 'congratulations', 'thank_you', 'apology', 'support', 'invitation', 'thinking_of_you', 'anniversary', 'get_well', 'new_job', 'graduation', 'achievement', 'encouragement', 'condolences', 'farewell', 'new_beginning', 'special_thanks', 'moving', 'wedding', 'pregnancy', 'birth', 'promotion', 'retirement', 'reunion', 'appreciation', 'miss_you', 'good_luck', 'celebration'
-    tone: str  # 'friendly', 'formal', 'casual', 'warm'
+    tone: str  # 'friendly', 'warm', 'casual', 'formal', 'humorous', 'professional', 'intimate', 'supportive', 'enthusiastic', 'gentle', 'confident', 'playful', 'sincere', 'optimistic', 'empathetic', 'encouraging', 'grateful'
     additional_context: Optional[str] = None
     language: str = "he"  # עברית או אנגלית
 

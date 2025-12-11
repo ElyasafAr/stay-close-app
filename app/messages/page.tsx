@@ -244,6 +244,19 @@ export default function MessagesPage() {
               <option value="warm">{t('messages.tones.warm')}</option>
               <option value="casual">{t('messages.tones.casual')}</option>
               <option value="formal">{t('messages.tones.formal')}</option>
+              <option value="humorous">{t('messages.tones.humorous')}</option>
+              <option value="professional">{t('messages.tones.professional')}</option>
+              <option value="intimate">{t('messages.tones.intimate')}</option>
+              <option value="supportive">{t('messages.tones.supportive')}</option>
+              <option value="enthusiastic">{t('messages.tones.enthusiastic')}</option>
+              <option value="gentle">{t('messages.tones.gentle')}</option>
+              <option value="confident">{t('messages.tones.confident')}</option>
+              <option value="playful">{t('messages.tones.playful')}</option>
+              <option value="sincere">{t('messages.tones.sincere')}</option>
+              <option value="optimistic">{t('messages.tones.optimistic')}</option>
+              <option value="empathetic">{t('messages.tones.empathetic')}</option>
+              <option value="encouraging">{t('messages.tones.encouraging')}</option>
+              <option value="grateful">{t('messages.tones.grateful')}</option>
             </select>
 
             <h2 className={styles.sectionTitle}>

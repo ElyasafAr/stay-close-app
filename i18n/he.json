@@ -76,7 +76,20 @@
       "friendly": "ידידותי",
       "warm": "חם",
       "casual": "קליל",
-      "formal": "רשמי"
+      "formal": "פורמלי",
+      "humorous": "הומוריסטי",
+      "professional": "מקצועי",
+      "intimate": "אינטימי",
+      "supportive": "תומך",
+      "enthusiastic": "נלהב",
+      "gentle": "עדין",
+      "confident": "בטוח",
+      "playful": "שובב",
+      "sincere": "כנה",
+      "optimistic": "אופטימי",
+      "empathetic": "אמפתי",
+      "encouraging": "מעודד",
+      "grateful": "אסיר תודה"
     }
   },
   "common": {

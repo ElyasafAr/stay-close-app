@@ -133,6 +133,19 @@ export default function ContactsPage() {
               <option value="warm">חם</option>
               <option value="casual">קליל</option>
               <option value="formal">פורמלי</option>
+              <option value="humorous">הומוריסטי</option>
+              <option value="professional">מקצועי</option>
+              <option value="intimate">אינטימי</option>
+              <option value="supportive">תומך</option>
+              <option value="enthusiastic">נלהב</option>
+              <option value="gentle">עדין</option>
+              <option value="confident">בטוח</option>
+              <option value="playful">שובב</option>
+              <option value="sincere">כנה</option>
+              <option value="optimistic">אופטימי</option>
+              <option value="empathetic">אמפתי</option>
+              <option value="encouraging">מעודד</option>
+              <option value="grateful">אסיר תודה</option>
             </select>
             <div className={styles.formActions}>
               <button type="button" onClick={() => setShowForm(false)} className={styles.cancelButton}>
@@ -173,6 +186,19 @@ export default function ContactsPage() {
                       contact.default_tone === 'warm' ? 'חם' :
                       contact.default_tone === 'casual' ? 'קליל' :
                       contact.default_tone === 'formal' ? 'פורמלי' :
+                      contact.default_tone === 'humorous' ? 'הומוריסטי' :
+                      contact.default_tone === 'professional' ? 'מקצועי' :
+                      contact.default_tone === 'intimate' ? 'אינטימי' :
+                      contact.default_tone === 'supportive' ? 'תומך' :
+                      contact.default_tone === 'enthusiastic' ? 'נלהב' :
+                      contact.default_tone === 'gentle' ? 'עדין' :
+                      contact.default_tone === 'confident' ? 'בטוח' :
+                      contact.default_tone === 'playful' ? 'שובב' :
+                      contact.default_tone === 'sincere' ? 'כנה' :
+                      contact.default_tone === 'optimistic' ? 'אופטימי' :
+                      contact.default_tone === 'empathetic' ? 'אמפתי' :
+                      contact.default_tone === 'encouraging' ? 'מעודד' :
+                      contact.default_tone === 'grateful' ? 'אסיר תודה' :
                       contact.default_tone
                     }
                   </p>
