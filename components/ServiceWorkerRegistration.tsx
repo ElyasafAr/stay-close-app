@@ -122,7 +122,7 @@ export function ServiceWorkerRegistration() {
                       const keyBuffer = applicationServerKey.buffer.slice(
                         applicationServerKey.byteOffset,
                         applicationServerKey.byteOffset + applicationServerKey.byteLength
-                      )
+                      ) as ArrayBuffer
                       
                       subscription = await registration.pushManager.subscribe({
                         userVisibleOnly: true,
