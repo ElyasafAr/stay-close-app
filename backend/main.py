@@ -673,7 +673,7 @@ async def create_reminder(
         raise HTTPException(status_code=404, detail="איש קשר לא נמצא")
     
     # Calculate next trigger using advanced function
-    now = datetime.now()
+    now = datetime.now(timezone.utc)
     next_trigger = calculate_next_trigger_advanced(
         reminder_type=reminder.reminder_type or 'recurring',
         interval_type=reminder.interval_type,
@@ -859,7 +859,7 @@ async def register_push_token(
         # עדכן device_info
         if push_token.device_info:
             existing_token.device_info = json.dumps(push_token.device_info)
-        existing_token.updated_at = datetime.now()
+        existing_token.updated_at = datetime.now(timezone.utc)
         db.commit()
         print(f"✅ [PUSH] Updated push token for user {user_id}")
         return {"message": "Push token עודכן בהצלחה"}
