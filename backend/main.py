@@ -47,14 +47,18 @@ def check_and_send_reminders():
     db = SessionLocal()
     try:
         now = datetime.now(timezone.utc)
+        print(f"🔍 [BACKGROUND] Checking reminders at {now}")
         
         # מצא כל ההתראות שצריכות להתפעל
         all_reminders = db.query(DBReminder).filter(
             DBReminder.enabled == True
         ).all()
         
+        print(f"🔍 [BACKGROUND] Found {len(all_reminders)} enabled reminders")
+        
         triggered_count = 0
         for db_reminder in all_reminders:
+            print(f"🔍 [BACKGROUND] Checking reminder {db_reminder.id}: type={db_reminder.reminder_type}, next_trigger={db_reminder.next_trigger}, scheduled_datetime={db_reminder.scheduled_datetime}")
             reminder_type = db_reminder.reminder_type or 'recurring'
             should_trigger = False
             
@@ -64,13 +68,19 @@ def check_and_send_reminders():
                     db_reminder.scheduled_datetime <= now and 
                     not db_reminder.one_time_triggered):
                     should_trigger = True
+                    print(f"✅ [BACKGROUND] One-time reminder {db_reminder.id} should trigger (scheduled: {db_reminder.scheduled_datetime}, now: {now})")
                     db_reminder.one_time_triggered = True
                     db_reminder.last_triggered = now
+                else:
+                    print(f"⏭️ [BACKGROUND] One-time reminder {db_reminder.id} not ready: scheduled={db_reminder.scheduled_datetime}, triggered={db_reminder.one_time_triggered}")
             else:
                 # התראות אחרות
                 if db_reminder.next_trigger and db_reminder.next_trigger <= now:
                     should_trigger = True
+                    print(f"✅ [BACKGROUND] Reminder {db_reminder.id} should trigger (next_trigger: {db_reminder.next_trigger}, now: {now})")
                     db_reminder.last_triggered = now
+                else:
+                    print(f"⏭️ [BACKGROUND] Reminder {db_reminder.id} not ready: next_trigger={db_reminder.next_trigger}, now={now}")
                     
                     # Parse weekdays if needed
                     weekdays = None
@@ -141,6 +151,8 @@ def check_and_send_reminders():
         if triggered_count > 0:
             db.commit()
             print(f"✅ [BACKGROUND] Processed {triggered_count} reminders and sent push notifications")
+        else:
+            print(f"ℹ️ [BACKGROUND] No reminders to trigger at {now}")
         
     except Exception as e:
         db.rollback()

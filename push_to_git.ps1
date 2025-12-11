@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Fix: Add detailed logging to check_reminders endpoint to debug 422 errors"
+$commitMessage = "Fix: Add detailed logging to background job to debug why reminders are not triggering"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files
