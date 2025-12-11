@@ -1,0 +1,83 @@
+# Dependencies - should be installed fresh in container
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Next.js build artifacts and cache (should be rebuilt in container)
+.next/
+out/
+build/
+dist/
+
+# Development files
+.env.local
+.env*.local
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Testing
+coverage/
+.nyc_output/
+__tests__/
+*.test.ts
+*.test.tsx
+*.test.js
+*.test.jsx
+
+# Documentation (not needed in production)
+*.md
+!README.md
+
+# PowerShell scripts (not needed in production)
+*.ps1
+
+# Python test files
+backend/test_*.py
+backend/check_*.py
+backend/*test*.py
+
+# Backup files
+app/layout-backup.tsx
+app/page-simple.tsx
+app/test/
+
+# Data files
+contacts.json
+backend/contacts.json
+backend/users.json
+backend/reminders.json
+
+# Firebase keys (security!)
+*serviceAccountKey.json
+*firebase-adminsdk*.json
+service-account*.json
+
+# Docker files (not needed on Railway)
+Dockerfile
+docker-compose.yml
+backend/Dockerfile
+
+# Misc
+*.pem
+.cache/
+tatus
+
+# Test files and configs
+jest.config.js
+jest.setup.js
+
