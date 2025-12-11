@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Fix: Add webpack config to resolve TypeScript path aliases in Next.js build"
+$commitMessage = "Fix: Restore hamburger menu on mobile (right side) and fix user dropdown overflow"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files

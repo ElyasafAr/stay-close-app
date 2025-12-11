@@ -139,6 +139,7 @@ html.dark .navLink.active {
   position: absolute;
   top: calc(100% + 8px);
   right: 0; /* RTL - align to right */
+  left: auto; /* Ensure it doesn't extend to left */
   background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -149,6 +150,8 @@ html.dark .navLink.active {
   max-width: calc(100vw - 32px); /* Prevent overflow on mobile */
   z-index: 1000;
   animation: slideDown 0.3s ease;
+  /* Ensure dropdown stays within viewport on RTL */
+  transform-origin: top right;
 }
 
 html.dark .dropdown {
@@ -354,9 +357,12 @@ html.dark .mobileMenuOverlay {
 
 @media (max-width: 768px) {
   .mobileMenuButton {
-    display: block !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
     z-index: 1001;
     position: relative;
+    margin-right: auto; /* דוחף את הכפתור לצד ימין (RTL) */
   }
   
   .mobileMenu {
@@ -377,6 +383,9 @@ html.dark .mobileMenuOverlay {
     width: auto;
     justify-content: flex-end;
     flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
   }
   
   .navLinks {
@@ -396,7 +405,13 @@ html.dark .mobileMenuOverlay {
     right: 0;
     left: auto;
     max-width: calc(100vw - 24px);
-    transform: translateX(0); /* Ensure it stays within viewport */
+    /* Ensure dropdown doesn't overflow on mobile - align to right edge */
+    transform: translateX(0);
+    /* Prevent overflow - ensure it stays within viewport */
+    position: absolute;
+    min-width: auto;
+    width: max-content;
+    max-width: min(280px, calc(100vw - 24px));
   }
   
   .userMenu {

@@ -22,7 +22,7 @@ export function Header() {
     }
   }, [pathname])
 
-  // סגירת התפריט כשלוחצים מחוץ לו
+  // סגירת התפריט כשלוחצים מחוץ לו + מניעת גלישה מעבר לדף
   useEffect(() => {
     if (!showMenu) return
 
@@ -33,8 +33,36 @@ export function Header() {
       }
     }
 
+    // בדיקה שהדרופדאון לא יוצא מהמסך
+    const checkDropdownPosition = () => {
+      const dropdown = document.querySelector(`.${styles.dropdown}`) as HTMLElement
+      if (dropdown) {
+        const rect = dropdown.getBoundingClientRect()
+        const viewportWidth = window.innerWidth
+        
+        // אם הדרופדאון יוצא מהמסך בצד שמאל (RTL), הזז אותו
+        if (rect.left < 0) {
+          dropdown.style.left = '12px'
+          dropdown.style.right = 'auto'
+        } else {
+          dropdown.style.left = 'auto'
+          dropdown.style.right = '0'
+        }
+      }
+    }
+
+    // בדיקה ראשונית ואחרי resize
+    checkDropdownPosition()
+    window.addEventListener('resize', checkDropdownPosition)
+    
+    // בדיקה אחרי render
+    setTimeout(checkDropdownPosition, 0)
+
     document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      window.removeEventListener('resize', checkDropdownPosition)
+    }
   }, [showMenu])
 
   const handleLogout = () => {
@@ -116,6 +144,16 @@ export function Header() {
                 </Link>
               ))}
             </div>
+            
+            {/* Mobile Hamburger Button - מצד ימין */}
+            <button
+              className={styles.mobileMenuButton}
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
+              aria-label="תפריט"
+              type="button"
+            >
+              {showMobileMenu ? <MdClose /> : <MdMenu />}
+            </button>
             
             {user && (
               <div className={styles.userMenu}>
