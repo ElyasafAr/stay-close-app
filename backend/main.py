@@ -17,7 +17,7 @@ from pydantic import BaseModel, EmailStr
 from typing import List, Optional
 import os
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import requests
 from dotenv import load_dotenv
 from sqlalchemy.orm import Session
@@ -46,7 +46,7 @@ def check_and_send_reminders():
     """Background Job - בודק התראות כל דקה ושולח Push Notifications"""
     db = SessionLocal()
     try:
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         
         # מצא כל ההתראות שצריכות להתפעל
         all_reminders = db.query(DBReminder).filter(
@@ -918,7 +918,7 @@ async def check_reminders(
     """בודק אילו התראות צריכות להתפעל עכשיו"""
     try:
         user_id = current_user["user_id"]
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         print(f"🔍 [CHECK] Checking reminders for user {user_id} at {now}")
         
         # Get all enabled reminders for user

@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Fix: Correct indentation in check_reminders endpoint and improve error handling"
+$commitMessage = "Fix: Use timezone-aware datetime.now(timezone.utc) to fix timezone comparison errors"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files
