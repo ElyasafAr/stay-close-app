@@ -39,17 +39,24 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     checkAuth()
 
     // Listener למצב ההתחברות של Firebase
+    // עבור התחברות רגילה (ללא Firebase), הבדיקה התקופתית תטפל בזה
     const unsubscribe = onAuthStateChange((user) => {
-      // תמיד לבדוק את localStorage ישירות (גם עבור התחברות רגילה)
-      const isAuth = isAuthenticated()
-      console.log(`🔍 [AUTHGUARD] onAuthStateChange: Firebase user=${!!user}, localStorage auth=${isAuth}`)
-      setAuthenticated(isAuth)
-
-      if (!isAuth && !publicPaths.includes(pathname)) {
-        router.replace('/login')
-      } else if (isAuth && pathname === '/login') {
-        router.replace('/')
+      // רק אם יש Firebase user, נעדכן
+      // עבור התחברות רגילה, הבדיקה התקופתית תטפל בזה
+      if (user) {
+        const isAuth = isAuthenticated()
+        console.log(`🔍 [AUTHGUARD] onAuthStateChange: Firebase user=true, localStorage auth=${isAuth}`)
+        setAuthenticated(isAuth)
+        
+        if (isAuth && pathname === '/login') {
+          router.push('/')
+        } else if (!isAuth && !publicPaths.includes(pathname)) {
+          router.push('/login')
+        }
       }
+      // אם אין Firebase user, לא נעשה כלום - הבדיקה התקופתית תטפל בזה
+      // זה חשוב כי onAuthStateChange נקרא גם כשמתחברים רגיל, ואז user=null
+      // אבל זה לא אומר שהמשתמש לא מחובר - רק שאין Firebase
     })
 
     // בדיקה תקופתית (למקרה שהשינוי קרה באותו חלון - התחברות רגילה)

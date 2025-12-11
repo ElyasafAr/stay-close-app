@@ -323,11 +323,24 @@ export function onAuthStateChange(callback: (user: User | null) => void) {
         console.error('שגיאה בעדכון Firebase token:', error)
       }
     } else {
-      // המשתמש התנתק
+      // אין Firebase user - זה יכול להיות התנתקות מ-Firebase או התחברות רגילה
+      // נבדוק אם יש JWT token ב-localStorage (התחברות רגילה)
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('firebase_token')
-        localStorage.removeItem('auth_token')
-        localStorage.removeItem('user')
+        const jwtToken = localStorage.getItem('auth_token')
+        if (jwtToken) {
+          // יש JWT token - זה התחברות רגילה, לא התנתקות
+          // נשאיר את ה-localStorage ונחזיר את המשתמש השמור
+          const storedUser = getStoredUser()
+          if (storedUser) {
+            callback(storedUser)
+            return
+          }
+        } else {
+          // אין JWT token - באמת התנתק
+          localStorage.removeItem('firebase_token')
+          localStorage.removeItem('auth_token')
+          localStorage.removeItem('user')
+        }
       }
       callback(null)
     }
