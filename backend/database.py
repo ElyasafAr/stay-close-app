@@ -159,6 +159,30 @@ def _run_migrations():
             """)
             db.execute(update_existing)
             
+            db.commit()
+            print("✅ [DATABASE] Migration completed: Advanced reminder fields added")
+        
+        # Migration 3: Add timezone column if it doesn't exist
+        check_timezone = text("""
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name='reminders' AND column_name='timezone';
+        """)
+        
+        result_timezone = db.execute(check_timezone).fetchone()
+        
+        if not result_timezone:
+            print("🔵 [DATABASE] Running migration: Adding timezone column...")
+            
+            alter_timezone = text("""
+                ALTER TABLE reminders 
+                ADD COLUMN timezone VARCHAR;
+            """)
+            db.execute(alter_timezone)
+            db.commit()
+            print("✅ [DATABASE] Migration completed: timezone column added")
+            db.execute(update_existing)
+            
             # Make interval_type and interval_value nullable (for one_time reminders)
             alter_interval_type = text("""
                 ALTER TABLE reminders 

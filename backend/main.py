@@ -18,6 +18,7 @@ from typing import List, Optional
 import os
 import json
 from datetime import datetime, timedelta, timezone
+import pytz
 import requests
 from dotenv import load_dotenv
 from sqlalchemy.orm import Session
@@ -317,6 +318,7 @@ class Reminder(BaseModel):
     scheduled_datetime: Optional[datetime] = None  # תאריך ושעה ספציפיים - רק ל-one_time
     weekdays: Optional[List[int]] = None  # [0,2,4] - ימים בשבוע - רק ל-weekly
     specific_time: Optional[str] = None  # "14:30" - שעה ספציפית - ל-weekly ו-daily
+    timezone: Optional[str] = None  # "Asia/Jerusalem" - timezone של המשתמש
     one_time_triggered: Optional[bool] = False  # האם התראה חד-פעמית הופעלה
     last_triggered: Optional[datetime] = None
     next_trigger: Optional[datetime] = None
@@ -332,6 +334,7 @@ class ReminderCreate(BaseModel):
     scheduled_datetime: Optional[datetime] = None  # תאריך ושעה ספציפיים - רק ל-one_time
     weekdays: Optional[List[int]] = None  # [0,2,4] - ימים בשבוע - רק ל-weekly
     specific_time: Optional[str] = None  # "14:30" - שעה ספציפית - ל-weekly ו-daily
+    timezone: Optional[str] = None  # "Asia/Jerusalem" - timezone של המשתמש
     enabled: Optional[bool] = True
 
 # Database functions - using PostgreSQL instead of JSON files
@@ -377,7 +380,8 @@ def calculate_next_trigger_advanced(
     scheduled_datetime: Optional[datetime] = None,
     weekdays: Optional[List[int]] = None,
     specific_time: Optional[str] = None,
-    last_triggered: Optional[datetime] = None
+    last_triggered: Optional[datetime] = None,
+    user_timezone: Optional[str] = None
 ) -> Optional[datetime]:
     """
     מחשב את זמן ההתראה הבאה לפי סוג ההתראה
@@ -416,27 +420,48 @@ def calculate_next_trigger_advanced(
         except (ValueError, AttributeError):
             return None
         
-        # מציאת היום הבא מהרשימה
-        current_weekday = now.weekday()  # 0=ראשון, 6=שבת
-        days_ahead = None
-        
-        # חיפוש היום הקרוב ביותר
-        for weekday in sorted(weekdays):
-            if weekday > current_weekday:
-                days_ahead = weekday - current_weekday
-                break
-        
-        # אם לא מצאנו, ניקח את היום הראשון בשבוע הבא
-        if days_ahead is None:
-            days_ahead = (7 - current_weekday) + min(weekdays)
-        
-        # חישוב התאריך - שימוש ב-replace עם timezone-aware datetime
-        next_date = (now + timedelta(days=days_ahead)).replace(hour=hour, minute=minute, second=0, microsecond=0)
-        
-        # אם השעה כבר עברה היום והתאריך הוא היום, ניקח את היום הבא
-        if next_date <= now:
-            days_ahead += 7
+        # המרת השעה מ-timezone של המשתמש ל-UTC
+        if user_timezone:
+            try:
+                tz = pytz.timezone(user_timezone)
+                # יצירת datetime בשעה המקומית של המשתמש
+                local_now = datetime.now(tz)
+                # חישוב התאריך הבא בשעה המקומית
+                local_next = local_now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+                if local_next <= local_now:
+                    local_next += timedelta(days=1)
+                # המרה ל-UTC
+                next_date = local_next.astimezone(timezone.utc).replace(tzinfo=None)
+                next_date = pytz.UTC.localize(next_date)
+            except Exception as e:
+                print(f"⚠️ [CALC] Error converting timezone {user_timezone}: {e}, using UTC")
+                # Fallback to UTC
+                current_weekday = now.weekday()
+                days_ahead = None
+                for weekday in sorted(weekdays):
+                    if weekday > current_weekday:
+                        days_ahead = weekday - current_weekday
+                        break
+                if days_ahead is None:
+                    days_ahead = (7 - current_weekday) + min(weekdays)
+                next_date = (now + timedelta(days=days_ahead)).replace(hour=hour, minute=minute, second=0, microsecond=0)
+                if next_date <= now:
+                    days_ahead += 7
+                    next_date = (now + timedelta(days=days_ahead)).replace(hour=hour, minute=minute, second=0, microsecond=0)
+        else:
+            # Fallback to UTC if no timezone provided
+            current_weekday = now.weekday()
+            days_ahead = None
+            for weekday in sorted(weekdays):
+                if weekday > current_weekday:
+                    days_ahead = weekday - current_weekday
+                    break
+            if days_ahead is None:
+                days_ahead = (7 - current_weekday) + min(weekdays)
             next_date = (now + timedelta(days=days_ahead)).replace(hour=hour, minute=minute, second=0, microsecond=0)
+            if next_date <= now:
+                days_ahead += 7
+                next_date = (now + timedelta(days=days_ahead)).replace(hour=hour, minute=minute, second=0, microsecond=0)
         
         return next_date
     
@@ -448,21 +473,38 @@ def calculate_next_trigger_advanced(
         # פרסור שעה
         try:
             hour, minute = map(int, specific_time.split(':'))
-            print(f"🔍 [CALC] Daily reminder: specific_time={specific_time}, parsed hour={hour}, minute={minute}")
+            print(f"🔍 [CALC] Daily reminder: specific_time={specific_time}, parsed hour={hour}, minute={minute}, timezone={user_timezone}")
         except (ValueError, AttributeError):
             print(f"❌ [CALC] Failed to parse specific_time: {specific_time}")
             return None
         
-        # חישוב התאריך הבא - שימוש ב-replace עם timezone-aware datetime
-        next_datetime = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
-        print(f"🔍 [CALC] Daily: now={now}, next_datetime (today)={next_datetime}")
-        
-        # אם השעה כבר עברה היום, ניקח מחר
-        if next_datetime <= now:
-            next_datetime = (now + timedelta(days=1)).replace(hour=hour, minute=minute, second=0, microsecond=0)
-            print(f"🔍 [CALC] Daily: hour passed, using tomorrow: {next_datetime}")
+        # המרת השעה מ-timezone של המשתמש ל-UTC
+        if user_timezone:
+            try:
+                tz = pytz.timezone(user_timezone)
+                # יצירת datetime בשעה המקומית של המשתמש
+                local_now = datetime.now(tz)
+                # חישוב התאריך הבא בשעה המקומית
+                local_next = local_now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+                if local_next <= local_now:
+                    local_next += timedelta(days=1)
+                # המרה ל-UTC
+                next_datetime = local_next.astimezone(timezone.utc).replace(tzinfo=None)
+                next_datetime = pytz.UTC.localize(next_datetime)
+                print(f"🔍 [CALC] Daily: local_now={local_now}, local_next={local_next}, UTC next={next_datetime}")
+            except Exception as e:
+                print(f"⚠️ [CALC] Error converting timezone {user_timezone}: {e}, using UTC")
+                # Fallback to UTC
+                next_datetime = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+                if next_datetime <= now:
+                    next_datetime = (now + timedelta(days=1)).replace(hour=hour, minute=minute, second=0, microsecond=0)
         else:
-            print(f"🔍 [CALC] Daily: hour not passed, using today: {next_datetime}")
+            # Fallback to UTC if no timezone provided
+            next_datetime = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+            print(f"🔍 [CALC] Daily: now={now}, next_datetime (today)={next_datetime} (no timezone)")
+            if next_datetime <= now:
+                next_datetime = (now + timedelta(days=1)).replace(hour=hour, minute=minute, second=0, microsecond=0)
+                print(f"🔍 [CALC] Daily: hour passed, using tomorrow: {next_datetime}")
         
         return next_datetime
     
@@ -667,6 +709,7 @@ async def get_reminder(
         scheduled_datetime=db_reminder.scheduled_datetime,
         weekdays=weekdays,
         specific_time=db_reminder.specific_time,
+        timezone=db_reminder.timezone,
         one_time_triggered=db_reminder.one_time_triggered or False,
         last_triggered=db_reminder.last_triggered,
         next_trigger=db_reminder.next_trigger,
@@ -797,6 +840,7 @@ async def update_reminder(
     db_reminder.scheduled_datetime = reminder.scheduled_datetime
     db_reminder.weekdays = weekdays_json
     db_reminder.specific_time = reminder.specific_time
+    db_reminder.timezone = reminder.timezone
     db_reminder.next_trigger = next_trigger
     db_reminder.enabled = reminder.enabled if reminder.enabled is not None else True
     

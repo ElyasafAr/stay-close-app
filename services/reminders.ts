@@ -32,6 +32,7 @@ export interface ReminderCreate {
   scheduled_datetime?: string
   weekdays?: number[]
   specific_time?: string
+  timezone?: string
   enabled?: boolean
 }
 

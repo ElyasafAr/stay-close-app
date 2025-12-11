@@ -142,6 +142,16 @@ export function ReminderModal({ contactId, contactName, existingReminder, onClos
       } else if (reminderType === 'daily') {
         reminderData.specific_time = dailyTime
       }
+      
+      // Add user timezone
+      try {
+        const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+        reminderData.timezone = userTimezone
+      } catch (e) {
+        console.warn('Failed to get user timezone:', e)
+        // Default to Asia/Jerusalem if detection fails
+        reminderData.timezone = 'Asia/Jerusalem'
+      }
 
       if (existingReminder) {
         await updateReminder(existingReminder.id, reminderData)

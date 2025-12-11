@@ -58,6 +58,7 @@ class Reminder(Base):
     scheduled_datetime = Column(DateTime(timezone=True), nullable=True)  # להתראה חד-פעמית
     weekdays = Column(Text, nullable=True)  # JSON array: "[0,2,4]" - ימים בשבוע
     specific_time = Column(String, nullable=True)  # "14:30" - שעה ספציפית
+    timezone = Column(String, nullable=True)  # "Asia/Jerusalem" - timezone של המשתמש
     one_time_triggered = Column(Boolean, default=False, nullable=False)  # האם התראה חד-פעמית הופעלה
     
     # Relationships
