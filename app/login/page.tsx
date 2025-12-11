@@ -47,7 +47,10 @@ export default function LoginPage() {
         })
         console.log('✅ [LOGIN] Registration successful, redirecting...')
       }
-      router.replace('/')
+      // Use window.location for immediate redirect (works better than router.replace)
+      if (typeof window !== 'undefined') {
+        window.location.href = '/'
+      }
     } catch (err) {
       console.error('❌ [LOGIN] Error:', err)
       const errorMessage = err instanceof Error ? err.message : 'שגיאה'
@@ -68,7 +71,10 @@ export default function LoginPage() {
       console.log('🔵 [LOGIN] Calling loginWithGoogle...')
       await loginWithGoogle()
       console.log('✅ [LOGIN] Google login successful, redirecting...')
-      router.replace('/')
+      // Use window.location for immediate redirect (works better than router.replace)
+      if (typeof window !== 'undefined') {
+        window.location.href = '/'
+      }
     } catch (err) {
       console.error('❌ [LOGIN] Google login error:', err)
       const errorMessage = err instanceof Error ? err.message : 'שגיאה בהתחברות עם Google'
