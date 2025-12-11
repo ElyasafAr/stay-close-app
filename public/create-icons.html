@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>יצירת אייקונים - Stay Close</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #7fb8c9;
+        }
+        canvas {
+            border: 2px solid #ddd;
+            margin: 20px 0;
+            display: block;
+        }
+        button {
+            background: #7fb8c9;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #6aa8b8;
+        }
+        .instructions {
+            background: #e8f4f8;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 יצירת אייקונים לאפליקציה</h1>
+        
+        <div class="instructions">
+            <h3>הוראות:</h3>
+            <ol>
+                <li>לחץ על "צור אייקון 512x512" כדי ליצור אייקון בגודל 512x512</li>
+                <li>לחץ על "הורד PNG" כדי להוריד את הקובץ</li>
+                <li>שמור את הקובץ כ-<code>icon-512x512.png</code> בתיקיית <code>public/</code></li>
+                <li>חזור על התהליך עבור 192x192</li>
+            </ol>
+        </div>
+
+        <h3>אייקון 512x512:</h3>
+        <canvas id="canvas512" width="512" height="512"></canvas>
+        <button onclick="createIcon(512)">צור אייקון 512x512</button>
+        <button onclick="downloadIcon(512)">הורד PNG (512x512)</button>
+
+        <h3>אייקון 192x192:</h3>
+        <canvas id="canvas192" width="192" height="192"></canvas>
+        <button onclick="createIcon(192)">צור אייקון 192x192</button>
+        <button onclick="downloadIcon(192)">הורד PNG (192x192)</button>
+    </div>
+
+    <script>
+        function createIcon(size) {
+            const canvas = document.getElementById(`canvas${size}`);
+            const ctx = canvas.getContext('2d');
+            
+            // רקע
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#7fb8c9');
+            gradient.addColorStop(1, '#6aa8b8');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+            
+            // עיגול מעוגל
+            ctx.beginPath();
+            const radius = size * 0.4;
+            ctx.arc(size / 2, size / 2, radius, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.fill();
+            
+            // לב פשוט
+            ctx.fillStyle = '#ffffff';
+            ctx.font = `bold ${size * 0.15}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('💌', size / 2, size / 2 - size * 0.05);
+            
+            // טקסט
+            ctx.font = `bold ${size * 0.12}px Arial`;
+            ctx.fillText('Stay Close', size / 2, size / 2 + size * 0.1);
+        }
+
+        function downloadIcon(size) {
+            const canvas = document.getElementById(`canvas${size}`);
+            const link = document.createElement('a');
+            link.download = `icon-${size}x${size}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        // צור אייקונים אוטומטית בעת טעינת הדף
+        window.onload = function() {
+            createIcon(512);
+            createIcon(192);
+        };
+    </script>
+</body>
+</html>
+

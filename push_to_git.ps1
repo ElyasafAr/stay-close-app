@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Fix: Improve VAPID key conversion and add detailed error logging"
+$commitMessage = "Add icon placeholder SVG and HTML tool for creating app icons"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files
