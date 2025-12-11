@@ -49,9 +49,10 @@ export function ServiceWorkerRegistration() {
                     const applicationServerKey = urlBase64ToUint8Array(publicKey)
                     
                     // יצירת Push subscription
+                    // PushManager מצפה ל-BufferSource - Uint8Array הוא ArrayBufferView שהוא BufferSource
                     subscription = await registration.pushManager.subscribe({
                       userVisibleOnly: true,
-                      applicationServerKey: applicationServerKey
+                      applicationServerKey: applicationServerKey as BufferSource
                     })
                     
                     // שליחת subscription ל-backend
