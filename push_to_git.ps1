@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Fix: Ensure all frontend files (i18n, services, components) are included in build"
+$commitMessage = "Fix: Add webpack config to resolve TypeScript path aliases in Next.js build"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files
