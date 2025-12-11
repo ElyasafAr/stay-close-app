@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Add py-vapid support and detailed logging for VAPID key debugging, update VAPID_KEYS_SETUP.md with troubleshooting"
+$commitMessage = "Fix: Update py-vapid version to 1.9.2 (latest available on PyPI)"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files

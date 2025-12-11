@@ -19,6 +19,6 @@ psycopg2-binary==2.9.9
 alembic==1.12.1
 schedule==1.2.0
 pywebpush==1.14.0
-py-vapid==1.11.0
+py-vapid==1.9.2
 pytz==2023.3
 
