@@ -23,15 +23,19 @@ def generate_vapid_keys():
         encryption_algorithm=serialization.NoEncryption()
     )
     
-    # Serialize public key to DER format (needed for VAPID)
-    public_der = public_key.public_bytes(
-        encoding=serialization.Encoding.DER,
-        format=serialization.PublicFormat.SubjectPublicKeyInfo
-    )
+    # Serialize public key to uncompressed point format (needed for VAPID)
+    # VAPID requires the raw public key point (65 bytes: 0x04 + 32 bytes X + 32 bytes Y)
+    public_numbers = public_key.public_numbers()
+    
+    # Convert X and Y coordinates to bytes (32 bytes each)
+    x_bytes = public_numbers.x.to_bytes(32, byteorder='big')
+    y_bytes = public_numbers.y.to_bytes(32, byteorder='big')
+    
+    # Uncompressed point format: 0x04 + X + Y (65 bytes total)
+    public_key_bytes = b'\x04' + x_bytes + y_bytes
     
     # Convert to base64 URL-safe format for VAPID
-    # Public key: DER format -> base64url
-    public_key_base64 = base64.urlsafe_b64encode(public_der).decode('utf-8').rstrip('=')
+    public_key_base64 = base64.urlsafe_b64encode(public_key_bytes).decode('utf-8').rstrip('=')
     
     # Private key: PEM format -> extract key bytes -> base64url
     # Extract the key from PEM

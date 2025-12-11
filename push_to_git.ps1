@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Fix: Add VAPID key validation and cleaning in backend endpoint"
+$commitMessage = "Fix: Generate VAPID public key in uncompressed point format (65 bytes) instead of DER"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files
