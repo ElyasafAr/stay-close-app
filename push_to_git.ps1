@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Major UI/UX redesign: Dramatic dark theme contrast, modern thin borders, smooth animations, high contrast buttons"
+$commitMessage = "Fix: Add dark theme to messages/settings pages, fix mobile navigation menu, improve AuthGuard authentication check"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files

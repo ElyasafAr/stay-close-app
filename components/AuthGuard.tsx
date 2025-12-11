@@ -15,19 +15,27 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const publicPaths = ['/login', '/register']
 
   useEffect(() => {
-    // בדיקה ראשונית
+    // בדיקה ראשונית - רק אחרי שהדף נטען
     const checkAuth = () => {
-      const isAuth = isAuthenticated()
+      // בדיקה קפדנית יותר - לא רק token, אלא גם user
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+      const user = typeof window !== 'undefined' ? localStorage.getItem('user') : null
+      const isAuth = !!(token && user)
+      
+      console.log(`🔍 [AUTHGUARD] Initial check: token=${!!token}, user=${!!user}, isAuth=${isAuth}, pathname=${pathname}`)
+      
       setAuthenticated(isAuth)
 
       // אם המשתמש לא מחובר ולא בדף ציבורי - העבר ל-login
       if (!isAuth && !publicPaths.includes(pathname)) {
+        console.log('🔍 [AUTHGUARD] Not authenticated, redirecting to /login')
         router.replace('/login')
         setLoading(false)
         return
       }
       // אם המשתמש מחובר ובדף login - העבר לבית
       if (isAuth && pathname === '/login') {
+        console.log('🔍 [AUTHGUARD] Authenticated, redirecting from /login to /')
         router.replace('/')
         setLoading(false)
         return
@@ -36,7 +44,8 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       setLoading(false)
     }
 
-    checkAuth()
+    // קצת delay כדי לוודא שהכל נטען
+    const timeoutId = setTimeout(checkAuth, 100)
 
     // Listener למצב ההתחברות של Firebase
     // עבור התחברות רגילה (ללא Firebase), הבדיקה התקופתית תטפל בזה
@@ -63,7 +72,11 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     // זה חשוב כי storage events לא עובדים באותו חלון
     // וגם כי onAuthStateChange לא עובד עם התחברות רגילה
     const intervalId = setInterval(() => {
-      const isAuth = isAuthenticated()
+      // בדיקה קפדנית יותר
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+      const user = typeof window !== 'undefined' ? localStorage.getItem('user') : null
+      const isAuth = !!(token && user)
+      
       if (isAuth !== authenticated) {
         console.log(`🔄 [AUTHGUARD] Auth status changed: ${authenticated} -> ${isAuth}, pathname=${pathname}`)
         setAuthenticated(isAuth)
@@ -77,11 +90,12 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
           router.push('/login')
         }
       }
-    }, 200) // בדיקה כל 200ms - לא יותר מדי תכוף כדי לא לגרום ל-loops
+    }, 500) // בדיקה כל 500ms - לא יותר מדי תכוף כדי לא לגרום ל-loops
 
     return () => {
       unsubscribe()
       clearInterval(intervalId)
+      if (timeoutId) clearTimeout(timeoutId)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname, router, authenticated])
