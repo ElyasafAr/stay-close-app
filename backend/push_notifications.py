@@ -13,6 +13,13 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.backends import default_backend
 
+# Try to use py-vapid if available (better VAPID key handling)
+try:
+    from py_vapid import Vapid01
+    HAS_PY_VAPID = True
+except ImportError:
+    HAS_PY_VAPID = False
+
 # VAPID keys - צריך ליצור או להשתמש ב-Firebase
 VAPID_PUBLIC_KEY = os.getenv("VAPID_PUBLIC_KEY", "")
 VAPID_PRIVATE_KEY_RAW = os.getenv("VAPID_PRIVATE_KEY", "")
@@ -21,11 +28,30 @@ VAPID_CLAIMS = {
 }
 
 def _load_vapid_private_key():
-    """ממיר את ה-VAPID private key מ-base64url ל-PEM string"""
+    """ממיר את ה-VAPID private key מ-base64url לפורמט ש-pywebpush יכול להשתמש בו"""
     if not VAPID_PRIVATE_KEY_RAW:
         return None
     
     try:
+        # אם יש py-vapid, נשתמש בו (יותר אמין)
+        if HAS_PY_VAPID:
+            try:
+                # py-vapid יכול לטעון מפתח מ-base64url string ישירות
+                vapid = Vapid01.from_string(VAPID_PRIVATE_KEY_RAW)
+                # Vapid01 object יש לו method לשליחה ישירה, אבל pywebpush מצפה ל-PEM
+                # נמיר ל-PEM דרך cryptography
+                private_key = vapid.key
+                pem_string = private_key.private_bytes(
+                    encoding=serialization.Encoding.PEM,
+                    format=serialization.PrivateFormat.PKCS8,
+                    encryption_algorithm=serialization.NoEncryption()
+                ).decode('utf-8')
+                print(f"✅ [PUSH] VAPID private key loaded via py-vapid and converted to PEM (length: {len(pem_string)})")
+                return pem_string
+            except Exception as e:
+                print(f"⚠️ [PUSH] Failed to load key via py-vapid: {e}, trying manual conversion...")
+        
+        # Fallback: המרה ידנית מ-base64url ל-PEM
         # הוספת padding אם חסר
         key_str = VAPID_PRIVATE_KEY_RAW
         padding = len(key_str) % 4
@@ -42,14 +68,14 @@ def _load_vapid_private_key():
             backend=default_backend()
         )
         
-        # המרה ל-PEM string - pywebpush מצפה ל-PEM string, לא object
+        # המרה ל-PEM string - pywebpush מצפה ל-PEM string
         pem_string = private_key.private_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.PKCS8,
             encryption_algorithm=serialization.NoEncryption()
         ).decode('utf-8')
         
-        print(f"✅ [PUSH] VAPID private key converted to PEM (length: {len(pem_string)})")
+        print(f"✅ [PUSH] VAPID private key converted to PEM manually (length: {len(pem_string)})")
         return pem_string
     except Exception as e:
         print(f"❌ [PUSH] Error loading VAPID private key: {e}")
@@ -92,6 +118,13 @@ def send_push_notification(
         
         # Send push notification
         # pywebpush expects the private key as a PEM string
+        # But it might try to parse it again, so we need to ensure it's valid PEM
+        # Let's verify the PEM format is correct
+        if not VAPID_PRIVATE_KEY.startswith('-----BEGIN'):
+            print(f"⚠️ [PUSH] Warning: PEM key doesn't start with '-----BEGIN', trying to fix...")
+            # This shouldn't happen, but just in case
+            raise ValueError("Invalid PEM format")
+        
         webpush(
             subscription_info=subscription,
             data=json.dumps({

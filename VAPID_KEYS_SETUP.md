@@ -1,5 +1,18 @@
 # 🔑 הגדרת VAPID Keys ל-Push Notifications
 
+## ⚠️ בעיה ידועה: שגיאת "Could not deserialize key data"
+
+אם אתה מקבל שגיאה: `Could not deserialize key data. The data may be in an incorrect format... ASN.1 parsing error: invalid length`
+
+**פתרון:**
+1. צור מפתחות חדשים עם: `python3 backend/generate_vapid_keys.py`
+2. עדכן את המפתחות ב-Railway Backend Service:
+   - VAPID_PUBLIC_KEY
+   - VAPID_PRIVATE_KEY
+3. המפתחות החדשים אמורים לעבוד עם הקוד המעודכן
+
+## יצירת מפתחות חדשים
+
 ## מה זה VAPID?
 
 VAPID (Voluntary Application Server Identification) הוא פרוטוקול לזיהוי שרתים ב-Web Push Notifications.

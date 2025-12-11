@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Fix: Convert VAPID private key to PEM string format (pywebpush expects PEM string, not object)"
+$commitMessage = "Add py-vapid support and detailed logging for VAPID key debugging, update VAPID_KEYS_SETUP.md with troubleshooting"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files
