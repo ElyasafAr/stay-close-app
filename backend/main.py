@@ -448,15 +448,21 @@ def calculate_next_trigger_advanced(
         # פרסור שעה
         try:
             hour, minute = map(int, specific_time.split(':'))
+            print(f"🔍 [CALC] Daily reminder: specific_time={specific_time}, parsed hour={hour}, minute={minute}")
         except (ValueError, AttributeError):
+            print(f"❌ [CALC] Failed to parse specific_time: {specific_time}")
             return None
         
         # חישוב התאריך הבא - שימוש ב-replace עם timezone-aware datetime
         next_datetime = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+        print(f"🔍 [CALC] Daily: now={now}, next_datetime (today)={next_datetime}")
         
         # אם השעה כבר עברה היום, ניקח מחר
         if next_datetime <= now:
             next_datetime = (now + timedelta(days=1)).replace(hour=hour, minute=minute, second=0, microsecond=0)
+            print(f"🔍 [CALC] Daily: hour passed, using tomorrow: {next_datetime}")
+        else:
+            print(f"🔍 [CALC] Daily: hour not passed, using today: {next_datetime}")
         
         return next_datetime
     
