@@ -21,7 +21,7 @@ VAPID_CLAIMS = {
 }
 
 def _load_vapid_private_key():
-    """טוען את ה-VAPID private key מ-base64url ל-EllipticCurvePrivateKey object"""
+    """ממיר את ה-VAPID private key מ-base64url ל-PEM string"""
     if not VAPID_PRIVATE_KEY_RAW:
         return None
     
@@ -42,15 +42,22 @@ def _load_vapid_private_key():
             backend=default_backend()
         )
         
-        print(f"✅ [PUSH] VAPID private key loaded successfully (type: {type(private_key).__name__})")
-        return private_key
+        # המרה ל-PEM string - pywebpush מצפה ל-PEM string, לא object
+        pem_string = private_key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption()
+        ).decode('utf-8')
+        
+        print(f"✅ [PUSH] VAPID private key converted to PEM (length: {len(pem_string)})")
+        return pem_string
     except Exception as e:
         print(f"❌ [PUSH] Error loading VAPID private key: {e}")
         import traceback
         traceback.print_exc()
         return None
 
-# טעינת המפתח כ-object (pywebpush יכול לקבל גם object וגם PEM string)
+# המרת המפתח ל-PEM string (pywebpush מצפה ל-PEM string)
 VAPID_PRIVATE_KEY = _load_vapid_private_key()
 
 def send_push_notification(
@@ -84,8 +91,7 @@ def send_push_notification(
         subscription = json.loads(push_token)
         
         # Send push notification
-        # pywebpush can accept either EllipticCurvePrivateKey object or PEM string
-        # We'll pass the object directly to avoid parsing issues
+        # pywebpush expects the private key as a PEM string
         webpush(
             subscription_info=subscription,
             data=json.dumps({
@@ -93,7 +99,7 @@ def send_push_notification(
                 "body": body,
                 "data": data or {}
             }),
-            vapid_private_key=VAPID_PRIVATE_KEY,  # EllipticCurvePrivateKey object
+            vapid_private_key=VAPID_PRIVATE_KEY,  # PEM string format
             vapid_claims=VAPID_CLAIMS
         )
         
