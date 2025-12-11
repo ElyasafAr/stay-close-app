@@ -19,6 +19,14 @@ export default function SettingsPage() {
     saveSettings()
     setShowSuccess(true)
     setTimeout(() => setShowSuccess(false), 3000)
+    // Note: Theme changes apply immediately, but language changes may require a refresh
+    // We'll reload only if language changed
+    const currentLanguage = settings.language
+    if (currentLanguage !== (localStorage.getItem('app_language') || 'he')) {
+      setTimeout(() => {
+        window.location.reload()
+      }, 500)
+    }
   }
 
   const handleLogout = () => {

@@ -6,7 +6,7 @@ import translations from './he.json'
 type TranslationKey = string
 type TranslationObject = typeof translations
 
-// פונקציה רקורסיבית לקבלת תרגום
+// Recursive function to get nested translation
 function getNestedTranslation(obj: any, key: string): string {
   const keys = key.split('.')
   let value = obj
@@ -15,7 +15,7 @@ function getNestedTranslation(obj: any, key: string): string {
     if (value && typeof value === 'object' && k in value) {
       value = value[k]
     } else {
-      return key // מחזיר את המפתח אם לא נמצא
+      return key // Return key if not found
     }
   }
   
@@ -26,10 +26,72 @@ export function useTranslation() {
   const [language, setLanguage] = useState<string>('he')
 
   useEffect(() => {
-    // טוען את השפה מהגדרות מקומיות
+    // Load language from settings (check both app_language and app_settings)
     if (typeof window !== 'undefined') {
-      const savedLanguage = localStorage.getItem('app_language') || 'he'
-      setLanguage(savedLanguage)
+      // First check app_language (for backward compatibility)
+      let savedLanguage = localStorage.getItem('app_language')
+      
+      // If not found, check app_settings
+      if (!savedLanguage) {
+        const savedSettings = localStorage.getItem('app_settings')
+        if (savedSettings) {
+          try {
+            const parsed = JSON.parse(savedSettings)
+            savedLanguage = parsed.language || 'he'
+          } catch (error) {
+            console.error('Error parsing settings:', error)
+          }
+        }
+      }
+      
+      setLanguage(savedLanguage || 'he')
+    }
+  }, [])
+
+  // Listen for storage changes to update language in real-time
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'app_settings' || e.key === 'app_language') {
+        if (e.key === 'app_settings' && e.newValue) {
+          try {
+            const parsed = JSON.parse(e.newValue)
+            if (parsed.language) {
+              setLanguage(parsed.language)
+            }
+          } catch (error) {
+            console.error('Error parsing settings:', error)
+          }
+        } else if (e.key === 'app_language' && e.newValue) {
+          setLanguage(e.newValue)
+        }
+      }
+    }
+    
+    window.addEventListener('storage', handleStorageChange)
+    
+    // Also listen for custom events (for same-tab updates)
+    const handleCustomStorageChange = () => {
+      const savedSettings = localStorage.getItem('app_settings')
+      if (savedSettings) {
+        try {
+          const parsed = JSON.parse(savedSettings)
+          if (parsed.language) {
+            setLanguage(parsed.language)
+          }
+        } catch (error) {
+          console.error('Error parsing settings:', error)
+        }
+      }
+    }
+    
+    // Listen for custom event
+    window.addEventListener('settingsUpdated', handleCustomStorageChange)
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      window.removeEventListener('settingsUpdated', handleCustomStorageChange)
     }
   }, [])
 

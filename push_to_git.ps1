@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Expand message tones list from 4 to 18 options"
+$commitMessage = "Fix settings page: Apply theme and language changes immediately"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files

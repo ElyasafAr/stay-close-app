@@ -3,6 +3,7 @@ import './globals.css'
 import { Header } from '@/components/Header'
 import { AuthGuard } from '@/components/AuthGuard'
 import { ReminderChecker } from '@/components/ReminderChecker'
+import { ThemeProvider } from '@/components/ThemeProvider'
 
 export const metadata: Metadata = {
   title: 'Stay Close - אפליקציית קרבה',
@@ -17,6 +18,7 @@ export default function RootLayout({
   return (
     <html lang="he" dir="rtl">
       <body>
+        <ThemeProvider />
         <AuthGuard>
           <Header />
           <main>
