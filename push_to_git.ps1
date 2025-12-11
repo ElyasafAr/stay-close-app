@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Add app icons (icon-192x192.png and icon-512x512.png)"
+$commitMessage = "Fix: Update package-lock.json to ensure TypeScript and @types/react are installed"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files
