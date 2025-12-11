@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Fix: Add detailed logging to background job to debug why reminders are not triggering"
+$commitMessage = "Fix: Improve next_trigger calculation for daily/weekly reminders and add detailed background job logging"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files

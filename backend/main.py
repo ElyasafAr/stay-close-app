@@ -430,17 +430,15 @@ def calculate_next_trigger_advanced(
         if days_ahead is None:
             days_ahead = (7 - current_weekday) + min(weekdays)
         
-        # חישוב התאריך
-        next_date = now + timedelta(days=days_ahead)
-        next_datetime = next_date.replace(hour=hour, minute=minute, second=0, microsecond=0)
+        # חישוב התאריך - שימוש ב-replace עם timezone-aware datetime
+        next_date = (now + timedelta(days=days_ahead)).replace(hour=hour, minute=minute, second=0, microsecond=0)
         
         # אם השעה כבר עברה היום והתאריך הוא היום, ניקח את היום הבא
-        if next_datetime <= now:
+        if next_date <= now:
             days_ahead += 7
-            next_date = now + timedelta(days=days_ahead)
-            next_datetime = next_date.replace(hour=hour, minute=minute, second=0, microsecond=0)
+            next_date = (now + timedelta(days=days_ahead)).replace(hour=hour, minute=minute, second=0, microsecond=0)
         
-        return next_datetime
+        return next_date
     
     elif reminder_type == 'daily':
         # התראה יומית - כל יום בשעה מסוימת
@@ -453,12 +451,12 @@ def calculate_next_trigger_advanced(
         except (ValueError, AttributeError):
             return None
         
-        # חישוב התאריך הבא
+        # חישוב התאריך הבא - שימוש ב-replace עם timezone-aware datetime
         next_datetime = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
         
         # אם השעה כבר עברה היום, ניקח מחר
         if next_datetime <= now:
-            next_datetime += timedelta(days=1)
+            next_datetime = (now + timedelta(days=1)).replace(hour=hour, minute=minute, second=0, microsecond=0)
         
         return next_datetime
     
