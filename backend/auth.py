@@ -10,7 +10,7 @@ import hashlib
 from datetime import datetime, timedelta
 from typing import Optional, Dict
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+import bcrypt
 from fastapi import HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
@@ -21,9 +21,6 @@ from models import User
 SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-secret-key-change-in-production")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30 * 24 * 60  # 30 ימים
-
-# הגדרות הצפנת סיסמאות
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Security scheme
 security = HTTPBearer()
@@ -47,10 +44,14 @@ def hash_password(password: str) -> str:
     # נשתמש ב-UTF-8 encoding כדי לחשב את האורך הנכון
     password_bytes = password.encode('utf-8')
     if len(password_bytes) > 72:
-        # חיתוך ל-72 bytes
+        # חיתוך ל-72 bytes - חותכים את ה-bytes ישירות
         password_bytes = password_bytes[:72]
-        password = password_bytes.decode('utf-8', errors='ignore')
-    return pwd_context.hash(password)
+        print(f"⚠️ [AUTH] Password truncated to 72 bytes")
+    
+    # שימוש ב-bcrypt ישירות (לא דרך passlib) כדי להימנע מבעיות
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password_bytes, salt)
+    return hashed.decode('utf-8')
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """בודק סיסמה"""
@@ -58,8 +59,10 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     password_bytes = plain_password.encode('utf-8')
     if len(password_bytes) > 72:
         password_bytes = password_bytes[:72]
-        plain_password = password_bytes.decode('utf-8', errors='ignore')
-    return pwd_context.verify(plain_password, hashed_password)
+    
+    # שימוש ב-bcrypt ישירות (לא דרך passlib) כדי להימנע מבעיות
+    hashed_bytes = hashed_password.encode('utf-8')
+    return bcrypt.checkpw(password_bytes, hashed_bytes)
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     """יוצר JWT token"""
