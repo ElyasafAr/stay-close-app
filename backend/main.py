@@ -170,8 +170,13 @@ class Reminder(BaseModel):
     id: Optional[int] = None
     user_id: Optional[str] = None
     contact_id: int
-    interval_type: str  # 'hours' או 'days'
-    interval_value: int  # מספר השעות/ימים
+    reminder_type: str = 'recurring'  # 'one_time', 'recurring', 'weekly', 'daily'
+    interval_type: Optional[str] = None  # 'hours' או 'days' - רק ל-recurring
+    interval_value: Optional[int] = None  # מספר השעות/ימים - רק ל-recurring
+    scheduled_datetime: Optional[datetime] = None  # תאריך ושעה ספציפיים - רק ל-one_time
+    weekdays: Optional[List[int]] = None  # [0,2,4] - ימים בשבוע - רק ל-weekly
+    specific_time: Optional[str] = None  # "14:30" - שעה ספציפית - ל-weekly ו-daily
+    one_time_triggered: Optional[bool] = False  # האם התראה חד-פעמית הופעלה
     last_triggered: Optional[datetime] = None
     next_trigger: Optional[datetime] = None
     enabled: bool = True
@@ -180,9 +185,13 @@ class Reminder(BaseModel):
 class ReminderCreate(BaseModel):
     """מודל ליצירת התראה חדשה"""
     contact_id: int
-    interval_type: str  # 'hours' או 'days'
-    interval_value: int
-    enabled: bool = True
+    reminder_type: str = 'recurring'  # 'one_time', 'recurring', 'weekly', 'daily'
+    interval_type: Optional[str] = None  # 'hours' או 'days' - רק ל-recurring
+    interval_value: Optional[int] = None  # מספר השעות/ימים - רק ל-recurring
+    scheduled_datetime: Optional[datetime] = None  # תאריך ושעה ספציפיים - רק ל-one_time
+    weekdays: Optional[List[int]] = None  # [0,2,4] - ימים בשבוע - רק ל-weekly
+    specific_time: Optional[str] = None  # "14:30" - שעה ספציפית - ל-weekly ו-daily
+    enabled: Optional[bool] = True
 
 # Database functions - using PostgreSQL instead of JSON files
 def get_contacts_from_db(db: Session, user_id: str) -> List[DBContact]:
@@ -208,7 +217,7 @@ def get_reminder_by_id(db: Session, reminder_id: int, user_id: str) -> Optional[
     ).first()
 
 def calculate_next_trigger(interval_type: str, interval_value: int, last_triggered: Optional[datetime] = None) -> datetime:
-    """מחשב את זמן ההתראה הבאה"""
+    """מחשב את זמן ההתראה הבאה (ל-recurring בלבד - תאימות לאחור)"""
     now = datetime.now()
     if interval_type == 'hours':
         delta = timedelta(hours=interval_value)
@@ -219,6 +228,100 @@ def calculate_next_trigger(interval_type: str, interval_value: int, last_trigger
         return last_triggered + delta
     else:
         return now + delta
+
+def calculate_next_trigger_advanced(
+    reminder_type: str,
+    interval_type: Optional[str] = None,
+    interval_value: Optional[int] = None,
+    scheduled_datetime: Optional[datetime] = None,
+    weekdays: Optional[List[int]] = None,
+    specific_time: Optional[str] = None,
+    last_triggered: Optional[datetime] = None
+) -> Optional[datetime]:
+    """
+    מחשב את זמן ההתראה הבאה לפי סוג ההתראה
+    """
+    now = datetime.now()
+    
+    if reminder_type == 'one_time':
+        # התראה חד-פעמית - מחזיר את התאריך הספציפי
+        if scheduled_datetime and scheduled_datetime > now:
+            return scheduled_datetime
+        return None  # אם התאריך כבר עבר
+    
+    elif reminder_type == 'recurring':
+        # התראה חזרתית - כמו עכשיו
+        if not interval_type or not interval_value:
+            return None
+        
+        if interval_type == 'hours':
+            delta = timedelta(hours=interval_value)
+        else:  # days
+            delta = timedelta(days=interval_value)
+        
+        if last_triggered:
+            return last_triggered + delta
+        else:
+            return now + delta
+    
+    elif reminder_type == 'weekly':
+        # התראה שבועית - יום/ימים קבועים בשבוע בשעה מסוימת
+        if not weekdays or not specific_time:
+            return None
+        
+        # פרסור שעה
+        try:
+            hour, minute = map(int, specific_time.split(':'))
+        except (ValueError, AttributeError):
+            return None
+        
+        # מציאת היום הבא מהרשימה
+        current_weekday = now.weekday()  # 0=ראשון, 6=שבת
+        days_ahead = None
+        
+        # חיפוש היום הקרוב ביותר
+        for weekday in sorted(weekdays):
+            if weekday > current_weekday:
+                days_ahead = weekday - current_weekday
+                break
+        
+        # אם לא מצאנו, ניקח את היום הראשון בשבוע הבא
+        if days_ahead is None:
+            days_ahead = (7 - current_weekday) + min(weekdays)
+        
+        # חישוב התאריך
+        next_date = now + timedelta(days=days_ahead)
+        next_datetime = next_date.replace(hour=hour, minute=minute, second=0, microsecond=0)
+        
+        # אם השעה כבר עברה היום והתאריך הוא היום, ניקח את היום הבא
+        if next_datetime <= now:
+            days_ahead += 7
+            next_date = now + timedelta(days=days_ahead)
+            next_datetime = next_date.replace(hour=hour, minute=minute, second=0, microsecond=0)
+        
+        return next_datetime
+    
+    elif reminder_type == 'daily':
+        # התראה יומית - כל יום בשעה מסוימת
+        if not specific_time:
+            return None
+        
+        # פרסור שעה
+        try:
+            hour, minute = map(int, specific_time.split(':'))
+        except (ValueError, AttributeError):
+            return None
+        
+        # חישוב התאריך הבא
+        next_datetime = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+        
+        # אם השעה כבר עברה היום, ניקח מחר
+        if next_datetime <= now:
+            next_datetime += timedelta(days=1)
+        
+        return next_datetime
+    
+    return None
 
 # Database is initialized on startup via startup_event
 # No need to load from JSON files anymore
@@ -360,17 +463,33 @@ async def get_reminders(
     user_id = current_user["user_id"]
     db_reminders = get_reminders_from_db(db, user_id)
     # Convert SQLAlchemy models to Pydantic models
-    return [Reminder(
-        id=r.id,
-        user_id=r.user_id,
-        contact_id=r.contact_id,
-        interval_type=r.interval_type,
-        interval_value=r.interval_value,
-        last_triggered=r.last_triggered,
-        next_trigger=r.next_trigger,
-        enabled=r.enabled,
-        created_at=r.created_at
-    ) for r in db_reminders]
+    result = []
+    for r in db_reminders:
+        # Parse weekdays from JSON string if exists
+        weekdays = None
+        if r.weekdays:
+            try:
+                weekdays = json.loads(r.weekdays)
+            except (json.JSONDecodeError, TypeError):
+                weekdays = None
+        
+        result.append(Reminder(
+            id=r.id,
+            user_id=r.user_id,
+            contact_id=r.contact_id,
+            reminder_type=r.reminder_type or 'recurring',
+            interval_type=r.interval_type,
+            interval_value=r.interval_value,
+            scheduled_datetime=r.scheduled_datetime,
+            weekdays=weekdays,
+            specific_time=r.specific_time,
+            one_time_triggered=r.one_time_triggered or False,
+            last_triggered=r.last_triggered,
+            next_trigger=r.next_trigger,
+            enabled=r.enabled,
+            created_at=r.created_at
+        ))
+    return result
 
 @app.get("/api/reminders/{reminder_id}", response_model=Reminder)
 async def get_reminder(
@@ -383,13 +502,27 @@ async def get_reminder(
     db_reminder = get_reminder_by_id(db, reminder_id, user_id)
     if not db_reminder:
         raise HTTPException(status_code=404, detail="התראה לא נמצאה")
+    
+    # Parse weekdays from JSON string if exists
+    weekdays = None
+    if db_reminder.weekdays:
+        try:
+            weekdays = json.loads(db_reminder.weekdays)
+        except (json.JSONDecodeError, TypeError):
+            weekdays = None
+    
     # Convert SQLAlchemy model to Pydantic model
     return Reminder(
         id=db_reminder.id,
         user_id=db_reminder.user_id,
         contact_id=db_reminder.contact_id,
+        reminder_type=db_reminder.reminder_type or 'recurring',
         interval_type=db_reminder.interval_type,
         interval_value=db_reminder.interval_value,
+        scheduled_datetime=db_reminder.scheduled_datetime,
+        weekdays=weekdays,
+        specific_time=db_reminder.specific_time,
+        one_time_triggered=db_reminder.one_time_triggered or False,
         last_triggered=db_reminder.last_triggered,
         next_trigger=db_reminder.next_trigger,
         enabled=db_reminder.enabled,
@@ -410,23 +543,37 @@ async def create_reminder(
     if not contact:
         raise HTTPException(status_code=404, detail="איש קשר לא נמצא")
     
-    # Calculate next trigger
+    # Calculate next trigger using advanced function
     now = datetime.now()
-    next_trigger = calculate_next_trigger(
+    next_trigger = calculate_next_trigger_advanced(
+        reminder_type=reminder.reminder_type or 'recurring',
         interval_type=reminder.interval_type,
         interval_value=reminder.interval_value,
+        scheduled_datetime=reminder.scheduled_datetime,
+        weekdays=reminder.weekdays,
+        specific_time=reminder.specific_time,
         last_triggered=None
     )
+    
+    # Convert weekdays list to JSON string
+    weekdays_json = None
+    if reminder.weekdays:
+        weekdays_json = json.dumps(reminder.weekdays)
     
     # Create new reminder in database
     db_reminder = DBReminder(
         user_id=user_id,
         contact_id=reminder.contact_id,
+        reminder_type=reminder.reminder_type or 'recurring',
         interval_type=reminder.interval_type,
         interval_value=reminder.interval_value,
+        scheduled_datetime=reminder.scheduled_datetime,
+        weekdays=weekdays_json,
+        specific_time=reminder.specific_time,
+        one_time_triggered=False,
         last_triggered=None,
         next_trigger=next_trigger,
-        enabled=reminder.enabled,
+        enabled=reminder.enabled if reminder.enabled is not None else True,
         created_at=now
     )
     db.add(db_reminder)
@@ -434,13 +581,27 @@ async def create_reminder(
     db.refresh(db_reminder)
     
     print(f"✅ [DATABASE] Created reminder {db_reminder.id} for user {user_id}")
+    
+    # Parse weekdays for response
+    weekdays_parsed = None
+    if db_reminder.weekdays:
+        try:
+            weekdays_parsed = json.loads(db_reminder.weekdays)
+        except (json.JSONDecodeError, TypeError):
+            weekdays_parsed = None
+    
     # Convert SQLAlchemy model to Pydantic model
     return Reminder(
         id=db_reminder.id,
         user_id=db_reminder.user_id,
         contact_id=db_reminder.contact_id,
+        reminder_type=db_reminder.reminder_type or 'recurring',
         interval_type=db_reminder.interval_type,
         interval_value=db_reminder.interval_value,
+        scheduled_datetime=db_reminder.scheduled_datetime,
+        weekdays=weekdays_parsed,
+        specific_time=db_reminder.specific_time,
+        one_time_triggered=db_reminder.one_time_triggered or False,
         last_triggered=db_reminder.last_triggered,
         next_trigger=db_reminder.next_trigger,
         enabled=db_reminder.enabled,
@@ -462,31 +623,58 @@ async def update_reminder(
     if not db_reminder:
         raise HTTPException(status_code=404, detail="התראה לא נמצאה")
     
-    # Calculate next trigger
-    next_trigger = calculate_next_trigger(
+    # Calculate next trigger using advanced function
+    next_trigger = calculate_next_trigger_advanced(
+        reminder_type=reminder.reminder_type or 'recurring',
         interval_type=reminder.interval_type,
         interval_value=reminder.interval_value,
+        scheduled_datetime=reminder.scheduled_datetime,
+        weekdays=reminder.weekdays,
+        specific_time=reminder.specific_time,
         last_triggered=db_reminder.last_triggered
     )
     
+    # Convert weekdays list to JSON string
+    weekdays_json = None
+    if reminder.weekdays:
+        weekdays_json = json.dumps(reminder.weekdays)
+    
     # Update reminder fields
     db_reminder.contact_id = reminder.contact_id
+    db_reminder.reminder_type = reminder.reminder_type or 'recurring'
     db_reminder.interval_type = reminder.interval_type
     db_reminder.interval_value = reminder.interval_value
+    db_reminder.scheduled_datetime = reminder.scheduled_datetime
+    db_reminder.weekdays = weekdays_json
+    db_reminder.specific_time = reminder.specific_time
     db_reminder.next_trigger = next_trigger
-    db_reminder.enabled = reminder.enabled
+    db_reminder.enabled = reminder.enabled if reminder.enabled is not None else True
     
     db.commit()
     db.refresh(db_reminder)
     
     print(f"✅ [DATABASE] Updated reminder {reminder_id} for user {user_id}")
+    
+    # Parse weekdays for response
+    weekdays_parsed = None
+    if db_reminder.weekdays:
+        try:
+            weekdays_parsed = json.loads(db_reminder.weekdays)
+        except (json.JSONDecodeError, TypeError):
+            weekdays_parsed = None
+    
     # Convert SQLAlchemy model to Pydantic model
     return Reminder(
         id=db_reminder.id,
         user_id=db_reminder.user_id,
         contact_id=db_reminder.contact_id,
+        reminder_type=db_reminder.reminder_type or 'recurring',
         interval_type=db_reminder.interval_type,
         interval_value=db_reminder.interval_value,
+        scheduled_datetime=db_reminder.scheduled_datetime,
+        weekdays=weekdays_parsed,
+        specific_time=db_reminder.specific_time,
+        one_time_triggered=db_reminder.one_time_triggered or False,
         last_triggered=db_reminder.last_triggered,
         next_trigger=db_reminder.next_trigger,
         enabled=db_reminder.enabled,
@@ -524,33 +712,78 @@ async def check_reminders(
     now = datetime.now()
     
     # Get all enabled reminders for user
-    reminders = db.query(DBReminder).filter(
+    # For one_time: check scheduled_datetime and one_time_triggered
+    # For others: check next_trigger
+    all_reminders = db.query(DBReminder).filter(
         DBReminder.user_id == user_id,
-        DBReminder.enabled == True,
-        DBReminder.next_trigger <= now
+        DBReminder.enabled == True
     ).all()
     
     triggered_reminders = []
-    for db_reminder in reminders:
-        # Update next trigger time
-        db_reminder.last_triggered = now
-        db_reminder.next_trigger = calculate_next_trigger(
-            interval_type=db_reminder.interval_type,
-            interval_value=db_reminder.interval_value,
-            last_triggered=now
-        )
-        # Convert SQLAlchemy model to Pydantic model
-        triggered_reminders.append(Reminder(
-            id=db_reminder.id,
-            user_id=db_reminder.user_id,
-            contact_id=db_reminder.contact_id,
-            interval_type=db_reminder.interval_type,
-            interval_value=db_reminder.interval_value,
-            last_triggered=db_reminder.last_triggered,
-            next_trigger=db_reminder.next_trigger,
-            enabled=db_reminder.enabled,
-            created_at=db_reminder.created_at
-        ))
+    for db_reminder in all_reminders:
+        reminder_type = db_reminder.reminder_type or 'recurring'
+        should_trigger = False
+        
+        if reminder_type == 'one_time':
+            # התראה חד-פעמית - בדוק אם התאריך הגיע ולא הופעלה
+            if (db_reminder.scheduled_datetime and 
+                db_reminder.scheduled_datetime <= now and 
+                not db_reminder.one_time_triggered):
+                should_trigger = True
+                db_reminder.one_time_triggered = True
+                db_reminder.last_triggered = now
+                # לא מחשבים next_trigger להתראה חד-פעמית
+        else:
+            # התראות אחרות - בדוק next_trigger
+            if db_reminder.next_trigger and db_reminder.next_trigger <= now:
+                should_trigger = True
+                db_reminder.last_triggered = now
+                
+                # Parse weekdays if needed
+                weekdays = None
+                if db_reminder.weekdays:
+                    try:
+                        weekdays = json.loads(db_reminder.weekdays)
+                    except (json.JSONDecodeError, TypeError):
+                        weekdays = None
+                
+                # Calculate next trigger
+                db_reminder.next_trigger = calculate_next_trigger_advanced(
+                    reminder_type=reminder_type,
+                    interval_type=db_reminder.interval_type,
+                    interval_value=db_reminder.interval_value,
+                    scheduled_datetime=db_reminder.scheduled_datetime,
+                    weekdays=weekdays,
+                    specific_time=db_reminder.specific_time,
+                    last_triggered=now
+                )
+        
+        if should_trigger:
+            # Parse weekdays for response
+            weekdays_parsed = None
+            if db_reminder.weekdays:
+                try:
+                    weekdays_parsed = json.loads(db_reminder.weekdays)
+                except (json.JSONDecodeError, TypeError):
+                    weekdays_parsed = None
+            
+            # Convert SQLAlchemy model to Pydantic model
+            triggered_reminders.append(Reminder(
+                id=db_reminder.id,
+                user_id=db_reminder.user_id,
+                contact_id=db_reminder.contact_id,
+                reminder_type=reminder_type,
+                interval_type=db_reminder.interval_type,
+                interval_value=db_reminder.interval_value,
+                scheduled_datetime=db_reminder.scheduled_datetime,
+                weekdays=weekdays_parsed,
+                specific_time=db_reminder.specific_time,
+                one_time_triggered=db_reminder.one_time_triggered or False,
+                last_triggered=db_reminder.last_triggered,
+                next_trigger=db_reminder.next_trigger,
+                enabled=db_reminder.enabled,
+                created_at=db_reminder.created_at
+            ))
     
     if triggered_reminders:
         db.commit()

@@ -203,14 +203,40 @@ export default function ContactsPage() {
                     }
                   </p>
                 )}
-                {contact.id && getReminderForContact(contact.id) && (
-                  <div className={styles.reminderBadge}>
-                    <MdNotifications style={{ fontSize: '16px', marginLeft: '4px' }} />
-                    <span>
-                      כל {getReminderForContact(contact.id)?.interval_value} {getReminderForContact(contact.id)?.interval_type === 'hours' ? 'שעות' : 'ימים'}
-                    </span>
-                  </div>
-                )}
+                {contact.id && getReminderForContact(contact.id) && (() => {
+                  const reminder = getReminderForContact(contact.id)!
+                  let reminderText = ''
+                  
+                  if (reminder.reminder_type === 'one_time') {
+                    if (reminder.scheduled_datetime) {
+                      const date = new Date(reminder.scheduled_datetime)
+                      reminderText = date.toLocaleDateString('he-IL', { 
+                        day: 'numeric', 
+                        month: 'numeric', 
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })
+                    } else {
+                      reminderText = 'תאריך ספציפי'
+                    }
+                  } else if (reminder.reminder_type === 'recurring') {
+                    reminderText = `כל ${reminder.interval_value} ${reminder.interval_type === 'hours' ? 'שעות' : 'ימים'}`
+                  } else if (reminder.reminder_type === 'weekly') {
+                    const weekdayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת']
+                    const days = reminder.weekdays?.map(d => weekdayNames[d]).join(', ') || ''
+                    reminderText = `${days}${reminder.specific_time ? ` בשעה ${reminder.specific_time}` : ''}`
+                  } else if (reminder.reminder_type === 'daily') {
+                    reminderText = `כל יום בשעה ${reminder.specific_time || '12:00'}`
+                  }
+                  
+                  return (
+                    <div className={styles.reminderBadge}>
+                      <MdNotifications style={{ fontSize: '16px', marginLeft: '4px' }} />
+                      <span>{reminderText}</span>
+                    </div>
+                  )
+                })()}
                 <div className={styles.contactActions}>
                   <button
                     onClick={() => contact.id && setReminderModal({ 

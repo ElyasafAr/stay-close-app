@@ -2,12 +2,22 @@
 
 import { getData, postData, putData, deleteData } from './api'
 
+export type ReminderType = 'one_time' | 'recurring' | 'weekly' | 'daily'
+
 export interface Reminder {
   id: number
   user_id?: string
   contact_id: number
-  interval_type: 'hours' | 'days'
-  interval_value: number
+  reminder_type: ReminderType
+  // שדות קיימים (עבור recurring)
+  interval_type?: 'hours' | 'days'
+  interval_value?: number
+  // שדות חדשים
+  scheduled_datetime?: string  // ISO datetime string
+  weekdays?: number[]  // [0,2,4] = ראשון, שלישי, חמישי
+  specific_time?: string  // "14:30"
+  one_time_triggered?: boolean
+  // שדות קיימים
   last_triggered?: string
   next_trigger?: string
   enabled: boolean
@@ -16,8 +26,12 @@ export interface Reminder {
 
 export interface ReminderCreate {
   contact_id: number
-  interval_type: 'hours' | 'days'
-  interval_value: number
+  reminder_type: ReminderType
+  interval_type?: 'hours' | 'days'
+  interval_value?: number
+  scheduled_datetime?: string
+  weekdays?: number[]
+  specific_time?: string
   enabled?: boolean
 }
 

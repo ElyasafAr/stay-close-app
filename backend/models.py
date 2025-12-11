@@ -42,15 +42,23 @@ class Reminder(Base):
     """Reminder model - stores reminder settings"""
     __tablename__ = "reminders"
     
+    # שדות קיימים
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     user_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     contact_id = Column(Integer, ForeignKey("contacts.id", ondelete="CASCADE"), nullable=False, index=True)
-    interval_type = Column(String, nullable=False)  # 'hours' or 'days'
-    interval_value = Column(Integer, nullable=False)
+    interval_type = Column(String, nullable=True)  # 'hours' or 'days' - רק ל-recurring
+    interval_value = Column(Integer, nullable=True)  # רק ל-recurring
     last_triggered = Column(DateTime(timezone=True), nullable=True)
     next_trigger = Column(DateTime(timezone=True), nullable=True)
     enabled = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    
+    # שדות חדשים - מערכת התראות משופרת
+    reminder_type = Column(String, nullable=False, default='recurring')  # 'one_time', 'recurring', 'weekly', 'daily'
+    scheduled_datetime = Column(DateTime(timezone=True), nullable=True)  # להתראה חד-פעמית
+    weekdays = Column(Text, nullable=True)  # JSON array: "[0,2,4]" - ימים בשבוע
+    specific_time = Column(String, nullable=True)  # "14:30" - שעה ספציפית
+    one_time_triggered = Column(Boolean, default=False, nullable=False)  # האם התראה חד-פעמית הופעלה
     
     # Relationships
     user = relationship("User", back_populates="reminders")

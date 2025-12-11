@@ -85,7 +85,7 @@ def _run_migrations():
     
     db = SessionLocal()
     try:
-        # Migration: Add default_tone column to contacts if it doesn't exist
+        # Migration 1: Add default_tone column to contacts if it doesn't exist
         check_query = text("""
             SELECT column_name 
             FROM information_schema.columns 
@@ -103,6 +103,77 @@ def _run_migrations():
             db.execute(alter_query)
             db.commit()
             print("✅ [DATABASE] Migration completed: default_tone column added")
+        
+        # Migration 2: Add advanced reminder fields if they don't exist
+        check_reminder_type = text("""
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name='reminders' AND column_name='reminder_type';
+        """)
+        
+        result_reminder_type = db.execute(check_reminder_type).fetchone()
+        
+        if not result_reminder_type:
+            print("🔵 [DATABASE] Running migration: Adding advanced reminder fields...")
+            
+            # Add reminder_type column
+            alter_reminder_type = text("""
+                ALTER TABLE reminders 
+                ADD COLUMN reminder_type VARCHAR DEFAULT 'recurring' NOT NULL;
+            """)
+            db.execute(alter_reminder_type)
+            
+            # Add scheduled_datetime column
+            alter_scheduled = text("""
+                ALTER TABLE reminders 
+                ADD COLUMN scheduled_datetime TIMESTAMP WITH TIME ZONE;
+            """)
+            db.execute(alter_scheduled)
+            
+            # Add weekdays column
+            alter_weekdays = text("""
+                ALTER TABLE reminders 
+                ADD COLUMN weekdays TEXT;
+            """)
+            db.execute(alter_weekdays)
+            
+            # Add specific_time column
+            alter_time = text("""
+                ALTER TABLE reminders 
+                ADD COLUMN specific_time VARCHAR;
+            """)
+            db.execute(alter_time)
+            
+            # Add one_time_triggered column
+            alter_triggered = text("""
+                ALTER TABLE reminders 
+                ADD COLUMN one_time_triggered BOOLEAN DEFAULT FALSE NOT NULL;
+            """)
+            db.execute(alter_triggered)
+            
+            # Update existing reminders to have reminder_type='recurring'
+            update_existing = text("""
+                UPDATE reminders 
+                SET reminder_type = 'recurring' 
+                WHERE reminder_type IS NULL;
+            """)
+            db.execute(update_existing)
+            
+            # Make interval_type and interval_value nullable (for one_time reminders)
+            alter_interval_type = text("""
+                ALTER TABLE reminders 
+                ALTER COLUMN interval_type DROP NOT NULL;
+            """)
+            db.execute(alter_interval_type)
+            
+            alter_interval_value = text("""
+                ALTER TABLE reminders 
+                ALTER COLUMN interval_value DROP NOT NULL;
+            """)
+            db.execute(alter_interval_value)
+            
+            db.commit()
+            print("✅ [DATABASE] Migration completed: Advanced reminder fields added")
         else:
             print("✅ [DATABASE] Schema is up to date")
     except Exception as e:

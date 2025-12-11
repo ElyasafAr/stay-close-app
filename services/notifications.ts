@@ -45,12 +45,31 @@ export function showNotification(reminder: Reminder, contact: Contact): void {
     return
   }
 
-  const intervalText = reminder.interval_type === 'hours' 
-    ? `${reminder.interval_value} שעות`
-    : `${reminder.interval_value} ימים`
+  // בניית טקסט התראה לפי סוג ההתראה
+  let reminderText = ''
+  if (reminder.reminder_type === 'one_time') {
+    reminderText = 'תאריך ספציפי'
+  } else if (reminder.reminder_type === 'recurring') {
+    const intervalText = reminder.interval_type === 'hours' 
+      ? `${reminder.interval_value} שעות`
+      : `${reminder.interval_value} ימים`
+    reminderText = `כל ${intervalText}`
+  } else if (reminder.reminder_type === 'weekly') {
+    const weekdayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת']
+    const days = reminder.weekdays?.map(d => weekdayNames[d]).join(', ') || ''
+    reminderText = `${days}${reminder.specific_time ? ` בשעה ${reminder.specific_time}` : ''}`
+  } else if (reminder.reminder_type === 'daily') {
+    reminderText = `כל יום בשעה ${reminder.specific_time || '12:00'}`
+  } else {
+    // Fallback למצב הישן
+    const intervalText = reminder.interval_type === 'hours' 
+      ? `${reminder.interval_value} שעות`
+      : `${reminder.interval_value} ימים`
+    reminderText = `כל ${intervalText}`
+  }
 
   const notification = new Notification('זמן לשלוח הודעה! 💌', {
-    body: `הגיע הזמן לשלוח הודעה ל-${contact.name}\n(כל ${intervalText})`,
+    body: `הגיע הזמן לשלוח הודעה ל-${contact.name}\n(${reminderText})`,
     icon: '/icon-192x192.png', // אם יש אייקון
     badge: '/icon-192x192.png',
     tag: `reminder-${reminder.id}`,

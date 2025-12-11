@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Fix: Restore hamburger menu on mobile (right side) and fix user dropdown overflow"
+$commitMessage = "Feature: Advanced reminders system - support for one-time, weekly, daily, and recurring reminders"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files
