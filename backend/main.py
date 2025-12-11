@@ -347,7 +347,7 @@ def get_reminder_by_id(db: Session, reminder_id: int, user_id: str) -> Optional[
 
 def calculate_next_trigger(interval_type: str, interval_value: int, last_triggered: Optional[datetime] = None) -> datetime:
     """מחשב את זמן ההתראה הבאה (ל-recurring בלבד - תאימות לאחור)"""
-    now = datetime.now()
+    now = datetime.now(timezone.utc)
     if interval_type == 'hours':
         delta = timedelta(hours=interval_value)
     else:  # days
@@ -370,7 +370,7 @@ def calculate_next_trigger_advanced(
     """
     מחשב את זמן ההתראה הבאה לפי סוג ההתראה
     """
-    now = datetime.now()
+    now = datetime.now(timezone.utc)
     
     if reminder_type == 'one_time':
         # התראה חד-פעמית - מחזיר את התאריך הספציפי
@@ -512,7 +512,7 @@ async def create_contact(
         user_id=user_id,
         name=contact.name,
         default_tone=contact.default_tone or 'friendly',
-        created_at=datetime.now()
+        created_at=datetime.now(timezone.utc)
     )
     db.add(db_contact)
     db.commit()
@@ -873,8 +873,8 @@ async def register_push_token(
         user_id=user_id,
         token=push_token.token,
         device_info=device_info_json,
-        created_at=datetime.now(),
-        updated_at=datetime.now()
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc)
     )
     db.add(db_push_token)
     db.commit()
@@ -1307,7 +1307,7 @@ async def health_check():
     """Health check endpoint ל-Railway"""
     return {
         "status": "healthy",
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "version": "1.0.0"
     }
 

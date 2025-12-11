@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Fix: Use timezone-aware datetime.now(timezone.utc) to fix timezone comparison errors"
+$commitMessage = "Fix: Replace all datetime.now() with datetime.now(timezone.utc) for timezone-aware comparisons"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files
