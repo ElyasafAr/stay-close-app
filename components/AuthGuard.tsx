@@ -40,7 +40,8 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
     // Listener למצב ההתחברות של Firebase
     const unsubscribe = onAuthStateChange((user) => {
-      const isAuth = !!user
+      // בדיקה גם של localStorage (למקרה של התחברות רגילה)
+      const isAuth = !!user || isAuthenticated()
       setAuthenticated(isAuth)
 
       if (!isAuth && !publicPaths.includes(pathname)) {
@@ -50,11 +51,26 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       }
     })
 
+    // בדיקה תקופתית (למקרה שהשינוי קרה באותו חלון - התחברות רגילה)
+    // זה חשוב כי storage events לא עובדים באותו חלון
+    const intervalId = setInterval(() => {
+      const isAuth = isAuthenticated()
+      if (isAuth !== authenticated) {
+        setAuthenticated(isAuth)
+        if (isAuth && pathname === '/login') {
+          router.replace('/')
+        } else if (!isAuth && !publicPaths.includes(pathname)) {
+          router.replace('/login')
+        }
+      }
+    }, 300) // בדיקה כל 300ms
+
     return () => {
       unsubscribe()
+      clearInterval(intervalId)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname, router])
+  }, [pathname, router, authenticated])
 
   if (loading) {
     return <Loading />
