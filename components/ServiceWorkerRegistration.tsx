@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import { isAuthenticated } from '@/services/auth'
-import { postData } from '@/services/api'
+import { postData, getData } from '@/services/api'
 
 /**
  * קומפוננטה לרישום Service Worker ו-Push Notifications
@@ -75,17 +75,19 @@ export function ServiceWorkerRegistration() {
                 console.log('✅ [SW] Permission granted! Fetching VAPID key...')
                 // קבלת VAPID public key מה-backend
                 try {
-                  console.log('🔍 [SW] Fetching /api/push/vapid-public-key...')
-                  const vapidKeyResponse = await fetch('/api/push/vapid-public-key')
-                  console.log('🔍 [SW] VAPID key response status:', vapidKeyResponse.status)
+                  console.log('🔍 [SW] Fetching VAPID key from backend...')
+                  const vapidKeyResponse = await getData<{ publicKey: string }>('/api/push/vapid-public-key')
+                  console.log('🔍 [SW] VAPID key response:', {
+                    success: vapidKeyResponse.success,
+                    hasData: !!vapidKeyResponse.data
+                  })
                   
-                  if (vapidKeyResponse.ok) {
-                    const vapidData = await vapidKeyResponse.json()
+                  if (vapidKeyResponse.success && vapidKeyResponse.data) {
                     console.log('✅ [SW] VAPID key received:', {
-                      hasPublicKey: !!vapidData.publicKey,
-                      keyLength: vapidData.publicKey?.length
+                      hasPublicKey: !!vapidKeyResponse.data.publicKey,
+                      keyLength: vapidKeyResponse.data.publicKey?.length
                     })
-                    const { publicKey } = vapidData
+                    const { publicKey } = vapidKeyResponse.data
                     
                     // המרה מ-base64 ל-Uint8Array
                     console.log('🔍 [SW] Converting VAPID key to Uint8Array...')
@@ -120,7 +122,7 @@ export function ServiceWorkerRegistration() {
                     const backendResponse = await postData('/api/push-tokens', tokenData)
                     console.log('✅ [SW] Push subscription sent to backend successfully!', backendResponse)
                   } else {
-                    console.error('❌ [SW] Failed to get VAPID key:', vapidKeyResponse.status, await vapidKeyResponse.text())
+                    console.error('❌ [SW] Failed to get VAPID key:', vapidKeyResponse.error || 'Unknown error')
                   }
                 } catch (error) {
                   console.error('❌ [SW] Error creating push subscription:', error)

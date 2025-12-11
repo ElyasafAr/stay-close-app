@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Debug: Add detailed logging and debug page for Service Worker and Push Notifications"
+$commitMessage = "Fix: Use API service instead of direct fetch for VAPID key endpoint"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files
