@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Fix: Timezone support - save user timezone and use it when calculating next_trigger for reminders"
+$commitMessage = "Fix: FCM WebpushFCMOptions.link must be HTTPS URL - use full frontend URL"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files

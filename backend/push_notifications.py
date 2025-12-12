@@ -101,7 +101,7 @@ def send_push_notification(
                     require_interaction=False,
                 ),
                 fcm_options=messaging.WebpushFCMOptions(
-                    link='/'
+                    link=os.getenv('FRONTEND_URL', 'https://stay-close-app-front-production.up.railway.app') + '/'
                 )
             ),
             # הגדרות ל-Android
