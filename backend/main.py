@@ -99,7 +99,8 @@ def check_and_send_reminders():
                         scheduled_datetime=db_reminder.scheduled_datetime,
                         weekdays=weekdays,
                         specific_time=db_reminder.specific_time,
-                        last_triggered=now
+                        last_triggered=now,
+                        user_timezone=db_reminder.timezone or 'Asia/Jerusalem'
                     )
             
             if should_trigger:
@@ -917,7 +918,8 @@ async def create_reminder(
     
     # Calculate next trigger using advanced function
     now = datetime.now(timezone.utc)
-    print(f"🔍 [CREATE] Calculating next_trigger: type={reminder.reminder_type}, specific_time={reminder.specific_time}, now={now}")
+    user_timezone = reminder.timezone or 'Asia/Jerusalem'  # Default to Israel timezone
+    print(f"🔍 [CREATE] Calculating next_trigger: type={reminder.reminder_type}, specific_time={reminder.specific_time}, timezone={user_timezone}, now={now}")
     next_trigger = calculate_next_trigger_advanced(
         reminder_type=reminder.reminder_type or 'recurring',
         interval_type=reminder.interval_type,
@@ -925,7 +927,8 @@ async def create_reminder(
         scheduled_datetime=reminder.scheduled_datetime,
         weekdays=reminder.weekdays,
         specific_time=reminder.specific_time,
-        last_triggered=None
+        last_triggered=None,
+        user_timezone=user_timezone
     )
     print(f"✅ [CREATE] Calculated next_trigger: {next_trigger}")
     
@@ -944,6 +947,7 @@ async def create_reminder(
         scheduled_datetime=reminder.scheduled_datetime,
         weekdays=weekdays_json,
         specific_time=reminder.specific_time,
+        timezone=user_timezone,  # שמירת ה-timezone של המשתמש
         one_time_triggered=False,
         last_triggered=None,
         next_trigger=next_trigger,
@@ -999,7 +1003,8 @@ async def update_reminder(
     
     # Calculate next trigger using advanced function
     now = datetime.now(timezone.utc)
-    print(f"🔍 [UPDATE] Calculating next_trigger for reminder {reminder_id}: type={reminder.reminder_type}, specific_time={reminder.specific_time}, now={now}")
+    user_timezone = reminder.timezone or db_reminder.timezone or 'Asia/Jerusalem'
+    print(f"🔍 [UPDATE] Calculating next_trigger for reminder {reminder_id}: type={reminder.reminder_type}, specific_time={reminder.specific_time}, timezone={user_timezone}, now={now}")
     next_trigger = calculate_next_trigger_advanced(
         reminder_type=reminder.reminder_type or 'recurring',
         interval_type=reminder.interval_type,
@@ -1007,7 +1012,8 @@ async def update_reminder(
         scheduled_datetime=reminder.scheduled_datetime,
         weekdays=reminder.weekdays,
         specific_time=reminder.specific_time,
-        last_triggered=db_reminder.last_triggered
+        last_triggered=db_reminder.last_triggered,
+        user_timezone=user_timezone
     )
     print(f"✅ [UPDATE] Calculated next_trigger: {next_trigger}")
     

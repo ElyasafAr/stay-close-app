@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Feature: Auto-generate firebase-messaging-sw.js from environment variables for FCM push notifications"
+$commitMessage = "Fix: Timezone support - save user timezone and use it when calculating next_trigger for reminders"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files
