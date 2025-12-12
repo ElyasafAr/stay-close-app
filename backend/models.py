@@ -14,8 +14,15 @@ class User(Base):
     __tablename__ = "users"
     
     id = Column(String, primary_key=True, index=True)  # user_id from auth
-    username = Column(String, unique=True, index=True, nullable=False)
-    email = Column(String, unique=True, index=True, nullable=False)
+    
+    # Encrypted fields - username
+    username_hash = Column(String, unique=True, index=True, nullable=False)  # SHA256 for lookup
+    username_encrypted = Column(String, nullable=False)  # AES encrypted for display
+    
+    # Encrypted fields - email
+    email_hash = Column(String, unique=True, index=True, nullable=False)  # SHA256 for lookup
+    email_encrypted = Column(String, nullable=False)  # AES encrypted for display
+    
     password_hash = Column(String, nullable=True)  # Nullable for OAuth users
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
@@ -30,7 +37,7 @@ class Contact(Base):
     
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     user_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    name = Column(String, nullable=False)
+    name_encrypted = Column(String, nullable=False)  # AES encrypted contact name
     default_tone = Column(String, nullable=True, default='friendly')  # Default tone for messages: 'friendly', 'warm', 'casual', 'formal'
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     

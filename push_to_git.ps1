@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Fix: Hamburger menu button visibility in Dark Mode on mobile"
+$commitMessage = "Feature: Database encryption for sensitive data (email, username, contact names)"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files

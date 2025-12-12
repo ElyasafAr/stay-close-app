@@ -28,6 +28,7 @@ from auth import (
     register_user, authenticate_user, create_access_token,
     get_current_user, create_or_get_google_user, create_or_get_firebase_user, verify_token
 )
+from encryption import encrypt, decrypt
 import threading
 import schedule
 import time
@@ -138,15 +139,16 @@ def check_and_send_reminders():
                 ).all()
                 
                 # שלח Push Notification לכל ה-tokens
+                contact_name = decrypt(contact.name_encrypted)
                 for push_token in push_tokens:
                     send_push_notification(
                         push_token=push_token.token,
                         title="זמן לשלוח הודעה! 💌",
-                        body=f"הגיע הזמן לשלוח הודעה ל-{contact.name}\n({reminder_text})",
+                        body=f"הגיע הזמן לשלוח הודעה ל-{contact_name}\n({reminder_text})",
                         data={
                             "reminder_id": db_reminder.id,
                             "contact_id": contact.id,
-                            "contact_name": contact.name
+                            "contact_name": contact_name
                         }
                     )
         
@@ -528,11 +530,11 @@ async def get_contacts(
     """קבלת רשימת כל אנשי הקשר של המשתמש הנוכחי"""
     user_id = current_user["user_id"]
     db_contacts = get_contacts_from_db(db, user_id)
-    # Convert SQLAlchemy models to Pydantic models
+    # Convert SQLAlchemy models to Pydantic models (decrypt name)
     return [Contact(
         id=c.id,
         user_id=c.user_id,
-        name=c.name,
+        name=decrypt(c.name_encrypted),
         default_tone=c.default_tone,
         created_at=c.created_at
     ) for c in db_contacts]
@@ -548,11 +550,11 @@ async def get_contact(
     db_contact = get_contact_by_id(db, contact_id, user_id)
     if not db_contact:
         raise HTTPException(status_code=404, detail="איש קשר לא נמצא")
-    # Convert SQLAlchemy model to Pydantic model
+    # Convert SQLAlchemy model to Pydantic model (decrypt name)
     return Contact(
         id=db_contact.id,
         user_id=db_contact.user_id,
-        name=db_contact.name,
+        name=decrypt(db_contact.name_encrypted),
         default_tone=db_contact.default_tone,
         created_at=db_contact.created_at
     )
@@ -566,10 +568,13 @@ async def create_contact(
     """יצירת איש קשר חדש (של המשתמש הנוכחי)"""
     user_id = current_user["user_id"]
     
-    # Create new contact in database
+    # Encrypt the contact name
+    name_encrypted = encrypt(contact.name)
+    
+    # Create new contact in database with encrypted name
     db_contact = DBContact(
         user_id=user_id,
-        name=contact.name,
+        name_encrypted=name_encrypted,
         default_tone=contact.default_tone or 'friendly',
         created_at=datetime.now(timezone.utc)
     )
@@ -578,11 +583,11 @@ async def create_contact(
     db.refresh(db_contact)
     
     print(f"✅ [DATABASE] Created contact {db_contact.id} for user {user_id}")
-    # Convert SQLAlchemy model to Pydantic model
+    # Convert SQLAlchemy model to Pydantic model (return original name)
     return Contact(
         id=db_contact.id,
         user_id=db_contact.user_id,
-        name=db_contact.name,
+        name=contact.name,  # Return original name, not encrypted
         default_tone=db_contact.default_tone,
         created_at=db_contact.created_at
     )
@@ -602,19 +607,19 @@ async def update_contact(
     if not db_contact:
         raise HTTPException(status_code=404, detail="איש קשר לא נמצא")
     
-    # Update contact fields
-    db_contact.name = contact.name
+    # Update contact fields (encrypt name)
+    db_contact.name_encrypted = encrypt(contact.name)
     db_contact.default_tone = contact.default_tone or 'friendly'
     
     db.commit()
     db.refresh(db_contact)
     
     print(f"✅ [DATABASE] Updated contact {contact_id} for user {user_id}")
-    # Convert SQLAlchemy model to Pydantic model
+    # Convert SQLAlchemy model to Pydantic model (return original name)
     return Contact(
         id=db_contact.id,
         user_id=db_contact.user_id,
-        name=db_contact.name,
+        name=contact.name,  # Return original name, not encrypted
         default_tone=db_contact.default_tone,
         created_at=db_contact.created_at
     )
@@ -696,10 +701,11 @@ async def check_reminders(
                     continue
                 
                 # Send push notification
+                contact_name = decrypt(contact.name_encrypted)
                 push_tokens = db.query(PushToken).filter(PushToken.user_id == user_id).all()
                 if push_tokens:
-                    notification_title = f"תזכורת: {contact.name}"
-                    notification_body = f"זמן להתקשר ל-{contact.name}!"
+                    notification_title = f"תזכורת: {contact_name}"
+                    notification_body = f"זמן להתקשר ל-{contact_name}!"
                     
                     for push_token in push_tokens:
                         send_push_notification(
@@ -1183,6 +1189,9 @@ async def generate_message(
     if not contact:
         raise HTTPException(status_code=404, detail="איש קשר לא נמצא")
     
+    # Decrypt contact name for display
+    contact_name = decrypt(contact.name_encrypted)
+    
     # קבלת מפתח API
     api_key = os.getenv("XAI_API_KEY") or os.getenv("GROQ_API_KEY")
     if not api_key:
@@ -1227,7 +1236,7 @@ async def generate_message(
         'celebration': 'ברכה על חגיגה'
     }.get(request.message_type, request.message_type)
     
-    prompt = f"""צור הודעה בעברית מסוג {message_type_hebrew} עבור {contact.name}.
+    prompt = f"""צור הודעה בעברית מסוג {message_type_hebrew} עבור {contact_name}.
 טון: {tone}
 """
     if request.additional_context:
@@ -1282,7 +1291,7 @@ async def generate_message(
         
         return {
             "message": message,
-            "contact_name": contact.name,
+            "contact_name": contact_name,
             "message_type": request.message_type,
             "tone": request.tone
         }
