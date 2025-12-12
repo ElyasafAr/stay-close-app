@@ -235,6 +235,15 @@ html.dark .dropdown {
   background: rgba(168, 213, 226, 0.1);
 }
 
+html.dark .mobileMenuButton {
+  color: #f9fafb !important;
+}
+
+html.dark .mobileMenuButton svg {
+  fill: #f9fafb !important;
+  color: #f9fafb !important;
+}
+
 html.dark .mobileMenuButton:hover {
   background: rgba(79, 195, 247, 0.2);
 }
