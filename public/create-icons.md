@@ -26,3 +26,5 @@ convert logo.svg -resize 192x192 public/icon-192x192.png
 ### אפשרות 4: אייקון זמני (placeholder)
 עד שיהיה אייקון אמיתי, אפשר ליצור אייקון פשוט עם טקסט או צבע.
 
+
+

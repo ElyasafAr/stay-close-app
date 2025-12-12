@@ -227,3 +227,5 @@ self.addEventListener('push', function(event) {
 
 **האם תרצה שאתחיל לממש Service Worker?**
 
+
+

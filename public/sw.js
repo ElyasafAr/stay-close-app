@@ -1,7 +1,7 @@
-// Service Worker - מקבל Push Notifications ומציג התראות
+// Service Worker - מקבל Push Notifications מ-Firebase Cloud Messaging
 // רץ גם כשהדפדפן פתוח אבל הדף סגור
 
-const CACHE_NAME = 'stay-close-v1'
+const CACHE_NAME = 'stay-close-v2'
 
 // התקנה
 self.addEventListener('install', (event) => {
@@ -27,7 +27,7 @@ self.addEventListener('activate', (event) => {
   return self.clients.claim() // קח שליטה על כל ה-clients
 })
 
-// קבלת Push Notifications
+// קבלת Push Notifications (עובד עם FCM ו-Web Push)
 self.addEventListener('push', (event) => {
   console.log('[SW] Push notification received:', event)
   
@@ -44,18 +44,54 @@ self.addEventListener('push', (event) => {
   if (event.data) {
     try {
       const pushData = event.data.json()
-      data = {
-        title: pushData.title || data.title,
-        body: pushData.body || data.body,
-        icon: pushData.icon || data.icon,
-        badge: pushData.badge || data.badge,
-        tag: pushData.tag || data.tag,
-        data: pushData.data || data.data
+      console.log('[SW] Push data:', pushData)
+      
+      // FCM שולח נתונים בפורמט שונה
+      // בדיקה אם זה FCM notification או data message
+      if (pushData.notification) {
+        // FCM notification message
+        data = {
+          title: pushData.notification.title || data.title,
+          body: pushData.notification.body || data.body,
+          icon: pushData.notification.icon || data.icon,
+          badge: pushData.notification.badge || data.badge,
+          tag: pushData.notification.tag || data.tag,
+          data: pushData.data || data.data
+        }
+      } else if (pushData.data) {
+        // FCM data message
+        data = {
+          title: pushData.data.title || data.title,
+          body: pushData.data.body || data.body,
+          icon: pushData.data.icon || data.icon,
+          badge: pushData.data.badge || data.badge,
+          tag: pushData.data.tag || data.tag,
+          data: pushData.data
+        }
+      } else {
+        // פורמט ישיר (Web Push רגיל)
+        data = {
+          title: pushData.title || data.title,
+          body: pushData.body || data.body,
+          icon: pushData.icon || data.icon,
+          badge: pushData.badge || data.badge,
+          tag: pushData.tag || data.tag,
+          data: pushData.data || data.data
+        }
       }
     } catch (e) {
       console.error('[SW] Error parsing push data:', e)
+      // ננסה כטקסט
+      try {
+        const textData = event.data.text()
+        data.body = textData
+      } catch (e2) {
+        console.error('[SW] Error getting push text:', e2)
+      }
     }
   }
+  
+  console.log('[SW] Showing notification:', data)
   
   const options = {
     body: data.body,
@@ -136,4 +172,3 @@ self.addEventListener('message', (event) => {
     self.skipWaiting()
   }
 })
-

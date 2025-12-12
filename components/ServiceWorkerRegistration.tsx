@@ -1,268 +1,145 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { isAuthenticated } from '@/services/auth'
-import { postData, getData } from '@/services/api'
+import { postData } from '@/services/api'
+import { getFCMToken, onFCMMessage } from '@/lib/firebase'
 
 /**
- * קומפוננטה לרישום Service Worker ו-Push Notifications
+ * קומפוננטה לרישום Push Notifications עם Firebase Cloud Messaging
  */
 export function ServiceWorkerRegistration() {
+  const [fcmToken, setFcmToken] = useState<string | null>(null)
+
   useEffect(() => {
-    console.log('🔍 [SW] ServiceWorkerRegistration component mounted')
+    console.log('🔍 [FCM] ServiceWorkerRegistration component mounted')
     
     if (typeof window === 'undefined') {
-      console.log('⚠️ [SW] Window is undefined (SSR)')
+      console.log('⚠️ [FCM] Window is undefined (SSR)')
       return
     }
 
     // רק אם המשתמש מחובר
     const authenticated = isAuthenticated()
-    console.log('🔍 [SW] User authenticated:', authenticated)
+    console.log('🔍 [FCM] User authenticated:', authenticated)
     if (!authenticated) {
-      console.log('⚠️ [SW] User not authenticated - skipping registration')
+      console.log('⚠️ [FCM] User not authenticated - skipping FCM registration')
       return
     }
 
-    const registerServiceWorker = async () => {
-      console.log('🔍 [SW] Starting registration process...')
-      console.log('🔍 [SW] Service Worker support:', 'serviceWorker' in navigator)
-      console.log('🔍 [SW] Push Manager support:', 'PushManager' in window)
+    const setupFCM = async () => {
+      console.log('🔍 [FCM] Starting FCM setup...')
       
-      if ('serviceWorker' in navigator) {
-        try {
-          // רישום Service Worker
-          console.log('🔍 [SW] Attempting to register /sw.js...')
-          const registration = await navigator.serviceWorker.register('/sw.js', {
-            scope: '/'
-          })
+      try {
+        // קבלת FCM token
+        console.log('🔍 [FCM] Requesting FCM token...')
+        const token = await getFCMToken()
+        
+        if (token) {
+          console.log('✅ [FCM] Token received:', token.substring(0, 30) + '...')
+          setFcmToken(token)
           
-          console.log('✅ [SW] Service Worker registered successfully!')
-          console.log('   Scope:', registration.scope)
-          console.log('   Active:', registration.active?.state)
-          console.log('   Installing:', registration.installing?.state)
-          console.log('   Waiting:', registration.waiting?.state)
-
-          // בדיקה אם יש Push Notifications support
-          if ('PushManager' in window) {
-            console.log('🔍 [SW] PushManager is available')
-            
-            // בדיקת הרשאות נוכחיות
-            const currentPermission = Notification.permission
-            console.log('🔍 [SW] Current notification permission:', currentPermission)
-            
-            // קבלת Push subscription
-            console.log('🔍 [SW] Checking for existing subscription...')
-            let subscription = await registration.pushManager.getSubscription()
-            
-            if (subscription) {
-              console.log('✅ [SW] Found existing subscription:', {
-                endpoint: subscription.endpoint.substring(0, 50) + '...',
-                keys: Object.keys(subscription.getKey ? subscription.getKey('p256dh') || {} : {})
-              })
-            } else {
-              console.log('ℹ️ [SW] No existing subscription found')
+          // שליחת ה-token ל-backend
+          console.log('🔍 [FCM] Sending token to backend...')
+          const tokenData = {
+            token: token, // FCM token ישירות, לא JSON
+            device_info: {
+              platform: 'web',
+              userAgent: navigator.userAgent,
+              language: navigator.language,
+              type: 'fcm'
             }
-            
-            // אם אין subscription, נבקש הרשאה ונצור אחד
-            if (!subscription) {
-              console.log('🔍 [SW] Requesting notification permission...')
-              // בקשת הרשאה
-              const permission = await Notification.requestPermission()
-              console.log('🔍 [SW] Permission result:', permission)
-              
-              if (permission === 'granted') {
-                console.log('✅ [SW] Permission granted! Fetching VAPID key...')
-                // קבלת VAPID public key מה-backend
-                try {
-                  console.log('🔍 [SW] Fetching VAPID key from backend...')
-                  const vapidKeyResponse = await getData<{ publicKey: string }>('/api/push/vapid-public-key')
-                  console.log('🔍 [SW] VAPID key response:', {
-                    success: vapidKeyResponse.success,
-                    hasData: !!vapidKeyResponse.data
-                  })
-                  
-                  if (vapidKeyResponse.success && vapidKeyResponse.data) {
-                    console.log('✅ [SW] VAPID key received:', {
-                      hasPublicKey: !!vapidKeyResponse.data.publicKey,
-                      keyLength: vapidKeyResponse.data.publicKey?.length,
-                      keyPreview: vapidKeyResponse.data.publicKey?.substring(0, 20) + '...'
-                    })
-                    const { publicKey } = vapidKeyResponse.data
-                    
-                    // בדיקה שהמפתח לא ריק
-                    if (!publicKey || publicKey.trim().length === 0) {
-                      throw new Error('VAPID public key is empty')
-                    }
-                    
-                    // המרה מ-base64url ל-Uint8Array
-                    console.log('🔍 [SW] Converting VAPID key to Uint8Array...')
-                    console.log('🔍 [SW] Key format check:', {
-                      hasHyphens: publicKey.includes('-'),
-                      hasUnderscores: publicKey.includes('_'),
-                      hasEquals: publicKey.includes('=')
-                    })
-                    
-                    const applicationServerKey = urlBase64ToUint8Array(publicKey)
-                    console.log('✅ [SW] Key converted successfully, length:', applicationServerKey.length)
-                    
-                    // יצירת Push subscription
-                    console.log('🔍 [SW] Creating push subscription...')
-                    console.log('🔍 [SW] ApplicationServerKey details:', {
-                      type: applicationServerKey.constructor.name,
-                      length: applicationServerKey.length,
-                      isUint8Array: applicationServerKey instanceof Uint8Array,
-                      firstBytes: Array.from(applicationServerKey.slice(0, 10))
-                    })
-                    
-                    // ניסיון ליצור subscription
-                    // PushManager מצפה ל-BufferSource - צריך להשתמש ב-ArrayBuffer
-                    try {
-                      // המרה ל-ArrayBuffer (נדרש ל-PushManager)
-                      const keyBuffer = applicationServerKey.buffer.slice(
-                        applicationServerKey.byteOffset,
-                        applicationServerKey.byteOffset + applicationServerKey.byteLength
-                      ) as ArrayBuffer
-                      
-                      subscription = await registration.pushManager.subscribe({
-                        userVisibleOnly: true,
-                        applicationServerKey: keyBuffer
-                      })
-                    } catch (subscribeError) {
-                      console.error('❌ [SW] Subscribe error details:', {
-                        error: subscribeError instanceof Error ? subscribeError.message : String(subscribeError),
-                        name: subscribeError instanceof Error ? subscribeError.name : undefined,
-                        keyLength: applicationServerKey.length,
-                        keyType: applicationServerKey.constructor.name
-                      })
-                      throw subscribeError
-                    }
-                    console.log('✅ [SW] Push subscription created!', {
-                      endpoint: subscription.endpoint.substring(0, 50) + '...'
-                    })
-                    
-                    // שליחת subscription ל-backend
-                    console.log('🔍 [SW] Sending subscription to backend...')
-                    const tokenData = {
-                      token: JSON.stringify(subscription),
-                      device_info: {
-                        platform: 'web',
-                        userAgent: navigator.userAgent,
-                        language: navigator.language
-                      }
-                    }
-                    console.log('🔍 [SW] Token data:', {
-                      tokenLength: tokenData.token.length,
-                      deviceInfo: tokenData.device_info
-                    })
-                    
-                    const backendResponse = await postData('/api/push-tokens', tokenData)
-                    console.log('✅ [SW] Push subscription sent to backend successfully!', backendResponse)
-                  } else {
-                    console.error('❌ [SW] Failed to get VAPID key:', vapidKeyResponse.error || 'Unknown error')
-                  }
-                } catch (error) {
-                  console.error('❌ [SW] Error creating push subscription:', error)
-                  console.error('❌ [SW] Error details:', {
-                    message: error instanceof Error ? error.message : String(error),
-                    stack: error instanceof Error ? error.stack : undefined
-                  })
-                }
-              } else {
-                console.warn('⚠️ [SW] Notification permission denied:', permission)
-              }
-            } else {
-              // יש כבר subscription - נשלח ל-backend (למקרה שלא נשמר)
-              console.log('🔍 [SW] Sending existing subscription to backend...')
-              try {
-                const tokenData = {
-                  token: JSON.stringify(subscription),
-                  device_info: {
-                    platform: 'web',
-                    userAgent: navigator.userAgent,
-                    language: navigator.language
-                  }
-                }
-                const backendResponse = await postData('/api/push-tokens', tokenData)
-                console.log('✅ [SW] Existing push subscription sent to backend:', backendResponse)
-              } catch (error) {
-                console.error('❌ [SW] Error sending existing subscription:', error)
-                console.error('❌ [SW] Error details:', {
-                  message: error instanceof Error ? error.message : String(error),
-                  stack: error instanceof Error ? error.stack : undefined
-                })
-              }
-            }
-          } else {
-            console.warn('⚠️ [SW] Push Notifications not supported in this browser')
           }
-
-          // עדכון Service Worker אם יש גרסה חדשה
-          registration.addEventListener('updatefound', () => {
-            const newWorker = registration.installing
-            if (newWorker) {
-              newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  console.log('🔄 [SW] New service worker available - reload to update')
-                }
+          
+          try {
+            const response = await postData('/api/push-tokens', tokenData)
+            console.log('✅ [FCM] Token sent to backend:', response)
+          } catch (error) {
+            console.error('❌ [FCM] Error sending token to backend:', error)
+          }
+        } else {
+          console.warn('⚠️ [FCM] No token received')
+        }
+        
+        // האזנה להודעות נכנסות (כשהאפליקציה פתוחה)
+        const unsubscribe = onFCMMessage((payload) => {
+          console.log('📩 [FCM] Foreground message received:', payload)
+          
+          // הצגת התראה כשהאפליקציה פתוחה
+          if (payload.notification) {
+            const { title, body } = payload.notification
+            
+            // הצגת התראה ידנית (כי Firebase לא מציג אוטומטית ב-foreground)
+            if (Notification.permission === 'granted') {
+              new Notification(title || 'Stay Close', {
+                body: body || '',
+                icon: '/icon-192x192.png',
+                badge: '/icon-192x192.png',
+                tag: 'fcm-foreground',
               })
             }
-          })
-
-        } catch (error) {
-          console.error('❌ [SW] Service Worker registration failed:', error)
-          console.error('❌ [SW] Error details:', {
-            message: error instanceof Error ? error.message : String(error),
-            stack: error instanceof Error ? error.stack : undefined,
-            name: error instanceof Error ? error.name : undefined
-          })
+          }
+        })
+        
+        // Cleanup
+        return () => {
+          unsubscribe()
         }
-      } else {
-        console.warn('⚠️ [SW] Service Workers not supported in this browser')
+        
+      } catch (error) {
+        console.error('❌ [FCM] Error setting up FCM:', error)
       }
     }
 
-    registerServiceWorker()
+    setupFCM()
+  }, [])
+
+  // גם רישום Service Worker לפונקציונליות נוספת
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
+      return
+    }
+
+    const registerSW = async () => {
+      try {
+        console.log('🔍 [SW] Registering service worker...')
+        const registration = await navigator.serviceWorker.register('/sw.js', {
+          scope: '/'
+        })
+        console.log('✅ [SW] Service Worker registered:', registration.scope)
+      } catch (error) {
+        console.error('❌ [SW] Service Worker registration failed:', error)
+      }
+    }
+
+    registerSW()
   }, [])
 
   return null // קומפוננטה לא מציגה כלום
 }
 
 /**
- * המרת VAPID public key מ-base64url ל-Uint8Array
- * VAPID keys הם בפורמט base64url (URL-safe base64)
+ * Hook לקבלת FCM token (לשימוש בקומפוננטות אחרות)
  */
-function urlBase64ToUint8Array(base64String: string): Uint8Array {
-  // הוספת padding אם צריך (base64url לא כולל padding)
-  const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
-  
-  // המרה מ-base64url ל-base64 רגיל
-  // base64url משתמש ב-'-' במקום '+' וב-'_' במקום '/'
-  const base64 = (base64String + padding)
-    .replace(/-/g, '+')
-    .replace(/_/g, '/')
+export function useFCMToken() {
+  const [token, setToken] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  try {
-    // המרה מ-base64 ל-binary string
-    const rawData = window.atob(base64)
-    
-    // יצירת Uint8Array מהבינארי
-    const outputArray = new Uint8Array(rawData.length)
-    for (let i = 0; i < rawData.length; ++i) {
-      outputArray[i] = rawData.charCodeAt(i)
+  useEffect(() => {
+    const getToken = async () => {
+      try {
+        const fcmToken = await getFCMToken()
+        setToken(fcmToken)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to get FCM token')
+      } finally {
+        setLoading(false)
+      }
     }
-    
-    console.log('🔍 [SW] Key conversion details:', {
-      originalLength: base64String.length,
-      base64Length: base64.length,
-      outputLength: outputArray.length,
-      firstBytes: Array.from(outputArray.slice(0, 5))
-    })
-    
-    return outputArray
-  } catch (error) {
-    console.error('❌ [SW] Error converting VAPID key:', error)
-    throw new Error(`Failed to convert VAPID key: ${error instanceof Error ? error.message : String(error)}`)
-  }
-}
 
+    getToken()
+  }, [])
+
+  return { token, loading, error }
+}

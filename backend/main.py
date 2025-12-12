@@ -1416,36 +1416,15 @@ async def get_me(current_user: dict = Depends(get_current_user)):
 
 @app.get("/api/push/vapid-public-key")
 async def get_vapid_public_key():
-    """קבלת VAPID public key ל-Push Notifications"""
-    from push_notifications import VAPID_PUBLIC_KEY
-    
-    if not VAPID_PUBLIC_KEY:
-        raise HTTPException(
-            status_code=500, 
-            detail="VAPID keys not configured. Please set VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY environment variables"
-        )
-    
-    # בדיקה שהמפתח תקין
-    key_length = len(VAPID_PUBLIC_KEY)
-    expected_length = 88  # VAPID public key should be ~88 chars (65 bytes * 4/3)
-    
-    # ניקוי המפתח מרווחים ותווים לא תקינים
-    cleaned_key = VAPID_PUBLIC_KEY.strip()
-    
-    # בדיקה שהמפתח בפורמט base64url
-    import re
-    if not re.match(r'^[A-Za-z0-9_-]+$', cleaned_key):
-        print(f"⚠️ [VAPID] Key contains invalid characters. Length: {key_length}")
-        # ננסה לנקות את המפתח
-        cleaned_key = re.sub(r'[^A-Za-z0-9_-]', '', cleaned_key)
-    
-    if key_length != len(cleaned_key):
-        print(f"⚠️ [VAPID] Key was cleaned. Original length: {key_length}, Cleaned length: {len(cleaned_key)}")
-    
-    if len(cleaned_key) != expected_length:
-        print(f"⚠️ [VAPID] Key length is {len(cleaned_key)}, expected ~{expected_length}. This may cause issues.")
-    
-    return {"publicKey": cleaned_key}
+    """
+    Endpoint זה נשמר לצורך תאימות לאחור.
+    עכשיו אנחנו משתמשים ב-Firebase Cloud Messaging (FCM) ולא צריך VAPID keys.
+    """
+    # FCM לא צריך VAPID keys - Firebase מנהל את זה אוטומטית
+    return {
+        "message": "Using Firebase Cloud Messaging (FCM). No VAPID key needed.",
+        "useFCM": True
+    }
 
 @app.get("/api/health")
 async def health_check():

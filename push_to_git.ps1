@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Fix: Support multiple VAPID key formats (PEM, base64url, DER) for compatibility with online generators"
+$commitMessage = "Feature: Auto-generate firebase-messaging-sw.js from environment variables for FCM push notifications"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files
@@ -59,6 +59,7 @@ Write-Host "Force adding specific critical files..." -ForegroundColor Cyan
 git add -f i18n/useTranslation.ts i18n/he.json 2>&1 | Out-Null
 git add -f services/contacts.ts services/reminders.ts services/messages.ts services/api.ts services/auth.ts 2>&1 | Out-Null
 git add -f components/Loading.tsx components/AuthGuard.tsx components/Header.tsx components/ReminderChecker.tsx components/ReminderModal.tsx 2>&1 | Out-Null
+git add -f scripts/ 2>&1 | Out-Null
 Write-Host "✅ Critical directories and files force-added" -ForegroundColor Green
 
 # Check status after adding
