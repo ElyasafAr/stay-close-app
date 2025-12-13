@@ -8,12 +8,12 @@ importScripts('https://www.gstatic.com/firebasejs/10.7.0/firebase-messaging-comp
 
 // Firebase Configuration - נוצר אוטומטית מ-environment variables
 const firebaseConfig = {
-  apiKey: "MISSING_API_KEY",
-  authDomain: "stay-close-f8d89.firebaseapp.com",
-  projectId: "stay-close-f8d89",
-  storageBucket: "stay-close-f8d89.firebasestorage.app",
-  messagingSenderId: "MISSING_SENDER_ID",
-  appId: "MISSING_APP_ID"
+  apiKey: "AIzaSyAQHHAcNK6phJYBpS26WkX0y3gyvt5dVOc",
+  authDomain: "stay-close-app.firebaseapp.com",
+  projectId: "stay-close-app",
+  storageBucket: "stay-close-app.firebasestorage.app",
+  messagingSenderId: "86289869108",
+  appId: "1:86289869108:android:9ed5ee1e60f646cdeedd61"
 }
 
 // Log config status

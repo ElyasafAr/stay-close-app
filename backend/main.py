@@ -226,11 +226,26 @@ allowed_origins.append("http://stay-close-app-front-production.up.railway.app")
 print(f"[CORS] Allowed origins: {allowed_origins}")
 
 # Additional middleware to ensure CORS headers are always set
-# This MUST be added BEFORE the CORS middleware to work correctly
+# Handle OPTIONS preflight requests explicitly
 @app.middleware("http")
 async def add_cors_headers(request: Request, call_next):
-    """Ensure CORS headers are always present"""
+    """Ensure CORS headers are always present, especially for OPTIONS preflight"""
     origin = request.headers.get("origin")
+    
+    # Handle OPTIONS preflight requests immediately
+    if request.method == "OPTIONS":
+        print(f"[CORS] OPTIONS preflight request from origin: {origin}")
+        if origin and origin in allowed_origins:
+            response = Response(status_code=200)
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+            response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+            response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With, Accept, Origin"
+            response.headers["Access-Control-Max-Age"] = "3600"
+            print(f"[CORS] ✅ OPTIONS response sent for origin: {origin}")
+            return response
+        else:
+            print(f"[CORS] ❌ OPTIONS denied for origin: {origin}")
     
     response = await call_next(request)
     
@@ -240,7 +255,7 @@ async def add_cors_headers(request: Request, call_next):
             response.headers["Access-Control-Allow-Origin"] = origin
             response.headers["Access-Control-Allow-Credentials"] = "true"
             response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-            response.headers["Access-Control-Allow-Headers"] = "*"
+            response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With, Accept, Origin"
             response.headers["Access-Control-Expose-Headers"] = "*"
             print(f"[CORS] Added headers for origin: {origin}")
         else:

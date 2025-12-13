@@ -6,6 +6,30 @@
 const fs = require('fs');
 const path = require('path');
 
+// טען את משתני הסביבה מ-.env.local ו-.env
+const envLocalPath = path.join(__dirname, '..', '.env.local');
+const envPath = path.join(__dirname, '..', '.env');
+
+function loadEnvFile(filePath) {
+  if (fs.existsSync(filePath)) {
+    const content = fs.readFileSync(filePath, 'utf8');
+    content.split('\n').forEach(line => {
+      const trimmed = line.trim();
+      if (trimmed && !trimmed.startsWith('#')) {
+        const [key, ...valueParts] = trimmed.split('=');
+        const value = valueParts.join('=');
+        if (key && value && !process.env[key]) {
+          process.env[key] = value;
+        }
+      }
+    });
+  }
+}
+
+// טען .env קודם, אז .env.local יכול לדרוס
+loadEnvFile(envPath);
+loadEnvFile(envLocalPath);
+
 // קרא את משתני הסביבה
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'MISSING_API_KEY',
