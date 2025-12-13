@@ -6,9 +6,10 @@ import {
   GoogleAuthProvider, 
   onAuthStateChanged,
   signOut as firebaseSignOut,
-  User as FirebaseUser
+  User as FirebaseUser,
+  Auth
 } from 'firebase/auth'
-import { auth } from '@/lib/firebase'
+import { getAuth } from '@/lib/firebase'
 
 export interface User {
   user_id: string
@@ -115,10 +116,25 @@ export async function login(data: LoginData): Promise<AuthResponse> {
 }
 
 /**
+ * בדיקה אם רצים על פלטפורמה Native (Android/iOS)
+ */
+export function isNativePlatform(): boolean {
+  if (typeof window === 'undefined') return false
+  // Capacitor מוסיף את האובייקט הזה כשרצים על Native
+  return !!(window as any).Capacitor?.isNativePlatform?.()
+}
+
+/**
  * התחברות עם Google דרך Firebase
  */
 export async function loginWithGoogle(): Promise<AuthResponse> {
   console.log('🔵 [AUTH] Starting Google login...')
+  
+  // בדיקה אם רצים על Native - Google Sign-In דורש הגדרה נפרדת
+  if (isNativePlatform()) {
+    console.warn('⚠️ [AUTH] Google login not available on native platform yet')
+    throw new Error('התחברות עם Google לא זמינה באפליקציה. אנא השתמש בשם משתמש וסיסמה.')
+  }
   
   try {
     console.log('🔵 [AUTH] Creating Google provider...')
@@ -128,7 +144,11 @@ export async function loginWithGoogle(): Promise<AuthResponse> {
     })
     
     console.log('🔵 [AUTH] Calling signInWithPopup...')
-    const result = await signInWithPopup(auth, provider)
+    const firebaseAuth = getAuth()
+    if (!firebaseAuth) {
+      throw new Error('שגיאה בהתחברות. נא לנסות שוב.')
+    }
+    const result = await signInWithPopup(firebaseAuth, provider)
     console.log('✅ [AUTH] Firebase sign-in successful:', {
       uid: result.user.uid,
       email: result.user.email,
@@ -200,7 +220,10 @@ export async function loginWithGoogle(): Promise<AuthResponse> {
 export async function logout(): Promise<void> {
   try {
     // התנתקות מ-Firebase
-    await firebaseSignOut(auth)
+    const firebaseAuth = getAuth()
+    if (firebaseAuth) {
+      await firebaseSignOut(firebaseAuth)
+    }
   } catch (error) {
     console.error('שגיאה בהתנתקות מ-Firebase:', error)
   }
@@ -268,7 +291,23 @@ export async function getCurrentUser(): Promise<User> {
  * מעדכן את ה-token ב-localStorage כשמתעדכן
  */
 export function onAuthStateChange(callback: (user: User | null) => void) {
-  return onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
+  const firebaseAuth = getAuth()
+  
+  // אם Firebase לא זמין, נחזיר unsubscribe ריק ונבדוק localStorage
+  if (!firebaseAuth) {
+    // במצב SSR או כשאין Firebase, נבדוק localStorage
+    if (typeof window !== 'undefined') {
+      const storedUser = getStoredUser()
+      if (storedUser && localStorage.getItem('auth_token')) {
+        callback(storedUser)
+      } else {
+        callback(null)
+      }
+    }
+    return () => {} // unsubscribe ריק
+  }
+  
+  return onAuthStateChanged(firebaseAuth, async (firebaseUser: FirebaseUser | null) => {
     if (firebaseUser) {
       try {
         // קבלת token מעודכן

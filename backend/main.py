@@ -202,6 +202,10 @@ allowed_origins = [
     "http://127.0.0.1:3000",
     "http://127.0.0.1:3001",
     "http://127.0.0.1:3002",
+    # Capacitor Android/iOS
+    "https://localhost",
+    "capacitor://localhost",
+    "http://localhost",
 ]
 
 # אם יש משתנה סביבה, נוסיף אותו גם

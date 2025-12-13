@@ -3,6 +3,12 @@ const path = require('path')
 
 const nextConfig = {
   reactStrictMode: true,
+  // Static export for Capacitor
+  output: 'export',
+  // Disable image optimization for static export
+  images: {
+    unoptimized: true,
+  },
   // Ensure NEXT_PUBLIC_* environment variables are accessible
   env: {
     // Next.js does this automatically, but this helps ensure it works

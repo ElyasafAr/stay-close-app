@@ -1,45 +1,28 @@
 // Firebase Messaging Service Worker
-// נדרש לקבלת Push Notifications ב-background דרך FCM
+// נוצר אוטומטית על ידי scripts/generate-firebase-sw.js
+// אל תערוך קובץ זה ישירות!
 
 // Import Firebase scripts
 importScripts('https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js')
 importScripts('https://www.gstatic.com/firebasejs/10.7.0/firebase-messaging-compat.js')
 
-// =============================================================
-// הגדרות Firebase - Stay Close App
-// הערכים האלה צריכים להתאים ל-.env.local / Vercel Environment
-// =============================================================
+// Firebase Configuration - נוצר אוטומטית מ-environment variables
 const firebaseConfig = {
-  // ========== עדכן את הערכים האלה מ-Firebase Console ==========
-  // Firebase Console -> Project Settings -> General -> Your apps -> Config
-  apiKey: "YOUR_API_KEY_HERE",               // <-- יש לעדכן!
+  apiKey: "MISSING_API_KEY",
   authDomain: "stay-close-f8d89.firebaseapp.com",
   projectId: "stay-close-f8d89",
   storageBucket: "stay-close-f8d89.firebasestorage.app",
-  messagingSenderId: "YOUR_SENDER_ID_HERE",   // <-- יש לעדכן!
-  appId: "YOUR_APP_ID_HERE"                   // <-- יש לעדכן!
-  // ===========================================================
+  messagingSenderId: "MISSING_SENDER_ID",
+  appId: "MISSING_APP_ID"
 }
 
 // Log config status
-console.log('[FCM-SW] Firebase config:', {
+console.log('[FCM-SW] Firebase config loaded:', {
   projectId: firebaseConfig.projectId,
   authDomain: firebaseConfig.authDomain,
-  hasApiKey: !!firebaseConfig.apiKey && !firebaseConfig.apiKey.includes('YOUR_'),
-  hasSenderId: !!firebaseConfig.messagingSenderId && !firebaseConfig.messagingSenderId.includes('YOUR_')
+  hasApiKey: !!firebaseConfig.apiKey && !firebaseConfig.apiKey.includes('MISSING'),
+  hasSenderId: !!firebaseConfig.messagingSenderId && !firebaseConfig.messagingSenderId.includes('MISSING')
 })
-
-// בדיקה אם הקונפיגורציה תקינה
-const isConfigValid = firebaseConfig.apiKey && 
-                      !firebaseConfig.apiKey.includes('YOUR_') &&
-                      firebaseConfig.messagingSenderId &&
-                      !firebaseConfig.messagingSenderId.includes('YOUR_')
-
-if (!isConfigValid) {
-  console.error('[FCM-SW] ⚠️ Firebase config incomplete!')
-  console.error('[FCM-SW] Please update firebase-messaging-sw.js with values from:')
-  console.error('[FCM-SW] Firebase Console -> Project Settings -> General -> Your apps')
-}
 
 // Initialize Firebase
 try {

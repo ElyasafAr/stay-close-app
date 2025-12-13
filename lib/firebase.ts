@@ -1,7 +1,7 @@
 'use client'
 
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app'
-import { getAuth, Auth } from 'firebase/auth'
+import { getAuth as firebaseGetAuth, Auth } from 'firebase/auth'
 import { getMessaging, getToken, onMessage, Messaging, isSupported } from 'firebase/messaging'
 
 const firebaseConfig = {
@@ -13,17 +13,66 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 }
 
-// Initialize Firebase - רק אם עדיין לא אותחל
-let app: FirebaseApp
-if (getApps().length === 0) {
-  app = initializeApp(firebaseConfig)
-} else {
-  app = getApps()[0]
+// בדיקה אם יש קונפיגורציה תקינה
+function isFirebaseConfigValid(): boolean {
+  return !!(
+    firebaseConfig.apiKey &&
+    firebaseConfig.projectId &&
+    firebaseConfig.apiKey !== 'undefined' &&
+    firebaseConfig.projectId !== 'undefined'
+  )
 }
 
-// Export auth instance
-export const auth = getAuth(app)
-export default app
+// Initialize Firebase - רק ב-Client Side ורק אם עדיין לא אותחל
+let app: FirebaseApp | null = null
+let auth: Auth | null = null
+
+function getFirebaseApp(): FirebaseApp | null {
+  // אל תאתחל Firebase בזמן SSG/Build
+  if (typeof window === 'undefined') {
+    return null
+  }
+  
+  // בדיקה אם יש קונפיגורציה תקינה
+  if (!isFirebaseConfigValid()) {
+    console.warn('⚠️ [Firebase] Config not valid, skipping initialization')
+    return null
+  }
+  
+  if (app) {
+    return app
+  }
+  
+  try {
+    if (getApps().length === 0) {
+      app = initializeApp(firebaseConfig)
+    } else {
+      app = getApps()[0]
+    }
+  } catch (error) {
+    console.error('❌ [Firebase] Error initializing app:', error)
+    return null
+  }
+  
+  return app
+}
+
+function getFirebaseAuth(): Auth | null {
+  const firebaseApp = getFirebaseApp()
+  if (!firebaseApp) {
+    return null
+  }
+  
+  if (!auth) {
+    auth = firebaseGetAuth(firebaseApp)
+  }
+  
+  return auth
+}
+
+// Export auth instance (lazy initialization)
+export { getFirebaseAuth as getAuth }
+export default getFirebaseApp
 
 // Firebase Messaging - רק בדפדפן
 let messaging: Messaging | null = null
@@ -83,7 +132,13 @@ export async function getFirebaseMessaging(): Promise<Messaging | null> {
     // רישום Service Worker קודם
     const registration = await registerServiceWorker()
     
-    messaging = getMessaging(app)
+    const firebaseApp = getFirebaseApp()
+    if (!firebaseApp) {
+      console.warn('⚠️ [Firebase] App not initialized')
+      return null
+    }
+    
+    messaging = getMessaging(firebaseApp)
     console.log('✅ [Firebase] Messaging initialized')
     
     return messaging

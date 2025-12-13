@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Stay Close</string>
+    <string name="title_activity_main">Stay Close</string>
+    <string name="package_name">com.stayclose.app</string>
+    <string name="custom_url_scheme">com.stayclose.app</string>
+</resources>
