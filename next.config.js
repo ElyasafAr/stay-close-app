@@ -1,13 +1,16 @@
 /** @type {import('next').NextConfig} */
 const path = require('path')
 
+// Check if we're building for Capacitor (static export)
+const isCapacitorBuild = process.env.CAPACITOR_BUILD === 'true'
+
 const nextConfig = {
   reactStrictMode: true,
-  // Static export for Capacitor
-  output: 'export',
+  // Static export ONLY for Capacitor builds
+  ...(isCapacitorBuild && { output: 'export' }),
   // Disable image optimization for static export
   images: {
-    unoptimized: true,
+    unoptimized: isCapacitorBuild,
   },
   // Ensure NEXT_PUBLIC_* environment variables are accessible
   env: {

@@ -12,7 +12,8 @@
     "test:watch": "jest --watch",
     "cap:sync": "npx cap sync",
     "cap:open:android": "npx cap open android",
-    "build:android": "npm run build && npx cap sync android",
+    "build:capacitor": "set CAPACITOR_BUILD=true && npm run build",
+    "build:android": "npm run build:capacitor && npx cap sync android",
     "android": "npm run build:android && npx cap open android"
   },
   "dependencies": {
