@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "86289869108-vk33vi411evuf141ssbvvfgp5d0i5vgq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.stayclose.app",
+            "certificate_hash": "ababe5a3925fa8de0d3c174719ecae096365799a"
+          }
+        },
+        {
           "client_id": "86289869108-dk3gck5ulocqn7anf7fo311uvj3066i2.apps.googleusercontent.com",
           "client_type": 3
         }

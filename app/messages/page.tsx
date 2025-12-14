@@ -121,20 +121,46 @@ export default function MessagesPage() {
   }
 
   const handleShare = async () => {
-    if (!generatedMessage) return
+    console.log('🟢 [SHARE] handleShare called')
+    console.log('🟢 [SHARE] generatedMessage:', generatedMessage?.substring(0, 50))
+    
+    if (!generatedMessage) {
+      console.log('🟢 [SHARE] No message to share, returning')
+      return
+    }
 
     try {
-      // Check if Web Share API is available (works on mobile and modern browsers)
-      if (navigator.share) {
+      // Check if running on Capacitor (native)
+      const isNative = !!(window as any).Capacitor?.isNativePlatform?.()
+      console.log('🟢 [SHARE] isNative:', isNative)
+      console.log('🟢 [SHARE] navigator.share available:', !!navigator.share)
+      
+      if (isNative) {
+        console.log('🟢 [SHARE] Using Capacitor Share plugin...')
+        // Use Capacitor Share plugin on native
+        const { Share } = await import('@capacitor/share')
+        console.log('🟢 [SHARE] Share plugin imported, calling share...')
+        const result = await Share.share({
+          text: generatedMessage,
+          title: 'הודעה מותאמת אישית',
+          dialogTitle: 'שתף הודעה'
+        })
+        console.log('🟢 [SHARE] Share result:', result)
+      } else if (navigator.share) {
+        console.log('🟢 [SHARE] Using Web Share API...')
+        // Use Web Share API on web
         await navigator.share({
           text: generatedMessage,
           title: 'הודעה מותאמת אישית'
         })
+        console.log('🟢 [SHARE] Web Share completed')
       } else {
+        console.log('🟢 [SHARE] No share API available, falling back to copy')
         // Fallback: copy to clipboard and show message
         await handleCopy()
       }
     } catch (err) {
+      console.error('🟢 [SHARE] Error:', err)
       // User cancelled or error occurred
       if (err instanceof Error && err.name !== 'AbortError') {
         console.error('Share failed:', err)

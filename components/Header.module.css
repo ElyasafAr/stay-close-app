@@ -7,7 +7,7 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  direction: rtl;
+  direction: ltr; /* Changed to LTR - logo left, hamburger right */
   transition: background var(--transition-normal), box-shadow var(--transition-normal);
 }
 
@@ -235,17 +235,22 @@ html.dark .dropdown {
   background: rgba(168, 213, 226, 0.1);
 }
 
+/* Dark mode hamburger - bright color for visibility */
 html.dark .mobileMenuButton {
-  color: #f9fafb !important;
+  color: #ffffff !important;
+  background: rgba(79, 195, 247, 0.15);
+  border: 1px solid rgba(79, 195, 247, 0.3);
 }
 
 html.dark .mobileMenuButton svg {
-  fill: #f9fafb !important;
-  color: #f9fafb !important;
+  stroke: #ffffff !important;
+  fill: #ffffff !important;
+  color: #ffffff !important;
 }
 
 html.dark .mobileMenuButton:hover {
-  background: rgba(79, 195, 247, 0.2);
+  background: rgba(79, 195, 247, 0.3);
+  border-color: rgba(79, 195, 247, 0.5);
 }
 
 .mobileMenu {
@@ -371,7 +376,8 @@ html.dark .mobileMenuOverlay {
     justify-content: center;
     z-index: 1001;
     position: relative;
-    margin-right: auto; /* דוחף את הכפתור לצד ימין (RTL) */
+    margin-left: auto; /* Push button to the right side (LTR) */
+    order: 99; /* Ensure it's at the end (right side in LTR) */
   }
   
   .mobileMenu {

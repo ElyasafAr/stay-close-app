@@ -125,17 +125,88 @@ export function isNativePlatform(): boolean {
 }
 
 /**
+ * התחברות עם Google - Native (Capacitor)
+ */
+async function loginWithGoogleNative(): Promise<AuthResponse> {
+  console.log('🔵 [AUTH] Starting Native Google login...')
+  
+  try {
+    // Import dynamically to avoid issues on web
+    const { FirebaseAuthentication } = await import('@capacitor-firebase/authentication')
+    
+    // Sign in with Google
+    console.log('🔵 [AUTH] Calling FirebaseAuthentication.signInWithGoogle...')
+    const result = await FirebaseAuthentication.signInWithGoogle()
+    
+    console.log('✅ [AUTH] Native Google sign-in successful:', {
+      uid: result.user?.uid,
+      email: result.user?.email,
+      displayName: result.user?.displayName
+    })
+    
+    // Get the ID token
+    const tokenResult = await FirebaseAuthentication.getIdToken()
+    const firebaseToken = tokenResult.token
+    
+    if (!firebaseToken) {
+      throw new Error('לא ניתן לקבל token מ-Firebase')
+    }
+    
+    console.log('✅ [AUTH] Firebase token received:', { 
+      tokenLength: firebaseToken.length,
+      tokenPreview: firebaseToken.substring(0, 20) + '...'
+    })
+    
+    // Send to backend for verification and JWT creation
+    console.log('🔵 [AUTH] Sending token to backend...')
+    const response = await postData<AuthResponse>('/api/auth/firebase', {
+      token: firebaseToken
+    })
+    
+    if (!response.success || !response.data) {
+      console.error('❌ [AUTH] Firebase login failed:', response.error)
+      throw new Error(response.error || 'שגיאה בהתחברות עם Firebase')
+    }
+    
+    console.log('✅ [AUTH] Firebase login successful:', { 
+      user_id: response.data.user.user_id,
+      username: response.data.user.username,
+      email: response.data.user.email
+    })
+    
+    // Save to localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('auth_token', response.data.access_token)
+      localStorage.setItem('firebase_token', firebaseToken)
+      localStorage.setItem('user', JSON.stringify(response.data.user))
+      console.log('💾 [AUTH] Saved to localStorage')
+    }
+    
+    return response.data
+  } catch (error: any) {
+    console.error('❌ [AUTH] Native Google login error:', error)
+    
+    if (error.message?.includes('canceled') || error.message?.includes('cancelled')) {
+      throw new Error('ההתחברות בוטלה. אנא נסה שוב.')
+    }
+    
+    throw new Error(error.message || 'שגיאה בהתחברות עם Google')
+  }
+}
+
+/**
  * התחברות עם Google דרך Firebase
  */
 export async function loginWithGoogle(): Promise<AuthResponse> {
   console.log('🔵 [AUTH] Starting Google login...')
   
-  // בדיקה אם רצים על Native - Google Sign-In דורש הגדרה נפרדת
+  // בדיקה אם רצים על Native - שימוש ב-Capacitor Firebase Auth
   if (isNativePlatform()) {
-    console.warn('⚠️ [AUTH] Google login not available on native platform yet')
-    throw new Error('התחברות עם Google לא זמינה באפליקציה. אנא השתמש בשם משתמש וסיסמה.')
+    console.log('🔵 [AUTH] Native platform detected, using Capacitor Firebase Auth')
+    return loginWithGoogleNative()
   }
   
+  // Web - שימוש ב-Firebase Web SDK
   try {
     console.log('🔵 [AUTH] Creating Google provider...')
     const provider = new GoogleAuthProvider()
@@ -218,22 +289,40 @@ export async function loginWithGoogle(): Promise<AuthResponse> {
  * התנתקות
  */
 export async function logout(): Promise<void> {
+  console.log('🔵 [AUTH] Starting logout...')
+  
   try {
-    // התנתקות מ-Firebase
+    // התנתקות מ-Firebase Native (Capacitor)
+    if (isNativePlatform()) {
+      try {
+        const { FirebaseAuthentication } = await import('@capacitor-firebase/authentication')
+        await FirebaseAuthentication.signOut()
+        console.log('✅ [AUTH] Native Firebase sign out successful')
+      } catch (e) {
+        console.warn('⚠️ [AUTH] Native Firebase sign out error:', e)
+      }
+    }
+    
+    // התנתקות מ-Firebase Web
     const firebaseAuth = getAuth()
     if (firebaseAuth) {
       await firebaseSignOut(firebaseAuth)
+      console.log('✅ [AUTH] Web Firebase sign out successful')
     }
   } catch (error) {
-    console.error('שגיאה בהתנתקות מ-Firebase:', error)
+    console.error('❌ [AUTH] שגיאה בהתנתקות מ-Firebase:', error)
   }
   
   // מחיקת נתונים מ-localStorage
   if (typeof window !== 'undefined') {
+    console.log('🔵 [AUTH] Clearing localStorage...')
     localStorage.removeItem('auth_token')
     localStorage.removeItem('firebase_token')
     localStorage.removeItem('user')
-    window.location.href = '/login'
+    
+    console.log('🔵 [AUTH] Redirecting to login...')
+    // שימוש ב-replace כדי למנוע חזרה אחורה למסך הקודם
+    window.location.replace('/login')
   }
 }
 

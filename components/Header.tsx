@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { useTranslation } from '@/i18n/useTranslation'
 import { logout, getStoredUser, isAuthenticated } from '@/services/auth'
-import { MdLogout, MdPerson, MdMenu, MdClose } from 'react-icons/md'
+import { MdLogout, MdMenu, MdClose } from 'react-icons/md'
 import styles from './Header.module.css'
 
 export function Header() {
@@ -13,62 +13,51 @@ export function Header() {
   const router = useRouter()
   const pathname = usePathname()
   const [user, setUser] = useState<any>(null)
-  const [showMenu, setShowMenu] = useState(false)
   const [showMobileMenu, setShowMobileMenu] = useState(false)
+  const [isDarkMode, setIsDarkMode] = useState(false)
+
+  // Detect dark mode
+  useEffect(() => {
+    const checkDarkMode = () => {
+      const isDark = document.documentElement.classList.contains('dark')
+      setIsDarkMode(isDark)
+    }
+    checkDarkMode()
+    // Check periodically for theme changes
+    const interval = setInterval(checkDarkMode, 500)
+    return () => clearInterval(interval)
+  }, [])
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setUser(getStoredUser())
+      const storedUser = getStoredUser()
+      console.log('🔵 [HEADER] pathname changed:', pathname)
+      console.log('🔵 [HEADER] storedUser:', storedUser)
+      console.log('🔵 [HEADER] isAuthenticated:', isAuthenticated())
+      setUser(storedUser)
     }
   }, [pathname])
 
-  // סגירת התפריט כשלוחצים מחוץ לו + מניעת גלישה מעבר לדף
-  useEffect(() => {
-    if (!showMenu) return
-
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement
-      if (!target.closest(`.${styles.userMenu}`)) {
-        setShowMenu(false)
-      }
+  const handleLogout = async () => {
+    console.log('🔴 [HEADER] handleLogout called - starting logout directly')
+    try {
+      // Clear localStorage first
+      console.log('🔴 [HEADER] Clearing localStorage...')
+      localStorage.removeItem('auth_token')
+      localStorage.removeItem('firebase_token')
+      localStorage.removeItem('user')
+      
+      // Call logout function
+      console.log('🔴 [HEADER] Calling logout()...')
+      await logout()
+      console.log('🔴 [HEADER] logout() completed')
+    } catch (err) {
+      console.error('🔴 [HEADER] Logout error (continuing anyway):', err)
     }
-
-    // בדיקה שהדרופדאון לא יוצא מהמסך
-    const checkDropdownPosition = () => {
-      const dropdown = document.querySelector(`.${styles.dropdown}`) as HTMLElement
-      if (dropdown) {
-        const rect = dropdown.getBoundingClientRect()
-        const viewportWidth = window.innerWidth
-        
-        // אם הדרופדאון יוצא מהמסך בצד שמאל (RTL), הזז אותו
-        if (rect.left < 0) {
-          dropdown.style.left = '12px'
-          dropdown.style.right = 'auto'
-        } else {
-          dropdown.style.left = 'auto'
-          dropdown.style.right = '0'
-        }
-      }
-    }
-
-    // בדיקה ראשונית ואחרי resize
-    checkDropdownPosition()
-    window.addEventListener('resize', checkDropdownPosition)
     
-    // בדיקה אחרי render
-    setTimeout(checkDropdownPosition, 0)
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-      window.removeEventListener('resize', checkDropdownPosition)
-    }
-  }, [showMenu])
-
-  const handleLogout = () => {
-    if (confirm('האם אתה בטוח שברצונך להתנתק?')) {
-      logout()
-    }
+    // Force full page reload to login with cache busting
+    console.log('🔴 [HEADER] Forcing full reload to /login...')
+    window.location.replace('/login.html')
   }
 
   // Close mobile menu when clicking outside and prevent body scroll
@@ -130,7 +119,7 @@ export function Header() {
       <header className={styles.header}>
         <nav className={styles.nav}>
           <Link href="/" className={styles.logo}>
-            {t('app.name')}
+            {t('app.name')} <span style={{fontSize: '14px', color: 'red', fontWeight: 'bold'}}>[v2.5]</span>
           </Link>
           <div className={styles.navRight}>
             <div className={styles.navLinks}>
@@ -151,35 +140,18 @@ export function Header() {
               onClick={() => setShowMobileMenu(!showMobileMenu)}
               aria-label="תפריט"
               type="button"
+              style={{
+                color: isDarkMode ? '#ffffff' : 'inherit',
+                background: isDarkMode ? 'rgba(79, 195, 247, 0.2)' : 'transparent',
+                border: isDarkMode ? '1px solid rgba(79, 195, 247, 0.4)' : 'none',
+                borderRadius: '8px',
+                padding: '8px'
+              }}
             >
-              {showMobileMenu ? <MdClose /> : <MdMenu />}
+              {showMobileMenu 
+                ? <MdClose size={28} color={isDarkMode ? '#ffffff' : '#333333'} /> 
+                : <MdMenu size={28} color={isDarkMode ? '#ffffff' : '#333333'} />}
             </button>
-            
-            {user && (
-              <div className={styles.userMenu}>
-                <button
-                  onClick={() => setShowMenu(!showMenu)}
-                  className={styles.userButton}
-                  aria-label="תפריט משתמש"
-                >
-                  <MdPerson className={styles.userIcon} />
-                  <span className={styles.userName}>{user.username || 'משתמש'}</span>
-                </button>
-                
-                {showMenu && (
-                  <div className={styles.dropdown}>
-                    <div className={styles.userInfo}>
-                      <p className={styles.userNameFull}>{user.username}</p>
-                      <p className={styles.userEmail}>{user.email}</p>
-                    </div>
-                    <button onClick={handleLogout} className={styles.logoutButton}>
-                      <MdLogout className={styles.logoutIcon} />
-                      <span>התנתק</span>
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         </nav>
       </header>
@@ -244,9 +216,13 @@ export function Header() {
               </p>
             </div>
             <button
-              onClick={() => {
-                handleLogout()
+              onClick={async () => {
+                console.log('🔴 [HEADER] Logout button clicked')
                 setShowMobileMenu(false)
+                // Wait a bit for menu to close, then logout
+                setTimeout(async () => {
+                  await handleLogout()
+                }, 100)
               }}
               style={{
                 width: '100%',
