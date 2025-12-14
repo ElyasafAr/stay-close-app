@@ -5,7 +5,8 @@ import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { useTranslation } from '@/i18n/useTranslation'
 import { logout, getStoredUser, isAuthenticated } from '@/services/auth'
-import { MdLogout, MdMenu, MdClose } from 'react-icons/md'
+import { getData } from '@/services/api'
+import { MdLogout, MdMenu, MdClose, MdAdminPanelSettings } from 'react-icons/md'
 import styles from './Header.module.css'
 
 export function Header() {
@@ -15,6 +16,7 @@ export function Header() {
   const [user, setUser] = useState<any>(null)
   const [showMobileMenu, setShowMobileMenu] = useState(false)
   const [isDarkMode, setIsDarkMode] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
 
   // Detect dark mode
   useEffect(() => {
@@ -35,8 +37,26 @@ export function Header() {
       console.log('🔵 [HEADER] storedUser:', storedUser)
       console.log('🔵 [HEADER] isAuthenticated:', isAuthenticated())
       setUser(storedUser)
+      
+      // Check if user is admin
+      if (isAuthenticated()) {
+        checkAdminStatus()
+      }
     }
   }, [pathname])
+
+  const checkAdminStatus = async () => {
+    try {
+      const response = await getData('/api/admin/stats')
+      // If we get here without error, user is admin
+      if (response.success) {
+        setIsAdmin(true)
+      }
+    } catch (err) {
+      // 403 means not admin - that's expected
+      setIsAdmin(false)
+    }
+  }
 
   const handleLogout = async () => {
     console.log('🔴 [HEADER] handleLogout called - starting logout directly')
@@ -114,6 +134,8 @@ export function Header() {
     { href: '/messages', label: t('navigation.messages') },
     { href: '/settings', label: t('navigation.settings') },
     { href: '/about', label: t('navigation.about') },
+    // Admin link - only shown if isAdmin is true
+    ...(isAdmin ? [{ href: '/admin', label: '🛠️ ניהול', isAdminLink: true }] : []),
   ]
 
   return (
