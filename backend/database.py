@@ -226,6 +226,25 @@ def _run_migrations():
             db.execute(create_table)
             db.commit()
             print("✅ [DATABASE] Migration completed: push_tokens table created")
+        
+        # Migration 4: Add notification_platform column to users if it doesn't exist
+        check_notification_platform = text("""
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name='users' AND column_name='notification_platform';
+        """)
+        
+        result_notification_platform = db.execute(check_notification_platform).fetchone()
+        
+        if not result_notification_platform:
+            print("🔵 [DATABASE] Running migration: Adding notification_platform column...")
+            alter_notification_platform = text("""
+                ALTER TABLE users 
+                ADD COLUMN notification_platform VARCHAR(20) NOT NULL DEFAULT 'both';
+            """)
+            db.execute(alter_notification_platform)
+            db.commit()
+            print("✅ [DATABASE] Migration completed: notification_platform column added")
         else:
             print("✅ [DATABASE] Schema is up to date")
     except Exception as e:
