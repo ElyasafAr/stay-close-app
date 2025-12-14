@@ -3,7 +3,7 @@
 SQLAlchemy models for PostgreSQL database
 """
 
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ForeignKey, Date, Float
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from datetime import datetime
@@ -31,9 +31,15 @@ class User(Base):
     # 'both' = phone + browser, 'phone' = only phone app, 'browser' = only web browser
     notification_platform = Column(String, nullable=False, default='both')
     
+    # Subscription fields
+    trial_started_at = Column(DateTime(timezone=True), nullable=True)  # When trial started
+    subscription_status = Column(String, nullable=False, default='trial')  # 'trial', 'free', 'premium'
+    
     # Relationships
     contacts = relationship("Contact", back_populates="user", cascade="all, delete-orphan")
     reminders = relationship("Reminder", back_populates="user", cascade="all, delete-orphan")
+    subscriptions = relationship("Subscription", back_populates="user", cascade="all, delete-orphan")
+    usage_stats = relationship("UsageStats", back_populates="user", cascade="all, delete-orphan")
 
 class Contact(Base):
     """Contact model - stores contact information"""
@@ -89,4 +95,60 @@ class PushToken(Base):
     
     # Relationships
     user = relationship("User")
+
+
+class Subscription(Base):
+    """Subscription model - stores user subscription data"""
+    __tablename__ = "subscriptions"
+    
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    user_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    
+    # Subscription details
+    plan_type = Column(String, nullable=False)  # 'monthly', 'yearly'
+    status = Column(String, nullable=False, default='active')  # 'active', 'cancelled', 'expired'
+    
+    # Google Play Billing data
+    google_order_id = Column(String, nullable=True, unique=True)
+    google_product_id = Column(String, nullable=True)  # e.g., 'monthly_subscription'
+    google_purchase_token = Column(Text, nullable=True)
+    
+    # Dates
+    started_at = Column(DateTime(timezone=True), nullable=False)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    cancelled_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    
+    # Price info (for analytics)
+    price_paid = Column(Float, nullable=True)  # In ILS
+    is_launch_price = Column(Boolean, default=False)  # Was this purchased at launch price?
+    
+    # Relationships
+    user = relationship("User", back_populates="subscriptions")
+
+
+class AppSettings(Base):
+    """App Settings model - stores configurable app settings"""
+    __tablename__ = "app_settings"
+    
+    key = Column(String, primary_key=True, index=True)  # Setting key
+    value = Column(Text, nullable=False)  # Setting value (JSON or string)
+    description = Column(String, nullable=True)  # Human-readable description
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class UsageStats(Base):
+    """Usage Stats model - tracks daily usage per user"""
+    __tablename__ = "usage_stats"
+    
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    user_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    date = Column(Date, nullable=False, index=True)  # The date of usage
+    messages_generated = Column(Integer, nullable=False, default=0)  # Messages generated that day
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    
+    # Relationships
+    user = relationship("User", back_populates="usage_stats")
 

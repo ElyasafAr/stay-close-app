@@ -245,11 +245,138 @@ def _run_migrations():
             db.execute(alter_notification_platform)
             db.commit()
             print("✅ [DATABASE] Migration completed: notification_platform column added")
-        else:
-            print("✅ [DATABASE] Schema is up to date")
+        
+        # Migration 5: Add subscription fields to users
+        check_subscription_status = text("""
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name='users' AND column_name='subscription_status';
+        """)
+        
+        result_subscription_status = db.execute(check_subscription_status).fetchone()
+        
+        if not result_subscription_status:
+            print("🔵 [DATABASE] Running migration: Adding subscription fields to users...")
+            alter_users = text("""
+                ALTER TABLE users 
+                ADD COLUMN trial_started_at TIMESTAMP WITH TIME ZONE,
+                ADD COLUMN subscription_status VARCHAR(20) NOT NULL DEFAULT 'trial';
+            """)
+            db.execute(alter_users)
+            db.commit()
+            print("✅ [DATABASE] Migration completed: subscription fields added to users")
+        
+        # Migration 6: Create subscriptions table
+        check_subscriptions = text("""
+            SELECT table_name 
+            FROM information_schema.tables 
+            WHERE table_name='subscriptions';
+        """)
+        
+        result_subscriptions = db.execute(check_subscriptions).fetchone()
+        
+        if not result_subscriptions:
+            print("🔵 [DATABASE] Running migration: Creating subscriptions table...")
+            create_subscriptions = text("""
+                CREATE TABLE subscriptions (
+                    id SERIAL PRIMARY KEY,
+                    user_id VARCHAR NOT NULL,
+                    plan_type VARCHAR NOT NULL,
+                    status VARCHAR NOT NULL DEFAULT 'active',
+                    google_order_id VARCHAR UNIQUE,
+                    google_product_id VARCHAR,
+                    google_purchase_token TEXT,
+                    started_at TIMESTAMP WITH TIME ZONE NOT NULL,
+                    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+                    cancelled_at TIMESTAMP WITH TIME ZONE,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+                    price_paid FLOAT,
+                    is_launch_price BOOLEAN DEFAULT FALSE,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                );
+                CREATE INDEX idx_subscriptions_user_id ON subscriptions(user_id);
+                CREATE INDEX idx_subscriptions_status ON subscriptions(status);
+            """)
+            db.execute(create_subscriptions)
+            db.commit()
+            print("✅ [DATABASE] Migration completed: subscriptions table created")
+        
+        # Migration 7: Create app_settings table
+        check_app_settings = text("""
+            SELECT table_name 
+            FROM information_schema.tables 
+            WHERE table_name='app_settings';
+        """)
+        
+        result_app_settings = db.execute(check_app_settings).fetchone()
+        
+        if not result_app_settings:
+            print("🔵 [DATABASE] Running migration: Creating app_settings table...")
+            create_app_settings = text("""
+                CREATE TABLE app_settings (
+                    key VARCHAR PRIMARY KEY,
+                    value TEXT NOT NULL,
+                    description VARCHAR,
+                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
+                );
+            """)
+            db.execute(create_app_settings)
+            
+            # Insert default settings
+            insert_defaults = text("""
+                INSERT INTO app_settings (key, value, description) VALUES
+                ('free_messages_per_day', '3', 'Max messages per day for free users'),
+                ('free_messages_per_month', '30', 'Max messages per month for free users'),
+                ('max_free_contacts', '2', 'Max contacts for free users'),
+                ('trial_days', '14', 'Trial period in days'),
+                ('freemium_enabled', 'true', 'Is freemium mode enabled'),
+                ('launch_pricing_active', 'true', 'Is launch pricing active'),
+                ('monthly_price_launch', '9.90', 'Monthly price during launch (ILS)'),
+                ('yearly_price_launch', '69.90', 'Yearly price during launch (ILS)'),
+                ('monthly_price_regular', '14.90', 'Regular monthly price (ILS)'),
+                ('yearly_price_regular', '99.90', 'Regular yearly price (ILS)'),
+                ('admin_emails', '[]', 'JSON array of admin email addresses');
+            """)
+            db.execute(insert_defaults)
+            db.commit()
+            print("✅ [DATABASE] Migration completed: app_settings table created with defaults")
+        
+        # Migration 8: Create usage_stats table
+        check_usage_stats = text("""
+            SELECT table_name 
+            FROM information_schema.tables 
+            WHERE table_name='usage_stats';
+        """)
+        
+        result_usage_stats = db.execute(check_usage_stats).fetchone()
+        
+        if not result_usage_stats:
+            print("🔵 [DATABASE] Running migration: Creating usage_stats table...")
+            create_usage_stats = text("""
+                CREATE TABLE usage_stats (
+                    id SERIAL PRIMARY KEY,
+                    user_id VARCHAR NOT NULL,
+                    date DATE NOT NULL,
+                    messages_generated INTEGER NOT NULL DEFAULT 0,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                    UNIQUE(user_id, date)
+                );
+                CREATE INDEX idx_usage_stats_user_id ON usage_stats(user_id);
+                CREATE INDEX idx_usage_stats_date ON usage_stats(date);
+            """)
+            db.execute(create_usage_stats)
+            db.commit()
+            print("✅ [DATABASE] Migration completed: usage_stats table created")
+        
+        print("✅ [DATABASE] All migrations completed successfully")
     except Exception as e:
         db.rollback()
         print(f"⚠️  [DATABASE] Migration warning: {e}")
+        import traceback
+        traceback.print_exc()
         # Don't raise - allow app to continue even if migration fails
     finally:
         db.close()

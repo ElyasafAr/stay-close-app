@@ -609,6 +609,25 @@ async def create_contact(
     """יצירת איש קשר חדש (של המשתמש הנוכחי)"""
     user_id = current_user["user_id"]
     
+    # בדיקת הגבלת אנשי קשר (Paywall)
+    from usage_limiter import check_can_add_contact, start_trial
+    
+    # התחל trial אם זו הפעם הראשונה
+    start_trial(db, user_id)
+    
+    can_add, contact_info = check_can_add_contact(db, user_id)
+    if not can_add:
+        raise HTTPException(
+            status_code=402,
+            detail={
+                "message": "הגעת למגבלת אנשי הקשר",
+                "reason": contact_info.get('reason'),
+                "current_contacts": contact_info.get('current_contacts'),
+                "max_contacts": contact_info.get('max_contacts'),
+                "upgrade_required": True
+            }
+        )
+    
     # Encrypt the contact name
     name_encrypted = encrypt(contact.name)
     
@@ -1283,6 +1302,277 @@ async def update_notification_settings(
 # NOTE: This endpoint is now defined above, before /api/reminders/{reminder_id}
 # to prevent FastAPI from matching "check" as a reminder_id parameter
 
+# ========== ADMIN ENDPOINTS ==========
+
+def is_admin(db: Session, user_id: str) -> bool:
+    """Check if a user is an admin"""
+    from usage_limiter import get_setting
+    import json
+    
+    # Get user email
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        return False
+    
+    user_email = decrypt(user.email_encrypted)
+    
+    # Get admin emails from settings
+    admin_emails_json = get_setting(db, 'admin_emails', '[]')
+    try:
+        admin_emails = json.loads(admin_emails_json)
+    except:
+        admin_emails = []
+    
+    return user_email in admin_emails
+
+@app.get("/api/admin/stats")
+async def get_admin_stats(
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """קבלת סטטיסטיקות למנהלים"""
+    user_id = current_user["user_id"]
+    
+    if not is_admin(db, user_id):
+        raise HTTPException(status_code=403, detail="אין הרשאת מנהל")
+    
+    from sqlalchemy import func
+    from models import UsageStats, Subscription, AppSettings
+    from datetime import date, timedelta
+    
+    today = date.today()
+    first_day_of_month = today.replace(day=1)
+    week_ago = today - timedelta(days=7)
+    
+    # Total users
+    total_users = db.query(func.count(User.id)).scalar() or 0
+    
+    # New users this month
+    new_users_month = db.query(func.count(User.id)).filter(
+        func.date(User.created_at) >= first_day_of_month
+    ).scalar() or 0
+    
+    # New users this week
+    new_users_week = db.query(func.count(User.id)).filter(
+        func.date(User.created_at) >= week_ago
+    ).scalar() or 0
+    
+    # Premium users
+    premium_users = db.query(func.count(User.id)).filter(
+        User.subscription_status == 'premium'
+    ).scalar() or 0
+    
+    # Trial users
+    trial_users = db.query(func.count(User.id)).filter(
+        User.subscription_status == 'trial'
+    ).scalar() or 0
+    
+    # Messages today
+    messages_today = db.query(func.sum(UsageStats.messages_generated)).filter(
+        UsageStats.date == today
+    ).scalar() or 0
+    
+    # Messages this month
+    messages_month = db.query(func.sum(UsageStats.messages_generated)).filter(
+        UsageStats.date >= first_day_of_month
+    ).scalar() or 0
+    
+    # Active subscriptions
+    active_subscriptions = db.query(func.count(Subscription.id)).filter(
+        Subscription.status == 'active'
+    ).scalar() or 0
+    
+    # Revenue estimate (active subscriptions * average price)
+    monthly_subs = db.query(func.count(Subscription.id)).filter(
+        Subscription.status == 'active',
+        Subscription.plan_type == 'monthly'
+    ).scalar() or 0
+    
+    yearly_subs = db.query(func.count(Subscription.id)).filter(
+        Subscription.status == 'active',
+        Subscription.plan_type == 'yearly'
+    ).scalar() or 0
+    
+    # Get prices from settings
+    from usage_limiter import get_setting
+    monthly_price = float(get_setting(db, 'monthly_price_launch', '9.90'))
+    yearly_price = float(get_setting(db, 'yearly_price_launch', '69.90'))
+    
+    monthly_revenue = (monthly_subs * monthly_price) + (yearly_subs * yearly_price / 12)
+    
+    # Daily messages for last 30 days (for chart)
+    thirty_days_ago = today - timedelta(days=30)
+    daily_stats = db.query(
+        UsageStats.date,
+        func.sum(UsageStats.messages_generated).label('total')
+    ).filter(
+        UsageStats.date >= thirty_days_ago
+    ).group_by(UsageStats.date).order_by(UsageStats.date).all()
+    
+    daily_messages = [
+        {"date": str(stat.date), "messages": stat.total}
+        for stat in daily_stats
+    ]
+    
+    return {
+        "users": {
+            "total": total_users,
+            "new_this_month": new_users_month,
+            "new_this_week": new_users_week,
+            "premium": premium_users,
+            "trial": trial_users,
+            "free": total_users - premium_users - trial_users
+        },
+        "messages": {
+            "today": messages_today,
+            "this_month": messages_month,
+            "estimated_cost": round(messages_month * 0.005, 2)  # $0.005 per message
+        },
+        "subscriptions": {
+            "active": active_subscriptions,
+            "monthly": monthly_subs,
+            "yearly": yearly_subs
+        },
+        "revenue": {
+            "monthly_estimate": round(monthly_revenue, 2)
+        },
+        "charts": {
+            "daily_messages": daily_messages
+        }
+    }
+
+@app.get("/api/admin/settings")
+async def get_admin_settings(
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """קבלת הגדרות האפליקציה"""
+    user_id = current_user["user_id"]
+    
+    if not is_admin(db, user_id):
+        raise HTTPException(status_code=403, detail="אין הרשאת מנהל")
+    
+    from models import AppSettings
+    
+    settings = db.query(AppSettings).all()
+    return {
+        setting.key: {
+            "value": setting.value,
+            "description": setting.description
+        }
+        for setting in settings
+    }
+
+class SettingUpdate(BaseModel):
+    key: str
+    value: str
+
+@app.put("/api/admin/settings")
+async def update_admin_setting(
+    setting: SettingUpdate,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """עדכון הגדרת אפליקציה"""
+    user_id = current_user["user_id"]
+    
+    if not is_admin(db, user_id):
+        raise HTTPException(status_code=403, detail="אין הרשאת מנהל")
+    
+    from models import AppSettings
+    
+    db_setting = db.query(AppSettings).filter(AppSettings.key == setting.key).first()
+    
+    if not db_setting:
+        raise HTTPException(status_code=404, detail="הגדרה לא נמצאה")
+    
+    db_setting.value = setting.value
+    db.commit()
+    
+    print(f"✅ [ADMIN] Setting '{setting.key}' updated to '{setting.value}' by user {user_id}")
+    
+    return {"message": "הגדרה עודכנה בהצלחה", "key": setting.key, "value": setting.value}
+
+@app.post("/api/admin/add-admin")
+async def add_admin_email(
+    email: str,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """הוספת מייל מנהל (רק למנהלים קיימים)"""
+    user_id = current_user["user_id"]
+    
+    # First admin can be added if list is empty
+    from usage_limiter import get_setting
+    import json
+    
+    admin_emails_json = get_setting(db, 'admin_emails', '[]')
+    try:
+        admin_emails = json.loads(admin_emails_json)
+    except:
+        admin_emails = []
+    
+    # If no admins exist, allow first admin to be added
+    if admin_emails and not is_admin(db, user_id):
+        raise HTTPException(status_code=403, detail="אין הרשאת מנהל")
+    
+    if email not in admin_emails:
+        admin_emails.append(email)
+        
+        from models import AppSettings
+        db_setting = db.query(AppSettings).filter(AppSettings.key == 'admin_emails').first()
+        if db_setting:
+            db_setting.value = json.dumps(admin_emails)
+            db.commit()
+            print(f"✅ [ADMIN] Added admin email: {email}")
+    
+    return {"message": "מייל מנהל נוסף", "admin_emails": admin_emails}
+
+# ========== USAGE ENDPOINTS ==========
+
+@app.get("/api/usage/status")
+async def get_usage_status(
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """קבלת סטטוס שימוש של המשתמש"""
+    user_id = current_user["user_id"]
+    
+    from usage_limiter import (
+        check_can_generate_message, 
+        check_can_add_contact,
+        get_user_subscription_status,
+        get_trial_days_remaining,
+        get_daily_usage,
+        get_monthly_usage,
+        get_setting_int,
+        start_trial
+    )
+    
+    # התחל trial אם זו הפעם הראשונה
+    start_trial(db, user_id)
+    
+    status = get_user_subscription_status(db, user_id)
+    _, message_info = check_can_generate_message(db, user_id)
+    _, contact_info = check_can_add_contact(db, user_id)
+    
+    return {
+        "subscription_status": status,
+        "trial_days_remaining": get_trial_days_remaining(db, user_id) if status == 'trial' else 0,
+        "messages": {
+            "daily_used": message_info.get('daily_used', 0),
+            "daily_limit": message_info.get('daily_limit'),
+            "monthly_used": message_info.get('monthly_used', 0),
+            "monthly_limit": message_info.get('monthly_limit'),
+            "can_generate": message_info.get('can_generate', True)
+        },
+        "contacts": {
+            "current": contact_info.get('current_contacts', 0),
+            "max": contact_info.get('max_contacts'),
+            "can_add": contact_info.get('can_add', True)
+        }
+    }
+
 # ========== MESSAGES ENDPOINTS ==========
 
 @app.post("/api/messages/generate")
@@ -1293,6 +1583,28 @@ async def generate_message(
 ):
     """יצירת הודעה מותאמת אישית באמצעות AI"""
     user_id = current_user["user_id"]
+    
+    # בדיקת הגבלות שימוש (Paywall)
+    from usage_limiter import check_can_generate_message, record_message_usage, start_trial
+    
+    # התחל trial אם זו הפעם הראשונה
+    start_trial(db, user_id)
+    
+    can_generate, usage_info = check_can_generate_message(db, user_id)
+    if not can_generate:
+        # Return 402 Payment Required with usage info
+        raise HTTPException(
+            status_code=402, 
+            detail={
+                "message": "הגעת למגבלת ההודעות",
+                "reason": usage_info.get('reason'),
+                "daily_used": usage_info.get('daily_used'),
+                "daily_limit": usage_info.get('daily_limit'),
+                "monthly_used": usage_info.get('monthly_used'),
+                "monthly_limit": usage_info.get('monthly_limit'),
+                "upgrade_required": True
+            }
+        )
     
     # בדיקה שאיש הקשר קיים ושייך למשתמש
     contact = get_contact_by_id(db, request.contact_id, user_id)
@@ -1399,11 +1711,15 @@ async def generate_message(
         result = response.json()
         message = result["choices"][0]["message"]["content"]
         
+        # רישום שימוש (לאחר יצירה מוצלחת)
+        record_message_usage(db, user_id)
+        
         return {
             "message": message,
             "contact_name": contact_name,
             "message_type": request.message_type,
-            "tone": request.tone
+            "tone": request.tone,
+            "usage": usage_info  # Include usage info in response
         }
         
     except requests.exceptions.RequestException as e:
