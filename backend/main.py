@@ -1302,6 +1302,85 @@ async def update_notification_settings(
 # NOTE: This endpoint is now defined above, before /api/reminders/{reminder_id}
 # to prevent FastAPI from matching "check" as a reminder_id parameter
 
+# ========== SUBSCRIPTION ENDPOINTS ==========
+
+class PurchaseVerification(BaseModel):
+    purchase_token: str
+    product_id: str
+    order_id: str
+
+@app.post("/api/subscription/verify")
+async def verify_subscription(
+    purchase: PurchaseVerification,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """אימות רכישה מ-Google Play ויצירת מנוי"""
+    user_id = current_user["user_id"]
+    
+    from subscription_service import process_google_purchase
+    
+    result = process_google_purchase(
+        db=db,
+        user_id=user_id,
+        purchase_token=purchase.purchase_token,
+        product_id=purchase.product_id,
+        order_id=purchase.order_id
+    )
+    
+    if not result.get('success'):
+        raise HTTPException(status_code=400, detail=result.get('error', 'Purchase verification failed'))
+    
+    return result
+
+@app.get("/api/subscription/status")
+async def get_subscription_status(
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """קבלת סטטוס מנוי נוכחי"""
+    user_id = current_user["user_id"]
+    
+    from subscription_service import get_active_subscription, get_prices, is_launch_pricing_active
+    from usage_limiter import get_user_subscription_status, get_trial_days_remaining
+    
+    status = get_user_subscription_status(db, user_id)
+    subscription = get_active_subscription(db, user_id)
+    prices = get_prices(db)
+    
+    return {
+        "status": status,
+        "trial_days_remaining": get_trial_days_remaining(db, user_id) if status == 'trial' else 0,
+        "subscription": {
+            "id": subscription.id if subscription else None,
+            "plan_type": subscription.plan_type if subscription else None,
+            "expires_at": subscription.expires_at.isoformat() if subscription else None,
+            "is_launch_price": subscription.is_launch_price if subscription else None
+        } if subscription else None,
+        "prices": {
+            "monthly": prices['monthly'],
+            "yearly": prices['yearly'],
+            "is_launch_price": is_launch_pricing_active(db)
+        }
+    }
+
+@app.post("/api/subscription/cancel")
+async def cancel_subscription_endpoint(
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """ביטול מנוי"""
+    user_id = current_user["user_id"]
+    
+    from subscription_service import cancel_subscription
+    
+    success = cancel_subscription(db, user_id)
+    
+    if not success:
+        raise HTTPException(status_code=404, detail="לא נמצא מנוי פעיל")
+    
+    return {"message": "המנוי בוטל בהצלחה. תוכל להמשיך להשתמש עד לתום התקופה."}
+
 # ========== ADMIN ENDPOINTS ==========
 
 def is_admin(db: Session, user_id: str) -> bool:
