@@ -1,16 +1,18 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { useTranslation } from '@/i18n/useTranslation'
 import { getContacts, createContact, deleteContact, Contact } from '@/services/contacts'
 import { getReminders, deleteReminder, Reminder } from '@/services/reminders'
 import { Loading } from '@/components/Loading'
 import { ReminderModal } from '@/components/ReminderModal'
-import { MdAdd, MdDelete, MdNotifications, MdNotificationsOff, MdTune } from 'react-icons/md'
+import { MdAdd, MdDelete, MdNotifications, MdNotificationsOff, MdTune, MdSend } from 'react-icons/md'
 import styles from './page.module.css'
 
 export default function ContactsPage() {
   const { t } = useTranslation()
+  const router = useRouter()
   const [contacts, setContacts] = useState<Contact[]>([])
   const [reminders, setReminders] = useState<Reminder[]>([])
   const [loading, setLoading] = useState(true)
@@ -21,6 +23,11 @@ export default function ContactsPage() {
     name: '',
     default_tone: 'friendly',
   })
+
+  // Navigate to messages page with pre-selected contact
+  const handleSendMessage = (contactId: number) => {
+    router.push(`/messages?contact=${contactId}`)
+  }
 
   useEffect(() => {
     loadContacts()
@@ -238,6 +245,14 @@ export default function ContactsPage() {
                   )
                 })()}
                 <div className={styles.contactActions}>
+                  <button
+                    onClick={() => contact.id && handleSendMessage(contact.id)}
+                    className={styles.sendMessageButton}
+                    disabled={!contact.id}
+                  >
+                    <MdSend style={{ fontSize: '18px' }} />
+                    שלח הודעה
+                  </button>
                   <button
                     onClick={() => contact.id && setReminderModal({ 
                       contactId: contact.id, 

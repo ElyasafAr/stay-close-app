@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useTranslation } from '@/i18n/useTranslation'
 import { getContacts, Contact } from '@/services/contacts'
 import { generateMessage, MessageRequest } from '@/services/messages'
@@ -11,6 +12,7 @@ import styles from './page.module.css'
 
 export default function MessagesPage() {
   const { t } = useTranslation()
+  const searchParams = useSearchParams()
   const [contacts, setContacts] = useState<Contact[]>([])
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
@@ -28,6 +30,17 @@ export default function MessagesPage() {
   useEffect(() => {
     loadContacts()
   }, [])
+  
+  // Pre-select contact from URL parameter
+  useEffect(() => {
+    const contactId = searchParams?.get('contact')
+    if (contactId && contacts.length > 0) {
+      const id = parseInt(contactId, 10)
+      if (!isNaN(id) && contacts.some(c => c.id === id)) {
+        setSelectedContact(id)
+      }
+    }
+  }, [searchParams, contacts])
 
   // Update default tone when contact is selected
   useEffect(() => {
