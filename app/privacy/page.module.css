@@ -1,0 +1,90 @@
+.main {
+  min-height: 100vh;
+  padding: 24px 16px;
+  background: var(--bg-gradient);
+  direction: rtl;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  background: var(--bg-card);
+  padding: 32px;
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+  text-align: center;
+}
+
+.lastUpdated {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-bottom: 32px;
+}
+
+.section {
+  margin-bottom: 28px;
+}
+
+.section h2 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 0 0 12px 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--color-primary-light);
+}
+
+.section h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 16px 0 8px 0;
+}
+
+.section p {
+  color: var(--text-primary);
+  line-height: 1.7;
+  margin: 0 0 12px 0;
+}
+
+.section ul {
+  margin: 0;
+  padding-right: 20px;
+}
+
+.section li {
+  color: var(--text-primary);
+  line-height: 1.8;
+  margin-bottom: 8px;
+}
+
+.section a {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+.section a:hover {
+  opacity: 0.8;
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding: 20px;
+  }
+  
+  .title {
+    font-size: 1.6rem;
+  }
+  
+  .section h2 {
+    font-size: 1.15rem;
+  }
+}
