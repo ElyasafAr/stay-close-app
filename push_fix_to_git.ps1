@@ -46,3 +46,4 @@ Write-Host "Last commit: $lastCommit" -ForegroundColor Cyan
 
 
 
+

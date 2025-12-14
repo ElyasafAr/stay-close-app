@@ -6,7 +6,8 @@ import { useTranslation } from '@/i18n/useTranslation'
 import { useSettings } from '@/state/useSettings'
 import { logout, getStoredUser, isAuthenticated } from '@/services/auth'
 import { getData, putData } from '@/services/api'
-import { MdSettings, MdLanguage, MdPalette, MdNotifications, MdLogout, MdPerson, MdPhoneAndroid, MdComputer, MdDevices } from 'react-icons/md'
+import { MdSettings, MdLanguage, MdPalette, MdNotifications, MdLogout, MdPerson, MdPhoneAndroid, MdComputer, MdDevices, MdDeleteForever } from 'react-icons/md'
+import { deleteData } from '@/services/api'
 import styles from './page.module.css'
 
 export default function SettingsPage() {
@@ -15,7 +16,46 @@ export default function SettingsPage() {
   const { settings, updateSettings, saveSettings } = useSettings()
   const [showSuccess, setShowSuccess] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const user = getStoredUser()
+
+  const handleDeleteAccount = async () => {
+    const confirmed = confirm(
+      'האם אתה בטוח שברצונך למחוק את החשבון?\n\n' +
+      'פעולה זו תמחק את כל המידע שלך לצמיתות:\n' +
+      '• כל אנשי הקשר\n' +
+      '• כל התזכורות\n' +
+      '• כל ההגדרות\n\n' +
+      'לא ניתן לבטל פעולה זו!'
+    )
+    
+    if (!confirmed) return
+    
+    const doubleConfirmed = confirm('האם אתה בטוח לחלוטין? המידע יימחק לצמיתות ולא ניתן לשחזור.')
+    
+    if (!doubleConfirmed) return
+    
+    setIsDeleting(true)
+    
+    try {
+      await deleteData('/api/account')
+      
+      // Clear local storage
+      localStorage.removeItem('auth_token')
+      localStorage.removeItem('firebase_token')
+      localStorage.removeItem('user')
+      localStorage.removeItem('app_settings')
+      
+      alert('החשבון נמחק בהצלחה. להתראות!')
+      
+      // Redirect to login
+      window.location.replace('/login')
+    } catch (error: any) {
+      alert('שגיאה במחיקת החשבון: ' + (error.message || 'אנא נסה שוב'))
+    } finally {
+      setIsDeleting(false)
+    }
+  }
 
   // טעינת הגדרת הפלטפורמה מהשרת
   useEffect(() => {
@@ -173,6 +213,22 @@ export default function SettingsPage() {
             <MdLogout style={{ fontSize: '24px' }} />
             <span>התנתק</span>
           </button>
+
+          {/* Delete Account */}
+          <div className={styles.dangerZone}>
+            <h3 className={styles.dangerTitle}>אזור מסוכן</h3>
+            <p className={styles.dangerText}>
+              מחיקת החשבון תסיר את כל המידע שלך לצמיתות ולא ניתן לשחזור.
+            </p>
+            <button 
+              onClick={handleDeleteAccount} 
+              className={styles.deleteButton}
+              disabled={isDeleting}
+            >
+              <MdDeleteForever style={{ fontSize: '24px' }} />
+              <span>{isDeleting ? 'מוחק...' : 'מחק את החשבון שלי'}</span>
+            </button>
+          </div>
         </div>
       </div>
     </main>

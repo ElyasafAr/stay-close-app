@@ -63,7 +63,7 @@ export default function AboutPage() {
           {/* מידע על גרסה */}
           <div className={styles.versionBox}>
             <p className={styles.versionText}>
-              <AiFillHeart style={{ color: '#f4a5ae', fontSize: '1.2rem', marginLeft: '4px' }} />
+            <AiFillHeart style={{ color: '#f4a5ae', fontSize: '1.2rem', marginLeft: '4px' }} />
               גרסה: <strong>{APP_VERSION}</strong>
             </p>
             <p className={styles.buildDate}>תאריך עדכון: {BUILD_DATE}</p>

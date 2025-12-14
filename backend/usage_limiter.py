@@ -3,13 +3,18 @@
 Usage Limiter - Manages usage limits for free users
 """
 
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, timezone
 from typing import Tuple, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 import json
 
 from models import User, UsageStats, AppSettings, Subscription
+
+
+def utc_now():
+    """Get current UTC time as timezone-aware datetime"""
+    return datetime.now(timezone.utc)
 
 
 def get_setting(db: Session, key: str, default: str = None) -> str:
@@ -46,7 +51,7 @@ def get_user_subscription_status(db: Session, user_id: str) -> str:
     active_subscription = db.query(Subscription).filter(
         Subscription.user_id == user_id,
         Subscription.status == 'active',
-        Subscription.expires_at > datetime.utcnow()
+        Subscription.expires_at > utc_now()
     ).first()
     
     if active_subscription:
@@ -70,7 +75,7 @@ def get_user_subscription_status(db: Session, user_id: str) -> str:
         
         trial_end = user.trial_started_at + timedelta(days=trial_days)
         
-        if datetime.utcnow() < trial_end:
+        if utc_now() < trial_end:
             if user.subscription_status != 'trial':
                 user.subscription_status = 'trial'
                 db.commit()
@@ -96,7 +101,7 @@ def start_trial(db: Session, user_id: str) -> bool:
     if user.trial_started_at:
         return False  # Trial already started
     
-    user.trial_started_at = datetime.utcnow()
+    user.trial_started_at = utc_now()
     user.subscription_status = 'trial'
     db.commit()
     return True
@@ -119,7 +124,7 @@ def get_trial_days_remaining(db: Session, user_id: str) -> int:
         pass  # Ignore if coupon service not available
     
     trial_end = user.trial_started_at + timedelta(days=trial_days)
-    remaining = (trial_end - datetime.utcnow()).days
+    remaining = (trial_end - utc_now()).days
     return max(0, remaining)
 
 
@@ -223,7 +228,7 @@ def record_message_usage(db: Session, user_id: str) -> bool:
     
     if usage:
         usage.messages_generated += 1
-        usage.updated_at = datetime.utcnow()
+        usage.updated_at = utc_now()
     else:
         usage = UsageStats(
             user_id=user_id,

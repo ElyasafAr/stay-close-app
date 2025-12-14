@@ -87,68 +87,68 @@ export function ServiceWorkerRegistration() {
 
   // Setup for Web FCM
   const setupWebFCM = async () => {
-    console.log('🔍 [FCM] Starting FCM setup...')
-    
-    try {
-      // קבלת FCM token
-      console.log('🔍 [FCM] Requesting FCM token...')
-      const token = await getFCMToken()
+      console.log('🔍 [FCM] Starting FCM setup...')
       
-      if (token) {
-        console.log('✅ [FCM] Token received:', token.substring(0, 30) + '...')
-        setFcmToken(token)
+      try {
+        // קבלת FCM token
+        console.log('🔍 [FCM] Requesting FCM token...')
+        const token = await getFCMToken()
         
-        // שליחת ה-token ל-backend
-        console.log('🔍 [FCM] Sending token to backend...')
-        const tokenData = {
-          token: token,
-          device_info: {
-            platform: 'web',
-            userAgent: navigator.userAgent,
-            language: navigator.language,
-            type: 'fcm'
-          }
-        }
-        
-        try {
-          const response = await postData('/api/push-tokens', tokenData)
-          console.log('✅ [FCM] Token sent to backend:', response)
-        } catch (error) {
-          console.error('❌ [FCM] Error sending token to backend:', error)
-        }
-      } else {
-        console.warn('⚠️ [FCM] No token received')
-      }
-      
-      // האזנה להודעות נכנסות (כשהאפליקציה פתוחה)
-      const unsubscribe = onFCMMessage((payload) => {
-        console.log('📩 [FCM] Foreground message received:', payload)
-        
-        // הצגת התראה כשהאפליקציה פתוחה
-        if (payload.notification) {
-          const { title, body } = payload.notification
+        if (token) {
+          console.log('✅ [FCM] Token received:', token.substring(0, 30) + '...')
+          setFcmToken(token)
           
-          // הצגת התראה ידנית (כי Firebase לא מציג אוטומטית ב-foreground)
-          if (Notification.permission === 'granted') {
-            new Notification(title || 'Stay Close', {
-              body: body || '',
-              icon: '/icon-192x192.png',
-              badge: '/icon-192x192.png',
-              tag: 'fcm-foreground',
-            })
+          // שליחת ה-token ל-backend
+          console.log('🔍 [FCM] Sending token to backend...')
+          const tokenData = {
+          token: token,
+            device_info: {
+              platform: 'web',
+              userAgent: navigator.userAgent,
+              language: navigator.language,
+              type: 'fcm'
+            }
           }
+          
+          try {
+            const response = await postData('/api/push-tokens', tokenData)
+            console.log('✅ [FCM] Token sent to backend:', response)
+          } catch (error) {
+            console.error('❌ [FCM] Error sending token to backend:', error)
+          }
+        } else {
+          console.warn('⚠️ [FCM] No token received')
         }
-      })
-      
-      // Cleanup
-      return () => {
-        unsubscribe()
+        
+        // האזנה להודעות נכנסות (כשהאפליקציה פתוחה)
+        const unsubscribe = onFCMMessage((payload) => {
+          console.log('📩 [FCM] Foreground message received:', payload)
+          
+          // הצגת התראה כשהאפליקציה פתוחה
+          if (payload.notification) {
+            const { title, body } = payload.notification
+            
+            // הצגת התראה ידנית (כי Firebase לא מציג אוטומטית ב-foreground)
+            if (Notification.permission === 'granted') {
+              new Notification(title || 'Stay Close', {
+                body: body || '',
+                icon: '/icon-192x192.png',
+                badge: '/icon-192x192.png',
+                tag: 'fcm-foreground',
+              })
+            }
+          }
+        })
+        
+        // Cleanup
+        return () => {
+          unsubscribe()
+        }
+        
+      } catch (error) {
+        console.error('❌ [FCM] Error setting up FCM:', error)
       }
-      
-    } catch (error) {
-      console.error('❌ [FCM] Error setting up FCM:', error)
     }
-  }
 
   // גם רישום Service Worker לפונקציונליות נוספת
   useEffect(() => {

@@ -55,8 +55,8 @@ export function Header() {
     } catch (err) {
       // 403 means not admin - that's expected
       setIsAdmin(false)
+      }
     }
-  }
 
   const handleLogout = async () => {
     console.log('🔴 [HEADER] handleLogout called - starting logout directly')
@@ -74,7 +74,7 @@ export function Header() {
     } catch (err) {
       console.error('🔴 [HEADER] Logout error (continuing anyway):', err)
     }
-    
+
     // Force full page reload to login
     console.log('🔴 [HEADER] Forcing full reload to /login...')
     // Use /login.html for Capacitor, /login for web

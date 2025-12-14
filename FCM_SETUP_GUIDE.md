@@ -1,4 +1,4 @@
-# הגדרת Firebase Cloud Messaging (FCM) 🔔
+ha # הגדרת Firebase Cloud Messaging (FCM) 🔔
 
 ## סקירה כללית
 
@@ -99,5 +99,6 @@ const firebaseConfig = {
 1. **FCM חינמי לחלוטין** - אין הגבלות על כמות ההודעות
 2. **לא צריך VAPID keys** - Firebase מנהל הכל אוטומטית
 3. **עובד בכל הדפדפנים** - Chrome, Firefox, Edge, Safari (iOS 16.4+)
+
 
 

@@ -3,13 +3,18 @@
 Subscription Service - Manages subscriptions and Google Play Billing
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any
 from sqlalchemy.orm import Session
 import os
 import json
 
 from models import User, Subscription, AppSettings
+
+
+def utc_now():
+    """Get current UTC time as timezone-aware datetime"""
+    return datetime.now(timezone.utc)
 
 
 def get_setting(db: Session, key: str, default: str = None) -> str:
@@ -43,7 +48,7 @@ def get_active_subscription(db: Session, user_id: str) -> Optional[Subscription]
     return db.query(Subscription).filter(
         Subscription.user_id == user_id,
         Subscription.status == 'active',
-        Subscription.expires_at > datetime.utcnow()
+        Subscription.expires_at > utc_now()
     ).first()
 
 
@@ -60,9 +65,9 @@ def create_subscription(
     
     # Calculate expiry date
     if plan_type == 'monthly':
-        expires_at = datetime.utcnow() + timedelta(days=30)
+        expires_at = utc_now() + timedelta(days=30)
     else:  # yearly
-        expires_at = datetime.utcnow() + timedelta(days=365)
+        expires_at = utc_now() + timedelta(days=365)
     
     subscription = Subscription(
         user_id=user_id,
@@ -71,7 +76,7 @@ def create_subscription(
         google_order_id=google_order_id,
         google_product_id=google_product_id,
         google_purchase_token=google_purchase_token,
-        started_at=datetime.utcnow(),
+        started_at=utc_now(),
         expires_at=expires_at,
         price_paid=price_paid,
         is_launch_price=is_launch_pricing_active(db)
@@ -99,7 +104,7 @@ def cancel_subscription(db: Session, user_id: str) -> bool:
         return False
     
     subscription.status = 'cancelled'
-    subscription.cancelled_at = datetime.utcnow()
+    subscription.cancelled_at = utc_now()
     
     # User keeps premium until expiry
     # (Don't change user.subscription_status here - it will change when subscription expires)
@@ -138,7 +143,7 @@ def verify_google_purchase(purchase_token: str, product_id: str) -> Dict[str, An
         'valid': True,
         'product_id': product_id,
         'purchase_token': purchase_token,
-        'expiry_time': (datetime.utcnow() + timedelta(days=30 if 'monthly' in product_id else 365)).isoformat()
+        'expiry_time': (utc_now() + timedelta(days=30 if 'monthly' in product_id else 365)).isoformat()
     }
 
 
@@ -220,7 +225,7 @@ def check_expired_subscriptions(db: Session) -> int:
     # Find expired subscriptions
     expired = db.query(Subscription).filter(
         Subscription.status == 'active',
-        Subscription.expires_at < datetime.utcnow()
+        Subscription.expires_at < utc_now()
     ).all()
     
     count = 0
@@ -234,7 +239,7 @@ def check_expired_subscriptions(db: Session) -> int:
             other_active = db.query(Subscription).filter(
                 Subscription.user_id == user.id,
                 Subscription.status == 'active',
-                Subscription.expires_at > datetime.utcnow(),
+                Subscription.expires_at > utc_now(),
                 Subscription.id != subscription.id
             ).first()
             

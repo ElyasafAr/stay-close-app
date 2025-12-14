@@ -3,12 +3,17 @@
 Coupon Service - Manages coupon validation and application
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any, Tuple
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from models import Coupon, CouponUsage, User, Subscription
+
+
+def utc_now():
+    """Get current UTC time as timezone-aware datetime"""
+    return datetime.now(timezone.utc)
 
 
 def get_coupon_by_code(db: Session, code: str) -> Optional[Coupon]:
@@ -45,7 +50,7 @@ def validate_coupon(
         return False, {"error": "קופון לא פעיל", "error_code": "INACTIVE"}
     
     # Check validity period
-    now = datetime.utcnow()
+    now = utc_now()
     
     if coupon.starts_at and now < coupon.starts_at:
         return False, {"error": "הקופון עדיין לא בתוקף", "error_code": "NOT_STARTED"}
@@ -124,7 +129,7 @@ def apply_coupon(
             result["extra_trial_days"] = coupon.value
         else:
             # Start trial if not started
-            user.trial_started_at = datetime.utcnow()
+            user.trial_started_at = utc_now()
             user.subscription_status = 'trial'
             applied_to = 'trial'
             result["message"] = f"תקופת ניסיון מורחבת: {coupon.value} ימים נוספים!"
@@ -132,13 +137,13 @@ def apply_coupon(
     
     elif coupon.coupon_type == 'free_period':
         # Give X days of premium for free
-        expires_at = datetime.utcnow() + timedelta(days=coupon.value)
+        expires_at = utc_now() + timedelta(days=coupon.value)
         
         subscription = Subscription(
             user_id=user_id,
             plan_type='coupon',
             status='active',
-            started_at=datetime.utcnow(),
+            started_at=utc_now(),
             expires_at=expires_at,
             price_paid=0,
             is_launch_price=False
@@ -201,7 +206,7 @@ def get_user_active_coupon_discount(db: Session, user_id: str, plan_type: str) -
         coupon = recent_usage.coupon
         
         # Check if this was used within the last hour (session-based discount)
-        if datetime.utcnow() - recent_usage.used_at < timedelta(hours=1):
+        if utc_now() - recent_usage.used_at < timedelta(hours=1):
             return {
                 "type": coupon.coupon_type,
                 "value": int(recent_usage.discount_amount),

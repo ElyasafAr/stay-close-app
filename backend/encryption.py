@@ -134,3 +134,4 @@ if __name__ == "__main__":
     # Verify hash consistency
     hash_val2 = hash_for_lookup(test_email)
     print(f"Hash consistent: {hash_val == hash_val2}")
+
