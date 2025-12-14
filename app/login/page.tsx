@@ -17,6 +17,7 @@ export default function LoginPage() {
     email: '',
     password: '',
   })
+  const [agreedToTerms, setAgreedToTerms] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -144,9 +145,26 @@ export default function LoginPage() {
               />
             </div>
 
+            {!isLogin && (
+              <label className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={agreedToTerms}
+                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                  className={styles.checkbox}
+                />
+                <span>
+                  קראתי ואני מסכים/ה ל
+                  <a href="/terms" target="_blank" className={styles.link}>תנאי השימוש</a>
+                  {' '}ול
+                  <a href="/privacy" target="_blank" className={styles.link}>מדיניות הפרטיות</a>
+                </span>
+              </label>
+            )}
+
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || (!isLogin && !agreedToTerms)}
               className={styles.submitButton}
             >
               {loading ? 'מתחבר...' : isLogin ? 'התחבר' : 'הירשם'}
@@ -173,6 +191,7 @@ export default function LoginPage() {
                 setIsLogin(!isLogin)
                 setError(null)
                 setFormData({ username: '', email: '', password: '' })
+                setAgreedToTerms(false)
               }}
               className={styles.switchButton}
             >

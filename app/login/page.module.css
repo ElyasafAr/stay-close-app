@@ -210,6 +210,37 @@
   text-decoration: underline;
 }
 
+/* Consent Checkbox */
+.checkboxLabel {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  line-height: 1.5;
+}
+
+.checkbox {
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.link {
+  color: var(--color-primary);
+  text-decoration: underline;
+  transition: opacity 200ms;
+}
+
+.link:hover {
+  opacity: 0.8;
+}
+
 @media (max-width: 768px) {
   .main {
     padding: 16px 12px;

@@ -1942,6 +1942,39 @@ async def generate_message(
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"שגיאה ביצירת הודעה: {str(e)}")
 
+# ========== ACCOUNT ENDPOINTS ==========
+
+@app.delete("/api/account")
+async def delete_account(
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """מחיקת חשבון משתמש וכל המידע שלו"""
+    user_id = current_user["user_id"]
+    
+    try:
+        # מחיקת המשתמש - CASCADE ימחק את כל הנתונים הקשורים
+        user = db.query(User).filter(User.id == user_id).first()
+        
+        if not user:
+            raise HTTPException(status_code=404, detail="משתמש לא נמצא")
+        
+        # מחיקת push tokens
+        db.query(PushToken).filter(PushToken.user_id == user_id).delete()
+        
+        # מחיקת המשתמש (CASCADE ימחק contacts, reminders, subscriptions, usage_stats)
+        db.delete(user)
+        db.commit()
+        
+        print(f"✅ [ACCOUNT] User {user_id} account deleted successfully")
+        
+        return {"message": "החשבון נמחק בהצלחה"}
+        
+    except Exception as e:
+        db.rollback()
+        print(f"❌ [ACCOUNT] Error deleting account: {e}")
+        raise HTTPException(status_code=500, detail=f"שגיאה במחיקת החשבון: {str(e)}")
+
 # ========== AUTH ENDPOINTS ==========
 
 @app.post("/api/auth/register")
