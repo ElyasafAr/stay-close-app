@@ -109,9 +109,13 @@ async function registerTokenWithBackend(token: string): Promise<void> {
   
   console.log(`🔵 [Capacitor] Registering ${platform} token with backend...`)
   
-  const response = await postData('/api/push/register', {
+  const response = await postData('/api/push-tokens', {
     token,
-    platform // 'android' או 'ios' או 'web'
+    device_info: {
+      platform, // 'android' או 'ios' או 'web'
+      type: 'fcm',
+      userAgent: navigator.userAgent
+    }
   })
   
   if (response.success) {
