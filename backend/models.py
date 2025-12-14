@@ -27,6 +27,10 @@ class User(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     
+    # Notification settings - where to receive push notifications
+    # 'both' = phone + browser, 'phone' = only phone app, 'browser' = only web browser
+    notification_platform = Column(String, nullable=False, default='both')
+    
     # Relationships
     contacts = relationship("Contact", back_populates="user", cascade="all, delete-orphan")
     reminders = relationship("Reminder", back_populates="user", cascade="all, delete-orphan")

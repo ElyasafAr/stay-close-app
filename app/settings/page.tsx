@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslation } from '@/i18n/useTranslation'
 import { useSettings } from '@/state/useSettings'
-import { logout, getStoredUser } from '@/services/auth'
+import { logout, getStoredUser, isAuthenticated } from '@/services/auth'
+import { getData, putData } from '@/services/api'
 import { MdSettings, MdLanguage, MdPalette, MdNotifications, MdLogout, MdPerson, MdPhoneAndroid, MdComputer, MdDevices } from 'react-icons/md'
 import styles from './page.module.css'
 
@@ -13,19 +14,56 @@ export default function SettingsPage() {
   const router = useRouter()
   const { settings, updateSettings, saveSettings } = useSettings()
   const [showSuccess, setShowSuccess] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const user = getStoredUser()
 
-  const handleSave = () => {
-    saveSettings()
-    setShowSuccess(true)
-    setTimeout(() => setShowSuccess(false), 3000)
-    // Note: Theme changes apply immediately, but language changes may require a refresh
-    // We'll reload only if language changed
-    const currentLanguage = settings.language
-    if (currentLanguage !== (localStorage.getItem('app_language') || 'he')) {
-      setTimeout(() => {
-        window.location.reload()
-      }, 500)
+  // טעינת הגדרת הפלטפורמה מהשרת
+  useEffect(() => {
+    const loadNotificationSettings = async () => {
+      if (!isAuthenticated()) return
+      
+      try {
+        const response = await getData<{ notification_platform: string }>('/api/notification-settings')
+        if (response.success && response.data?.notification_platform) {
+          updateSettings({ notificationPlatform: response.data.notification_platform as 'phone' | 'browser' | 'both' })
+        }
+      } catch (error) {
+        console.error('Failed to load notification settings:', error)
+      }
+    }
+    
+    loadNotificationSettings()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const handleSave = async () => {
+    setIsSaving(true)
+    
+    try {
+      // שמירת הגדרות מקומיות
+      saveSettings()
+      
+      // שמירת הגדרת הפלטפורמה בשרת
+      if (isAuthenticated()) {
+        await putData('/api/notification-settings', {
+          notification_platform: settings.notificationPlatform || 'both'
+        })
+      }
+      
+      setShowSuccess(true)
+      setTimeout(() => setShowSuccess(false), 3000)
+      
+      // Note: Theme changes apply immediately, but language changes may require a refresh
+      const currentLanguage = settings.language
+      if (currentLanguage !== (localStorage.getItem('app_language') || 'he')) {
+        setTimeout(() => {
+          window.location.reload()
+        }, 500)
+      }
+    } catch (error) {
+      console.error('Failed to save settings:', error)
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -111,8 +149,8 @@ export default function SettingsPage() {
             </div>
           )}
 
-          <button onClick={handleSave} className={styles.saveButton}>
-            {t('settings.save')}
+          <button onClick={handleSave} className={styles.saveButton} disabled={isSaving}>
+            {isSaving ? 'שומר...' : t('settings.save')}
           </button>
 
           {showSuccess && (

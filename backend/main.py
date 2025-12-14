@@ -138,9 +138,31 @@ def check_and_send_reminders():
                     PushToken.user_id == db_reminder.user_id
                 ).all()
                 
-                # שלח Push Notification לכל ה-tokens
+                # קבל את העדפת הפלטפורמה של המשתמש
+                user = db.query(User).filter(User.id == db_reminder.user_id).first()
+                notification_platform = user.notification_platform if user else 'both'
+                
+                # סנן טוקנים לפי העדפת המשתמש
+                filtered_tokens = []
+                for pt in push_tokens:
+                    try:
+                        device_info = json.loads(pt.device_info) if pt.device_info else {}
+                        platform = device_info.get('platform', 'web')
+                        
+                        # בדיקה אם הפלטפורמה הזו כלולה בהעדפת המשתמש
+                        if notification_platform == 'both':
+                            filtered_tokens.append(pt)
+                        elif notification_platform == 'phone' and platform in ['android', 'ios']:
+                            filtered_tokens.append(pt)
+                        elif notification_platform == 'browser' and platform == 'web':
+                            filtered_tokens.append(pt)
+                    except:
+                        # אם יש שגיאה בפרסור, שלח בכל מקרה
+                        filtered_tokens.append(pt)
+                
+                # שלח Push Notification לטוקנים המסוננים
                 contact_name = decrypt(contact.name_encrypted)
-                for push_token in push_tokens:
+                for push_token in filtered_tokens:
                     send_push_notification(
                         push_token=push_token.token,
                         title="זמן לשלוח הודעה! 💌",
@@ -722,11 +744,32 @@ async def check_reminders(
                 # Send push notification
                 contact_name = decrypt(contact.name_encrypted)
                 push_tokens = db.query(PushToken).filter(PushToken.user_id == user_id).all()
-                if push_tokens:
+                
+                # קבל את העדפת הפלטפורמה של המשתמש
+                user = db.query(User).filter(User.id == user_id).first()
+                notification_platform = user.notification_platform if user else 'both'
+                
+                # סנן טוקנים לפי העדפת המשתמש
+                filtered_tokens = []
+                for pt in push_tokens:
+                    try:
+                        device_info = json.loads(pt.device_info) if pt.device_info else {}
+                        platform = device_info.get('platform', 'web')
+                        
+                        if notification_platform == 'both':
+                            filtered_tokens.append(pt)
+                        elif notification_platform == 'phone' and platform in ['android', 'ios']:
+                            filtered_tokens.append(pt)
+                        elif notification_platform == 'browser' and platform == 'web':
+                            filtered_tokens.append(pt)
+                    except:
+                        filtered_tokens.append(pt)
+                
+                if filtered_tokens:
                     notification_title = f"תזכורת: {contact_name}"
                     notification_body = f"זמן להתקשר ל-{contact_name}!"
                     
-                    for push_token in push_tokens:
+                    for push_token in filtered_tokens:
                         send_push_notification(
                             push_token.token,
                             notification_title,
@@ -734,7 +777,7 @@ async def check_reminders(
                             data={"reminder_id": db_reminder.id, "contact_id": contact.id}
                         )
                 else:
-                    print(f"⚠️ [CHECK] No push tokens found for user {user_id}")
+                    print(f"⚠️ [CHECK] No push tokens found for user {user_id} (platform: {notification_platform})")
                 
                 # Update reminder
                 if reminder_type == 'one_time':
@@ -1187,6 +1230,54 @@ async def delete_push_token(
     
     print(f"✅ [PUSH] Deleted push token {token_id} for user {user_id}")
     return {"message": "Push token נמחק בהצלחה"}
+
+# ========== NOTIFICATION SETTINGS ENDPOINT ==========
+
+class NotificationSettingsUpdate(BaseModel):
+    notification_platform: str  # 'both', 'phone', 'browser'
+
+@app.get("/api/notification-settings")
+async def get_notification_settings(
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """קבלת הגדרות התראות של המשתמש"""
+    user_id = current_user["user_id"]
+    user = db.query(User).filter(User.id == user_id).first()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="משתמש לא נמצא")
+    
+    return {
+        "notification_platform": user.notification_platform or 'both'
+    }
+
+@app.put("/api/notification-settings")
+async def update_notification_settings(
+    settings: NotificationSettingsUpdate,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """עדכון הגדרות התראות של המשתמש"""
+    user_id = current_user["user_id"]
+    
+    # Validate platform value
+    if settings.notification_platform not in ['both', 'phone', 'browser']:
+        raise HTTPException(status_code=400, detail="ערך לא חוקי עבור notification_platform")
+    
+    user = db.query(User).filter(User.id == user_id).first()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="משתמש לא נמצא")
+    
+    user.notification_platform = settings.notification_platform
+    db.commit()
+    
+    print(f"✅ [SETTINGS] Updated notification_platform for user {user_id}: {settings.notification_platform}")
+    return {
+        "message": "הגדרות התראות עודכנו בהצלחה",
+        "notification_platform": settings.notification_platform
+    }
 
 # ========== REMINDERS CHECK ENDPOINT ==========
 # NOTE: This endpoint is now defined above, before /api/reminders/{reminder_id}
