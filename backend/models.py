@@ -152,3 +152,55 @@ class UsageStats(Base):
     # Relationships
     user = relationship("User", back_populates="usage_stats")
 
+
+class Coupon(Base):
+    """Coupon model - stores coupon codes and their settings"""
+    __tablename__ = "coupons"
+    
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    code = Column(String, unique=True, nullable=False, index=True)  # e.g., "WELCOME50"
+    
+    # Coupon type and value
+    # Types: 'trial_extension', 'discount_percent', 'discount_fixed', 'free_period'
+    coupon_type = Column(String, nullable=False)
+    value = Column(Integer, nullable=False)  # Days for trial/free_period, % for discount_percent, ILS for discount_fixed
+    
+    # Restrictions
+    valid_for_plans = Column(String, nullable=True)  # 'monthly', 'yearly', 'both' (null = all)
+    max_uses = Column(Integer, nullable=True)  # null = unlimited
+    max_uses_per_user = Column(Integer, nullable=False, default=1)
+    
+    # Validity period
+    starts_at = Column(DateTime(timezone=True), nullable=True)  # null = immediately valid
+    expires_at = Column(DateTime(timezone=True), nullable=True)  # null = never expires
+    
+    # Status
+    is_active = Column(Boolean, default=True, nullable=False)
+    
+    # Metadata
+    description = Column(String, nullable=True)  # Internal description
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    
+    # Relationships
+    usages = relationship("CouponUsage", back_populates="coupon", cascade="all, delete-orphan")
+
+
+class CouponUsage(Base):
+    """Coupon Usage model - tracks which users used which coupons"""
+    __tablename__ = "coupon_usages"
+    
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    coupon_id = Column(Integer, ForeignKey("coupons.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    
+    # What was applied
+    applied_to = Column(String, nullable=True)  # 'trial', 'subscription_monthly', 'subscription_yearly'
+    discount_amount = Column(Float, nullable=True)  # Actual discount applied (for analytics)
+    
+    used_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    
+    # Relationships
+    coupon = relationship("Coupon", back_populates="usages")
+    user = relationship("User")
+

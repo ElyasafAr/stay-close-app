@@ -1302,6 +1302,138 @@ async def update_notification_settings(
 # NOTE: This endpoint is now defined above, before /api/reminders/{reminder_id}
 # to prevent FastAPI from matching "check" as a reminder_id parameter
 
+# ========== COUPON ENDPOINTS ==========
+
+class CouponValidate(BaseModel):
+    code: str
+    plan_type: Optional[str] = None
+
+class CouponApply(BaseModel):
+    code: str
+    plan_type: Optional[str] = None
+
+class CouponCreate(BaseModel):
+    code: str
+    coupon_type: str  # 'trial_extension', 'discount_percent', 'discount_fixed', 'free_period'
+    value: int
+    description: Optional[str] = None
+    max_uses: Optional[int] = None
+    max_uses_per_user: int = 1
+    valid_for_plans: Optional[str] = None
+    expires_at: Optional[str] = None  # ISO datetime string
+
+@app.post("/api/coupon/validate")
+async def validate_coupon_endpoint(
+    data: CouponValidate,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """אימות קופון"""
+    user_id = current_user["user_id"]
+    
+    from coupon_service import validate_coupon
+    
+    is_valid, info = validate_coupon(db, data.code, user_id, data.plan_type)
+    
+    if not is_valid:
+        raise HTTPException(status_code=400, detail=info.get("error", "קופון לא תקף"))
+    
+    return {"valid": True, **info}
+
+@app.post("/api/coupon/apply")
+async def apply_coupon_endpoint(
+    data: CouponApply,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """הפעלת קופון"""
+    user_id = current_user["user_id"]
+    
+    from coupon_service import apply_coupon
+    
+    result = apply_coupon(db, data.code, user_id, data.plan_type)
+    
+    if not result.get("success"):
+        raise HTTPException(status_code=400, detail=result.get("error", "שגיאה בהפעלת קופון"))
+    
+    return result
+
+@app.get("/api/admin/coupons")
+async def get_coupons_endpoint(
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """קבלת רשימת קופונים (Admin only)"""
+    user_id = current_user["user_id"]
+    
+    if not is_admin(db, user_id):
+        raise HTTPException(status_code=403, detail="אין הרשאת מנהל")
+    
+    from coupon_service import get_all_coupons
+    
+    return get_all_coupons(db)
+
+@app.post("/api/admin/coupons")
+async def create_coupon_endpoint(
+    data: CouponCreate,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """יצירת קופון חדש (Admin only)"""
+    user_id = current_user["user_id"]
+    
+    if not is_admin(db, user_id):
+        raise HTTPException(status_code=403, detail="אין הרשאת מנהל")
+    
+    from coupon_service import create_coupon
+    from datetime import datetime
+    
+    expires_at = None
+    if data.expires_at:
+        try:
+            expires_at = datetime.fromisoformat(data.expires_at.replace('Z', '+00:00'))
+        except:
+            raise HTTPException(status_code=400, detail="תאריך תפוגה לא תקין")
+    
+    try:
+        coupon = create_coupon(
+            db=db,
+            code=data.code,
+            coupon_type=data.coupon_type,
+            value=data.value,
+            description=data.description,
+            max_uses=data.max_uses,
+            max_uses_per_user=data.max_uses_per_user,
+            valid_for_plans=data.valid_for_plans,
+            expires_at=expires_at
+        )
+        return {"success": True, "coupon_id": coupon.id, "code": coupon.code}
+    except Exception as e:
+        if "unique" in str(e).lower():
+            raise HTTPException(status_code=400, detail="קוד קופון כבר קיים")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.put("/api/admin/coupons/{coupon_id}/toggle")
+async def toggle_coupon_endpoint(
+    coupon_id: int,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """הפעלה/השבתה של קופון (Admin only)"""
+    user_id = current_user["user_id"]
+    
+    if not is_admin(db, user_id):
+        raise HTTPException(status_code=403, detail="אין הרשאת מנהל")
+    
+    from coupon_service import toggle_coupon_status
+    
+    success = toggle_coupon_status(db, coupon_id)
+    
+    if not success:
+        raise HTTPException(status_code=404, detail="קופון לא נמצא")
+    
+    return {"success": True}
+
 # ========== SUBSCRIPTION ENDPOINTS ==========
 
 class PurchaseVerification(BaseModel):

@@ -59,6 +59,15 @@ def get_user_subscription_status(db: Session, user_id: str) -> str:
     # Check trial status
     if user.trial_started_at:
         trial_days = get_setting_int(db, 'trial_days', 14)
+        
+        # Add coupon trial extensions
+        try:
+            from coupon_service import get_user_trial_extension
+            extra_days = get_user_trial_extension(db, user_id)
+            trial_days += extra_days
+        except Exception:
+            pass  # Ignore if coupon service not available
+        
         trial_end = user.trial_started_at + timedelta(days=trial_days)
         
         if datetime.utcnow() < trial_end:
@@ -94,12 +103,21 @@ def start_trial(db: Session, user_id: str) -> bool:
 
 
 def get_trial_days_remaining(db: Session, user_id: str) -> int:
-    """Get the number of trial days remaining for a user"""
+    """Get the number of trial days remaining for a user (including coupon extensions)"""
     user = db.query(User).filter(User.id == user_id).first()
     if not user or not user.trial_started_at:
         return 0
     
     trial_days = get_setting_int(db, 'trial_days', 14)
+    
+    # Add coupon trial extensions
+    try:
+        from coupon_service import get_user_trial_extension
+        extra_days = get_user_trial_extension(db, user_id)
+        trial_days += extra_days
+    except Exception:
+        pass  # Ignore if coupon service not available
+    
     trial_end = user.trial_started_at + timedelta(days=trial_days)
     remaining = (trial_end - datetime.utcnow()).days
     return max(0, remaining)

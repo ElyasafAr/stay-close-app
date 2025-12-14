@@ -371,6 +371,69 @@ def _run_migrations():
             db.commit()
             print("✅ [DATABASE] Migration completed: usage_stats table created")
         
+        # Migration 9: Create coupons table
+        check_coupons = text("""
+            SELECT table_name 
+            FROM information_schema.tables 
+            WHERE table_name='coupons';
+        """)
+        
+        result_coupons = db.execute(check_coupons).fetchone()
+        
+        if not result_coupons:
+            print("🔵 [DATABASE] Running migration: Creating coupons table...")
+            create_coupons = text("""
+                CREATE TABLE coupons (
+                    id SERIAL PRIMARY KEY,
+                    code VARCHAR NOT NULL UNIQUE,
+                    coupon_type VARCHAR NOT NULL,
+                    value INTEGER NOT NULL,
+                    valid_for_plans VARCHAR,
+                    max_uses INTEGER,
+                    max_uses_per_user INTEGER NOT NULL DEFAULT 1,
+                    starts_at TIMESTAMP WITH TIME ZONE,
+                    expires_at TIMESTAMP WITH TIME ZONE,
+                    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+                    description VARCHAR,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
+                );
+                CREATE INDEX idx_coupons_code ON coupons(code);
+                CREATE INDEX idx_coupons_is_active ON coupons(is_active);
+            """)
+            db.execute(create_coupons)
+            db.commit()
+            print("✅ [DATABASE] Migration completed: coupons table created")
+        
+        # Migration 10: Create coupon_usages table
+        check_coupon_usages = text("""
+            SELECT table_name 
+            FROM information_schema.tables 
+            WHERE table_name='coupon_usages';
+        """)
+        
+        result_coupon_usages = db.execute(check_coupon_usages).fetchone()
+        
+        if not result_coupon_usages:
+            print("🔵 [DATABASE] Running migration: Creating coupon_usages table...")
+            create_coupon_usages = text("""
+                CREATE TABLE coupon_usages (
+                    id SERIAL PRIMARY KEY,
+                    coupon_id INTEGER NOT NULL,
+                    user_id VARCHAR NOT NULL,
+                    applied_to VARCHAR,
+                    discount_amount FLOAT,
+                    used_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+                    FOREIGN KEY (coupon_id) REFERENCES coupons(id) ON DELETE CASCADE,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                );
+                CREATE INDEX idx_coupon_usages_coupon_id ON coupon_usages(coupon_id);
+                CREATE INDEX idx_coupon_usages_user_id ON coupon_usages(user_id);
+            """)
+            db.execute(create_coupon_usages)
+            db.commit()
+            print("✅ [DATABASE] Migration completed: coupon_usages table created")
+        
         print("✅ [DATABASE] All migrations completed successfully")
     except Exception as e:
         db.rollback()
