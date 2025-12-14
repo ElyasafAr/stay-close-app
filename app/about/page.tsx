@@ -1,11 +1,50 @@
 'use client'
 
+import { useState } from 'react'
 import { useTranslation } from '@/i18n/useTranslation'
 import { AiFillHeart } from 'react-icons/ai'
+import { MdEmail, MdSend, MdCheckCircle } from 'react-icons/md'
 import styles from './page.module.css'
+
+// מספר גרסה - עדכן כאן בכל שחרור
+const APP_VERSION = '1.1.0'
+const BUILD_DATE = '2024-12-12'
 
 export default function AboutPage() {
   const { t } = useTranslation()
+  const [showContactForm, setShowContactForm] = useState(false)
+  const [contactMessage, setContactMessage] = useState('')
+  const [contactEmail, setContactEmail] = useState('')
+  const [isSending, setIsSending] = useState(false)
+  const [isSent, setIsSent] = useState(false)
+
+  const handleSendFeedback = async () => {
+    if (!contactMessage.trim()) return
+    
+    setIsSending(true)
+    try {
+      // שליחה לאימייל דרך mailto או API
+      const subject = encodeURIComponent('פידבק מאפליקציית Stay Close')
+      const body = encodeURIComponent(`${contactMessage}\n\n---\nנשלח מגרסה: ${APP_VERSION}\nאימייל: ${contactEmail || 'לא צוין'}`)
+      
+      // פתיחת לקוח אימייל
+      window.location.href = `mailto:elyasaf.ar@gmail.com?subject=${subject}&body=${body}`
+      
+      setIsSent(true)
+      setContactMessage('')
+      setContactEmail('')
+      
+      // אפס את ההודעה אחרי 3 שניות
+      setTimeout(() => {
+        setIsSent(false)
+        setShowContactForm(false)
+      }, 3000)
+    } catch (error) {
+      console.error('Error sending feedback:', error)
+    } finally {
+      setIsSending(false)
+    }
+  }
 
   return (
     <main className={styles.main}>
@@ -20,10 +59,62 @@ export default function AboutPage() {
           <p className={styles.paragraph}>
             האפליקציה מספקת כלים נוחים לניהול קשרים, תזכורות, והתראות כדי שלא תפספסו רגעים חשובים.
           </p>
-          <p className={styles.paragraph}>
-            <AiFillHeart style={{ color: '#f4a5ae', fontSize: '1.2rem', marginLeft: '4px' }} />
-            גרסה: 1.0.0
-          </p>
+          
+          {/* מידע על גרסה */}
+          <div className={styles.versionBox}>
+            <p className={styles.versionText}>
+              <AiFillHeart style={{ color: '#f4a5ae', fontSize: '1.2rem', marginLeft: '4px' }} />
+              גרסה: <strong>{APP_VERSION}</strong>
+            </p>
+            <p className={styles.buildDate}>תאריך עדכון: {BUILD_DATE}</p>
+          </div>
+
+          {/* כפתור צור קשר */}
+          <button 
+            className={styles.contactButton}
+            onClick={() => setShowContactForm(!showContactForm)}
+          >
+            <MdEmail style={{ fontSize: '20px' }} />
+            צור קשר
+          </button>
+
+          {/* טופס צור קשר */}
+          {showContactForm && (
+            <div className={styles.contactForm}>
+              {isSent ? (
+                <div className={styles.successMessage}>
+                  <MdCheckCircle style={{ fontSize: '48px', color: '#4ade80' }} />
+                  <p>תודה על הפידבק! 💙</p>
+                </div>
+              ) : (
+                <>
+                  <h3>שלח לנו הודעה</h3>
+                  <input
+                    type="email"
+                    placeholder="האימייל שלך (אופציונלי)"
+                    value={contactEmail}
+                    onChange={(e) => setContactEmail(e.target.value)}
+                    className={styles.contactInput}
+                  />
+                  <textarea
+                    placeholder="כתוב כאן את ההודעה, הצעה לשיפור, או דיווח על באג..."
+                    value={contactMessage}
+                    onChange={(e) => setContactMessage(e.target.value)}
+                    className={styles.contactTextarea}
+                    rows={4}
+                  />
+                  <button 
+                    className={styles.sendButton}
+                    onClick={handleSendFeedback}
+                    disabled={isSending || !contactMessage.trim()}
+                  >
+                    <MdSend style={{ fontSize: '18px' }} />
+                    {isSending ? 'שולח...' : 'שלח'}
+                  </button>
+                </>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </main>

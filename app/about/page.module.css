@@ -70,6 +70,172 @@ html.dark .content {
   opacity: 0.8;
 }
 
+/* Version Box */
+.versionBox {
+  background: rgba(168, 213, 226, 0.1);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin: 24px 0;
+  text-align: center;
+}
+
+html.dark .versionBox {
+  background: rgba(79, 195, 247, 0.1);
+  border-color: rgba(79, 195, 247, 0.2);
+}
+
+.versionText {
+  font-size: 1.1rem;
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.buildDate {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* Contact Button */
+.contactButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px 24px;
+  margin-top: 24px;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.contactButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(168, 213, 226, 0.4);
+}
+
+/* Contact Form */
+.contactForm {
+  margin-top: 24px;
+  padding: 24px;
+  background: rgba(168, 213, 226, 0.05);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  animation: slideDown 0.3s ease;
+}
+
+html.dark .contactForm {
+  background: rgba(79, 195, 247, 0.05);
+  border-color: rgba(79, 195, 247, 0.15);
+}
+
+.contactForm h3 {
+  margin: 0 0 16px 0;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+  text-align: right;
+}
+
+.contactInput,
+.contactTextarea {
+  width: 100%;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  border: 1.5px solid var(--border-color);
+  border-radius: 10px;
+  font-size: 15px;
+  font-family: inherit;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  direction: rtl;
+  transition: all 200ms ease;
+}
+
+.contactInput:focus,
+.contactTextarea:focus {
+  border-color: var(--color-primary);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(168, 213, 226, 0.2);
+}
+
+html.dark .contactInput,
+html.dark .contactTextarea {
+  background: var(--bg-card);
+  border-color: rgba(79, 195, 247, 0.2);
+}
+
+html.dark .contactInput:focus,
+html.dark .contactTextarea:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(79, 195, 247, 0.2);
+}
+
+.contactTextarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.sendButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.sendButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(74, 222, 128, 0.4);
+}
+
+.sendButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.successMessage {
+  text-align: center;
+  padding: 24px;
+  color: var(--text-primary);
+}
+
+.successMessage p {
+  margin: 16px 0 0 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (max-width: 768px) {
   .main {
     padding: 16px 12px 24px;
@@ -82,5 +248,9 @@ html.dark .content {
   .content {
     padding: 32px 24px;
     border-radius: 24px;
+  }
+  
+  .contactForm {
+    padding: 20px 16px;
   }
 }
