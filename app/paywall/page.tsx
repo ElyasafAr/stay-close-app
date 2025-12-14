@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { getData } from '@/services/api'
+import { getData, postData } from '@/services/api'
 import { isAuthenticated } from '@/services/auth'
-import { MdStar, MdCheck, MdClose, MdLocalOffer } from 'react-icons/md'
+import { MdStar, MdCheck, MdClose, MdLocalOffer, MdConfirmationNumber } from 'react-icons/md'
 import styles from './page.module.css'
 
 interface SubscriptionStatus {
@@ -29,6 +29,9 @@ export default function PaywallPage() {
   const [subscriptionData, setSubscriptionData] = useState<SubscriptionStatus | null>(null)
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('yearly')
   const [processing, setProcessing] = useState(false)
+  const [couponCode, setCouponCode] = useState('')
+  const [couponResult, setCouponResult] = useState<{success: boolean; message?: string; type?: string; value?: number} | null>(null)
+  const [applyingCoupon, setApplyingCoupon] = useState(false)
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -54,6 +57,41 @@ export default function PaywallPage() {
       console.error('Error loading subscription status:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return
+    
+    setApplyingCoupon(true)
+    setCouponResult(null)
+    
+    try {
+      const response = await postData<{success: boolean; message?: string; type?: string; value?: number}>('/api/coupon/apply', {
+        code: couponCode.trim(),
+        plan_type: selectedPlan
+      })
+      
+      if (response.success && response.data) {
+        setCouponResult({
+          success: true,
+          message: response.data.message,
+          type: response.data.type,
+          value: response.data.value
+        })
+        
+        // If coupon gives free period or trial extension, refresh status
+        if (response.data.type === 'free_period' || response.data.type === 'trial_extension') {
+          await loadSubscriptionStatus()
+        }
+      }
+    } catch (error: any) {
+      setCouponResult({
+        success: false,
+        message: error.message || 'קופון לא תקף'
+      })
+    } finally {
+      setApplyingCoupon(false)
     }
   }
 
@@ -190,6 +228,31 @@ export default function PaywallPage() {
               {(yearlyPrice / 12).toFixed(2)}₪ לחודש
             </div>
           </button>
+        </div>
+
+        {/* Coupon Input */}
+        <div className={styles.couponSection}>
+          <div className={styles.couponInput}>
+            <MdConfirmationNumber size={20} />
+            <input
+              type="text"
+              placeholder="יש לך קוד קופון?"
+              value={couponCode}
+              onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+              disabled={applyingCoupon}
+            />
+            <button 
+              onClick={handleApplyCoupon}
+              disabled={!couponCode.trim() || applyingCoupon}
+            >
+              {applyingCoupon ? '...' : 'הפעל'}
+            </button>
+          </div>
+          {couponResult && (
+            <div className={`${styles.couponResult} ${couponResult.success ? styles.success : styles.error}`}>
+              {couponResult.message}
+            </div>
+          )}
         </div>
 
         {/* Purchase Button */}

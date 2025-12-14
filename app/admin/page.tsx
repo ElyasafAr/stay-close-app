@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { getData, putData } from '@/services/api'
+import { getData, putData, postData } from '@/services/api'
 import { isAuthenticated } from '@/services/auth'
-import { MdDashboard, MdPeople, MdMessage, MdAttachMoney, MdSettings, MdWarning, MdRefresh } from 'react-icons/md'
+import { MdDashboard, MdPeople, MdMessage, MdAttachMoney, MdSettings, MdWarning, MdRefresh, MdLocalOffer, MdAdd } from 'react-icons/md'
 import styles from './page.module.css'
 
 interface AdminStats {
@@ -41,6 +41,28 @@ interface AppSettings {
   }
 }
 
+interface CouponData {
+  id: number
+  code: string
+  type: string
+  value: number
+  description: string | null
+  max_uses: number | null
+  max_uses_per_user: number
+  valid_for_plans: string | null
+  expires_at: string | null
+  is_active: boolean
+  usage_count: number
+  created_at: string
+}
+
+const COUPON_TYPES = [
+  { value: 'trial_extension', label: 'הארכת Trial (ימים)' },
+  { value: 'discount_percent', label: 'הנחה באחוזים (%)' },
+  { value: 'discount_fixed', label: 'הנחה קבועה (₪)' },
+  { value: 'free_period', label: 'תקופה חינמית (ימים)' },
+]
+
 export default function AdminPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
@@ -49,6 +71,18 @@ export default function AdminPage() {
   const [settings, setSettings] = useState<AppSettings | null>(null)
   const [editedSettings, setEditedSettings] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
+  const [coupons, setCoupons] = useState<CouponData[]>([])
+  const [showCouponForm, setShowCouponForm] = useState(false)
+  const [newCoupon, setNewCoupon] = useState({
+    code: '',
+    coupon_type: 'trial_extension',
+    value: 7,
+    description: '',
+    max_uses: '',
+    max_uses_per_user: 1,
+    valid_for_plans: 'both',
+    expires_at: ''
+  })
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -63,9 +97,10 @@ export default function AdminPage() {
     setError(null)
     
     try {
-      const [statsRes, settingsRes] = await Promise.all([
+      const [statsRes, settingsRes, couponsRes] = await Promise.all([
         getData<AdminStats>('/api/admin/stats'),
-        getData<AppSettings>('/api/admin/settings')
+        getData<AppSettings>('/api/admin/settings'),
+        getData<CouponData[]>('/api/admin/coupons')
       ])
       
       if (statsRes.success && statsRes.data) {
@@ -80,6 +115,10 @@ export default function AdminPage() {
           initial[key] = val.value
         })
         setEditedSettings(initial)
+      }
+      
+      if (couponsRes.success && couponsRes.data) {
+        setCoupons(couponsRes.data)
       }
     } catch (err: any) {
       if (err.message?.includes('403')) {
@@ -250,6 +289,150 @@ export default function AdminPage() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* Coupons Section */}
+        <div className={styles.couponsSection}>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>
+              <MdLocalOffer size={24} />
+              קופונים
+            </h2>
+            <button 
+              className={styles.addButton}
+              onClick={() => setShowCouponForm(!showCouponForm)}
+            >
+              <MdAdd size={20} />
+              {showCouponForm ? 'סגור' : 'קופון חדש'}
+            </button>
+          </div>
+
+          {/* Create Coupon Form */}
+          {showCouponForm && (
+            <div className={styles.couponForm}>
+              <div className={styles.formRow}>
+                <div className={styles.formField}>
+                  <label>קוד קופון</label>
+                  <input
+                    type="text"
+                    value={newCoupon.code}
+                    onChange={(e) => setNewCoupon({...newCoupon, code: e.target.value.toUpperCase()})}
+                    placeholder="WELCOME50"
+                  />
+                </div>
+                <div className={styles.formField}>
+                  <label>סוג</label>
+                  <select
+                    value={newCoupon.coupon_type}
+                    onChange={(e) => setNewCoupon({...newCoupon, coupon_type: e.target.value})}
+                  >
+                    {COUPON_TYPES.map(t => (
+                      <option key={t.value} value={t.value}>{t.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className={styles.formField}>
+                  <label>ערך</label>
+                  <input
+                    type="number"
+                    value={newCoupon.value}
+                    onChange={(e) => setNewCoupon({...newCoupon, value: parseInt(e.target.value) || 0})}
+                  />
+                </div>
+              </div>
+              <div className={styles.formRow}>
+                <div className={styles.formField}>
+                  <label>תיאור (פנימי)</label>
+                  <input
+                    type="text"
+                    value={newCoupon.description}
+                    onChange={(e) => setNewCoupon({...newCoupon, description: e.target.value})}
+                    placeholder="קופון לדוגמא"
+                  />
+                </div>
+                <div className={styles.formField}>
+                  <label>מקס שימושים</label>
+                  <input
+                    type="number"
+                    value={newCoupon.max_uses}
+                    onChange={(e) => setNewCoupon({...newCoupon, max_uses: e.target.value})}
+                    placeholder="ללא הגבלה"
+                  />
+                </div>
+                <div className={styles.formField}>
+                  <label>תוכניות</label>
+                  <select
+                    value={newCoupon.valid_for_plans}
+                    onChange={(e) => setNewCoupon({...newCoupon, valid_for_plans: e.target.value})}
+                  >
+                    <option value="both">הכל</option>
+                    <option value="monthly">חודשי בלבד</option>
+                    <option value="yearly">שנתי בלבד</option>
+                  </select>
+                </div>
+              </div>
+              <button
+                className={styles.createCouponButton}
+                onClick={async () => {
+                  try {
+                    const res = await postData('/api/admin/coupons', {
+                      ...newCoupon,
+                      max_uses: newCoupon.max_uses ? parseInt(newCoupon.max_uses) : null,
+                      expires_at: newCoupon.expires_at || null
+                    })
+                    if (res.success) {
+                      setShowCouponForm(false)
+                      setNewCoupon({
+                        code: '', coupon_type: 'trial_extension', value: 7,
+                        description: '', max_uses: '', max_uses_per_user: 1,
+                        valid_for_plans: 'both', expires_at: ''
+                      })
+                      loadData()
+                    }
+                  } catch (err: any) {
+                    alert(err.message || 'שגיאה ביצירת קופון')
+                  }
+                }}
+              >
+                צור קופון
+              </button>
+            </div>
+          )}
+
+          {/* Coupons List */}
+          <div className={styles.couponsList}>
+            {coupons.length === 0 ? (
+              <p className={styles.noCoupons}>אין קופונים עדיין</p>
+            ) : (
+              coupons.map(coupon => (
+                <div key={coupon.id} className={`${styles.couponCard} ${!coupon.is_active ? styles.inactive : ''}`}>
+                  <div className={styles.couponHeader}>
+                    <span className={styles.couponCode}>{coupon.code}</span>
+                    <span className={`${styles.couponStatus} ${coupon.is_active ? styles.active : ''}`}>
+                      {coupon.is_active ? 'פעיל' : 'מושבת'}
+                    </span>
+                  </div>
+                  <div className={styles.couponDetails}>
+                    <span>{COUPON_TYPES.find(t => t.value === coupon.type)?.label || coupon.type}</span>
+                    <span>ערך: {coupon.value}</span>
+                    <span>שימושים: {coupon.usage_count}{coupon.max_uses ? `/${coupon.max_uses}` : ''}</span>
+                  </div>
+                  {coupon.description && (
+                    <div className={styles.couponDescription}>{coupon.description}</div>
+                  )}
+                  <button
+                    className={styles.toggleButton}
+                    onClick={async () => {
+                      await putData(`/api/admin/coupons/${coupon.id}/toggle`, {})
+                      loadData()
+                    }}
+                  >
+                    {coupon.is_active ? 'השבת' : 'הפעל'}
+                  </button>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
