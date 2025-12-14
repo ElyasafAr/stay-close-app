@@ -122,7 +122,9 @@ export default function AdminPage() {
       }
     } catch (err: any) {
       if (err.message?.includes('403')) {
-        setError('אין לך הרשאות מנהל')
+        // Redirect non-admins to home page
+        router.push('/')
+        return
       } else {
         setError('שגיאה בטעינת נתונים')
       }
