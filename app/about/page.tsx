@@ -7,7 +7,7 @@ import { MdEmail, MdSend, MdCheckCircle } from 'react-icons/md'
 import styles from './page.module.css'
 
 // מספר גרסה - עדכן כאן בכל שחרור
-const APP_VERSION = '1.1.1'
+const APP_VERSION = '1.2.0'
 const BUILD_DATE = '2024-12-14'
 
 export default function AboutPage() {
