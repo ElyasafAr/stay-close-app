@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslation } from '@/i18n/useTranslation'
 import { useSettings } from '@/state/useSettings'
 import { logout, getStoredUser } from '@/services/auth'
-import { MdSettings, MdLanguage, MdPalette, MdNotifications, MdLogout, MdPerson } from 'react-icons/md'
+import { MdSettings, MdLanguage, MdPalette, MdNotifications, MdLogout, MdPerson, MdPhoneAndroid, MdComputer, MdDevices } from 'react-icons/md'
 import styles from './page.module.css'
 
 export default function SettingsPage() {
@@ -74,6 +74,42 @@ export default function SettingsPage() {
               {t('settings.notifications')}
             </label>
           </div>
+
+          {/* בחירת מקום קבלת התראות */}
+          {settings.notifications && (
+            <div className={styles.settingItem}>
+              <label htmlFor="notificationPlatform">
+                <MdDevices style={{ fontSize: '24px', color: '#a8d5e2' }} />
+                קבל התראות ב:
+              </label>
+              <div className={styles.platformOptions}>
+                <button
+                  type="button"
+                  className={`${styles.platformButton} ${settings.notificationPlatform === 'phone' ? styles.active : ''}`}
+                  onClick={() => updateSettings({ notificationPlatform: 'phone' })}
+                >
+                  <MdPhoneAndroid style={{ fontSize: '20px' }} />
+                  <span>טלפון בלבד</span>
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.platformButton} ${settings.notificationPlatform === 'browser' ? styles.active : ''}`}
+                  onClick={() => updateSettings({ notificationPlatform: 'browser' })}
+                >
+                  <MdComputer style={{ fontSize: '20px' }} />
+                  <span>דפדפן בלבד</span>
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.platformButton} ${settings.notificationPlatform === 'both' ? styles.active : ''}`}
+                  onClick={() => updateSettings({ notificationPlatform: 'both' })}
+                >
+                  <MdDevices style={{ fontSize: '20px' }} />
+                  <span>שניהם</span>
+                </button>
+              </div>
+            </div>
+          )}
 
           <button onClick={handleSave} className={styles.saveButton}>
             {t('settings.save')}

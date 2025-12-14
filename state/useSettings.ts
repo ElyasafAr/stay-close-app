@@ -6,12 +6,14 @@ export interface Settings {
   language: string
   theme: string
   notifications: boolean
+  notificationPlatform: 'phone' | 'browser' | 'both'
 }
 
 const defaultSettings: Settings = {
   language: 'he',
   theme: 'light',
   notifications: true,
+  notificationPlatform: 'both', // ברירת מחדל - שני המקומות
 }
 
 // Apply theme to document immediately

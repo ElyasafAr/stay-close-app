@@ -6,6 +6,22 @@ import { postData } from '@/services/api'
 import { getFCMToken, onFCMMessage } from '@/lib/firebase'
 import { isNativePlatform, initializeNativePushNotifications } from '@/services/capacitorNotifications'
 
+// Helper to get notification platform setting
+function getNotificationPlatformSetting(): 'phone' | 'browser' | 'both' {
+  if (typeof window === 'undefined') return 'both'
+  
+  try {
+    const settings = localStorage.getItem('app_settings')
+    if (settings) {
+      const parsed = JSON.parse(settings)
+      return parsed.notificationPlatform || 'both'
+    }
+  } catch (e) {
+    console.error('Error reading notification platform setting:', e)
+  }
+  return 'both'
+}
+
 /**
  * קומפוננטה לרישום Push Notifications עם Firebase Cloud Messaging
  * תומכת גם ב-Web וגם ב-Native (Android/iOS)
@@ -29,10 +45,20 @@ export function ServiceWorkerRegistration() {
       return
     }
 
+    // קבלת הגדרת מקום ההתראות
+    const notificationPlatform = getNotificationPlatformSetting()
+    console.log('🔍 [Push] Notification platform setting:', notificationPlatform)
+
     // בדיקה אם רצים על Native או Web
     const setupPushNotifications = async () => {
       if (isNativePlatform()) {
-        // Native (Android/iOS) - שימוש ב-Capacitor
+        // Native (Android/iOS)
+        // בדיקה אם המשתמש רוצה התראות בטלפון
+        if (notificationPlatform === 'browser') {
+          console.log('⚠️ [Push] User set notifications to browser only - skipping native push')
+          return
+        }
+        
         console.log('🔍 [Push] Native platform detected, using Capacitor...')
         try {
           const token = await initializeNativePushNotifications()
@@ -44,7 +70,13 @@ export function ServiceWorkerRegistration() {
           console.error('❌ [Push] Error initializing native push:', error)
         }
       } else {
-        // Web - שימוש ב-Firebase Web SDK
+        // Web
+        // בדיקה אם המשתמש רוצה התראות בדפדפן
+        if (notificationPlatform === 'phone') {
+          console.log('⚠️ [Push] User set notifications to phone only - skipping web push')
+          return
+        }
+        
         console.log('🔍 [Push] Web platform detected, using Firebase Web SDK...')
         await setupWebFCM()
       }
