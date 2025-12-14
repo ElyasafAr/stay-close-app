@@ -55,9 +55,11 @@ export function Header() {
       console.error('🔴 [HEADER] Logout error (continuing anyway):', err)
     }
     
-    // Force full page reload to login with cache busting
+    // Force full page reload to login
     console.log('🔴 [HEADER] Forcing full reload to /login...')
-    window.location.replace('/login.html')
+    // Use /login.html for Capacitor, /login for web
+    const isCapacitor = !!(window as any).Capacitor?.isNativePlatform?.()
+    window.location.replace(isCapacitor ? '/login.html' : '/login')
   }
 
   // Close mobile menu when clicking outside and prevent body scroll
@@ -119,7 +121,7 @@ export function Header() {
       <header className={styles.header}>
         <nav className={styles.nav}>
           <Link href="/" className={styles.logo}>
-            {t('app.name')} <span style={{fontSize: '14px', color: 'red', fontWeight: 'bold'}}>[v2.5]</span>
+            {t('app.name')}
           </Link>
           <div className={styles.navRight}>
             <div className={styles.navLinks}>
