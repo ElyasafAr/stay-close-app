@@ -1,17 +1,19 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { useTranslation } from '@/i18n/useTranslation'
 import { getContacts, Contact } from '@/services/contacts'
 import { generateMessage, MessageRequest } from '@/services/messages'
 import { Loading } from '@/components/Loading'
+import { UsageBanner } from '@/components/UsageBanner'
 import { MdAutoAwesome, MdContentCopy, MdPerson, MdMessage, MdTune, MdEditNote, MdShare } from 'react-icons/md'
 import { AiFillHeart, AiFillStar } from 'react-icons/ai'
 import styles from './page.module.css'
 
 export default function MessagesPage() {
   const { t } = useTranslation()
+  const router = useRouter()
   const searchParams = useSearchParams()
   const [contacts, setContacts] = useState<Contact[]>([])
   const [loading, setLoading] = useState(true)
@@ -86,8 +88,15 @@ export default function MessagesPage() {
 
       const result = await generateMessage(request)
       setGeneratedMessage(result.message)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'שגיאה ביצירת הודעה')
+    } catch (err: any) {
+      // Check if this is a payment required error (usage limit reached)
+      const errorMsg = err instanceof Error ? err.message : String(err)
+      if (errorMsg.includes('402') || errorMsg.includes('הגעת למגבלת')) {
+        // Redirect to paywall
+        router.push('/paywall')
+        return
+      }
+      setError(errorMsg || 'שגיאה ביצירת הודעה')
     } finally {
       setGenerating(false)
     }
@@ -192,6 +201,9 @@ export default function MessagesPage() {
       <div className={styles.container}>
         <h1 className={styles.title}>{t('messages.title')}</h1>
         <p className={styles.subtitle}>{t('messages.subtitle')}</p>
+
+        {/* באנר שימוש/Trial */}
+        <UsageBanner />
 
         {error && (
           <div className={styles.error}>

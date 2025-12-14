@@ -1,0 +1,255 @@
+.main {
+  min-height: 100vh;
+  padding: 24px 16px;
+  background: linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  direction: rtl;
+}
+
+.container {
+  max-width: 500px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  color: white;
+  font-size: 1.2rem;
+}
+
+.closeButton {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  transition: background 200ms;
+}
+
+.closeButton:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 24px;
+  padding-top: 20px;
+}
+
+.crownIcon {
+  color: #ffd700;
+  margin-bottom: 16px;
+  filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.5));
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: white;
+  margin: 0 0 8px 0;
+}
+
+.subtitle {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+}
+
+.launchBanner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(90deg, #ff6b6b, #ffd93d);
+  color: #1a1a2e;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-weight: 700;
+  margin-bottom: 24px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+.features {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.feature {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  color: white;
+  font-size: 1rem;
+}
+
+.feature:not(:last-child) {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.featureIcon {
+  color: #4ade80;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.pricingCards {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.pricingCard {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 20px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 200ms;
+  position: relative;
+  color: white;
+}
+
+.pricingCard:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.pricingCard.selected {
+  border-color: #4ade80;
+  background: rgba(74, 222, 128, 0.1);
+}
+
+.pricingCard.recommended {
+  border-color: #ffd700;
+}
+
+.pricingCard.recommended.selected {
+  border-color: #4ade80;
+}
+
+.savingsBadge {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, #ffd700, #ffb347);
+  color: #1a1a2e;
+  padding: 4px 12px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.planName {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.price {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 2px;
+}
+
+.priceAmount {
+  font-size: 2rem;
+  font-weight: 800;
+}
+
+.priceCurrency {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.priceInterval {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.monthlyEquivalent {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 4px;
+}
+
+.purchaseButton {
+  width: 100%;
+  padding: 18px 24px;
+  background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+  color: #0f3460;
+  border: none;
+  border-radius: 16px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 200ms;
+  margin-bottom: 16px;
+}
+
+.purchaseButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(74, 222, 128, 0.4);
+}
+
+.purchaseButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.terms {
+  text-align: center;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0;
+}
+
+.terms a {
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: underline;
+}
+
+.trialInfo {
+  text-align: center;
+  margin-top: 20px;
+  padding: 12px;
+  background: rgba(74, 222, 128, 0.1);
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  border-radius: 12px;
+  color: #4ade80;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 480px) {
+  .pricingCards {
+    flex-direction: column;
+  }
+  
+  .title {
+    font-size: 1.6rem;
+  }
+}

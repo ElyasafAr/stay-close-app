@@ -1,0 +1,73 @@
+.trialBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: linear-gradient(90deg, #6366f1, #8b5cf6);
+  color: white;
+  padding: 12px 16px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  flex-wrap: wrap;
+}
+
+.usageBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  color: white;
+  padding: 12px 16px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  flex-wrap: wrap;
+}
+
+.usageBanner.warning {
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+  color: #1f2937;
+}
+
+.upgradeButton {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 200ms;
+  white-space: nowrap;
+}
+
+.upgradeButton:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.usageBanner.warning .upgradeButton {
+  background: rgba(0, 0, 0, 0.1);
+  color: #1f2937;
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+.usageBanner.warning .upgradeButton:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+@media (max-width: 480px) {
+  .trialBanner,
+  .usageBanner {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .upgradeButton {
+    width: 100%;
+  }
+}
