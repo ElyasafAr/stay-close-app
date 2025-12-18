@@ -188,8 +188,17 @@ export async function cancelAllLocalNotifications(): Promise<void> {
   }
 
   try {
-    await LocalNotifications.cancelAll()
-    console.log('✅ [LocalNotifications] Cancelled all local notifications')
+    // קבלת כל ההתראות המתוזמנות
+    const pending = await LocalNotifications.getPending()
+    
+    if (pending.notifications && pending.notifications.length > 0) {
+      // ביטול כל ההתראות
+      const notificationIds = pending.notifications.map(n => ({ id: n.id }))
+      await LocalNotifications.cancel({ notifications: notificationIds })
+      console.log(`✅ [LocalNotifications] Cancelled ${notificationIds.length} local notifications`)
+    } else {
+      console.log('ℹ️ [LocalNotifications] No pending notifications to cancel')
+    }
   } catch (error) {
     console.error('❌ [LocalNotifications] Failed to cancel all notifications:', error)
   }
