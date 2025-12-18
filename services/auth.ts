@@ -380,7 +380,7 @@ export async function getCurrentUser(): Promise<User> {
  * מעדכן את ה-token ב-localStorage כשמתעדכן
  */
 export function onAuthStateChange(callback: (user: User | null) => void) {
-  const firebaseAuth = getAuth()
+  const firebaseAuth = auth
   
   // אם Firebase לא זמין, נחזיר unsubscribe ריק ונבדוק localStorage
   if (!firebaseAuth) {
