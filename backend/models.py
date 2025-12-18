@@ -113,6 +113,11 @@ class Subscription(Base):
     google_product_id = Column(String, nullable=True)  # e.g., 'monthly_subscription'
     google_purchase_token = Column(Text, nullable=True)
     
+    # Allpay payment data
+    allpay_order_id = Column(String, nullable=True, unique=True)
+    allpay_payment_id = Column(String, nullable=True)
+    allpay_recurring_id = Column(String, nullable=True)
+    
     # Dates
     started_at = Column(DateTime(timezone=True), nullable=False)
     expires_at = Column(DateTime(timezone=True), nullable=False)

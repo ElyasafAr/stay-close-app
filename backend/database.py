@@ -434,6 +434,50 @@ def _run_migrations():
             db.commit()
             print("✅ [DATABASE] Migration completed: coupon_usages table created")
         
+        # Migration 11: Add Allpay fields to subscriptions table
+        check_allpay_fields = text("""
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name='subscriptions' AND column_name='allpay_order_id';
+        """)
+        
+        result_allpay = db.execute(check_allpay_fields).fetchone()
+        
+        if not result_allpay:
+            print("🔵 [DATABASE] Running migration: Adding Allpay fields to subscriptions...")
+            alter_subscriptions = text("""
+                ALTER TABLE subscriptions
+                ADD COLUMN allpay_order_id VARCHAR(255) UNIQUE,
+                ADD COLUMN allpay_payment_id VARCHAR(255),
+                ADD COLUMN allpay_recurring_id VARCHAR(255);
+                
+                CREATE INDEX IF NOT EXISTS idx_subscriptions_allpay_order_id ON subscriptions(allpay_order_id);
+            """)
+            db.execute(alter_subscriptions)
+            db.commit()
+            print("✅ [DATABASE] Migration completed: Allpay fields added to subscriptions")
+        
+        # Migration 12: Add Allpay pricing settings
+        check_allpay_prices = text("""
+            SELECT key 
+            FROM app_settings 
+            WHERE key='allpay_monthly_price';
+        """)
+        
+        result_allpay_prices = db.execute(check_allpay_prices).fetchone()
+        
+        if not result_allpay_prices:
+            print("🔵 [DATABASE] Running migration: Adding Allpay pricing settings...")
+            insert_allpay_prices = text("""
+                INSERT INTO app_settings (key, value, description) VALUES
+                ('allpay_monthly_price', '5.00', 'מחיר תשלום חודשי ב-Allpay (ILS)'),
+                ('allpay_yearly_price', '50.00', 'מחיר תשלום שנתי ב-Allpay (ILS) - משלם על 10 חודשים, מקבל 12')
+                ON CONFLICT (key) DO NOTHING;
+            """)
+            db.execute(insert_allpay_prices)
+            db.commit()
+            print("✅ [DATABASE] Migration completed: Allpay pricing settings added")
+        
         print("✅ [DATABASE] All migrations completed successfully")
     except Exception as e:
         db.rollback()

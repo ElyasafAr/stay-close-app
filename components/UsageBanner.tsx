@@ -62,7 +62,7 @@ export function UsageBanner() {
           className={styles.upgradeButton}
           onClick={() => router.push('/paywall')}
         >
-          שדרג עכשיו
+          תרום עכשיו
         </button>
       </div>
     )
@@ -85,7 +85,7 @@ export function UsageBanner() {
           className={styles.upgradeButton}
           onClick={() => router.push('/paywall')}
         >
-          שדרג לללא הגבלה
+          תרום לללא הגבלה
         </button>
       </div>
     )

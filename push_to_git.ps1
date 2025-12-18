@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Add local notifications for Android + fix security vulnerabilities - Add @capacitor/local-notifications for Android local notifications - Implement local notification scheduling - Update ReminderModal to schedule local notifications on Android - Update ReminderChecker to sync reminders from server - Update backend to skip push notifications for Android - Add Android permissions for local notifications - Fix security: update next to 14.2.35"
+$commitMessage = "Implement Allpay payment system + Fix Firebase auth - Add Allpay service and endpoints - Update backend/auth.py to use PostgreSQL and fix create_or_get_firebase_user arguments - Add Allpay fields to subscriptions table via migration - Update Paywall UI for Allpay donations - Add pricing update for 5ILS/month and 50ILS/year (2 months free)"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files

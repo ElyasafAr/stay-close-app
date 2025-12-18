@@ -1526,6 +1526,82 @@ async def cancel_subscription_endpoint(
     
     return {"message": "המנוי בוטל בהצלחה. תוכל להמשיך להשתמש עד לתום התקופה."}
 
+# ========== ALLPAY ENDPOINTS ==========
+
+class AllpayPaymentRequest(BaseModel):
+    plan_type: str  # 'monthly' or 'yearly'
+
+@app.post("/api/allpay/create-payment")
+async def create_allpay_payment(
+    request: AllpayPaymentRequest,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Create a payment link in Allpay
+    
+    Request body:
+    {
+        "plan_type": "monthly" | "yearly"
+    }
+    """
+    user_id = current_user["user_id"]
+    
+    if request.plan_type not in ['monthly', 'yearly']:
+        raise HTTPException(status_code=400, detail="plan_type must be 'monthly' or 'yearly'")
+    
+    from allpay_service import create_payment_link
+    from subscription_service import get_prices
+    
+    # Get price
+    prices = get_prices(db)
+    amount = prices[request.plan_type]
+    
+    # Create payment link
+    result = create_payment_link(db, user_id, request.plan_type, amount)
+    
+    if result.get('success'):
+        return {
+            "success": True,
+            "payment_url": result.get('payment_url'),
+            "order_id": result.get('order_id')
+        }
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail=result.get('error', 'Error creating payment link')
+        )
+
+
+@app.post("/api/allpay/webhook")
+async def allpay_webhook(request: Request, db: Session = Depends(get_db)):
+    """
+    Handle Allpay webhook notifications
+    
+    This endpoint receives webhooks from Allpay when:
+    - Payment is completed
+    - Recurring payment is processed
+    """
+    try:
+        data = await request.json()
+        
+        from allpay_service import process_allpay_payment
+        
+        result = process_allpay_payment(db, data)
+        
+        if result.get('success'):
+            print(f"✅ [ALLPAY WEBHOOK] Payment processed: {result.get('message')}")
+            return {"status": "success"}
+        else:
+            print(f"❌ [ALLPAY WEBHOOK] Error: {result.get('error')}")
+            return {"status": "error", "error": result.get('error')}, 400
+            
+    except Exception as e:
+        print(f"❌ [ALLPAY WEBHOOK] Exception: {e}")
+        import traceback
+        print(traceback.format_exc())
+        return {"status": "error", "error": str(e)}, 500
+
 # ========== ADMIN ENDPOINTS ==========
 
 def is_admin(db: Session, user_id: str) -> bool:

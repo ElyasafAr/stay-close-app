@@ -30,7 +30,19 @@ def is_launch_pricing_active(db: Session) -> bool:
 
 
 def get_prices(db: Session) -> Dict[str, float]:
-    """Get current prices (launch or regular)"""
+    """Get current prices for Allpay donations"""
+    # Check if Allpay prices are set
+    allpay_monthly = get_setting(db, 'allpay_monthly_price', None)
+    allpay_yearly = get_setting(db, 'allpay_yearly_price', None)
+    
+    if allpay_monthly and allpay_yearly:
+        # Use Allpay prices
+        return {
+            'monthly': float(allpay_monthly),
+            'yearly': float(allpay_yearly)
+        }
+    
+    # Fallback to old pricing (for backward compatibility)
     if is_launch_pricing_active(db):
         return {
             'monthly': float(get_setting(db, 'monthly_price_launch', '9.90')),
@@ -213,6 +225,50 @@ def process_google_purchase(
             'success': False,
             'error': str(e)
         }
+
+
+def create_allpay_subscription(
+    db: Session,
+    user_id: str,
+    plan_type: str,  # 'monthly' or 'yearly'
+    allpay_order_id: str,
+    allpay_payment_id: str,
+    price_paid: float,
+    allpay_recurring_id: Optional[str] = None
+) -> Subscription:
+    """Create a new subscription from Allpay payment"""
+    
+    # Calculate expiry date
+    if plan_type == 'monthly':
+        expires_at = utc_now() + timedelta(days=30)
+    else:  # yearly - משלם על 10 חודשים, מקבל 12 חודשים
+        expires_at = utc_now() + timedelta(days=365)  # 12 months = 365 days
+    
+    subscription = Subscription(
+        user_id=user_id,
+        plan_type=plan_type,
+        status='active',
+        allpay_order_id=allpay_order_id,
+        allpay_payment_id=allpay_payment_id,
+        allpay_recurring_id=allpay_recurring_id,
+        started_at=utc_now(),
+        expires_at=expires_at,
+        price_paid=price_paid,
+        is_launch_price=False  # Allpay doesn't have launch pricing
+    )
+    
+    db.add(subscription)
+    
+    # Update user status
+    user = db.query(User).filter(User.id == user_id).first()
+    if user:
+        user.subscription_status = 'premium'
+    
+    db.commit()
+    db.refresh(subscription)
+    
+    print(f"✅ [ALLPAY] Created {plan_type} subscription for user {user_id}")
+    return subscription
 
 
 def check_expired_subscriptions(db: Session) -> int:

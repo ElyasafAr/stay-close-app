@@ -39,6 +39,25 @@ export default function PaywallPage() {
       return
     }
     loadSubscriptionStatus()
+    
+    // Check for success/cancel from Allpay
+    const urlParams = new URLSearchParams(window.location.search)
+    const success = urlParams.get('success')
+    const cancel = urlParams.get('cancel')
+    
+    if (success === 'true') {
+      // Payment successful - reload status
+      setTimeout(() => {
+        loadSubscriptionStatus()
+        // Remove query params
+        window.history.replaceState({}, '', '/paywall')
+      }, 1000)
+    } else if (cancel === 'true') {
+      // Payment cancelled
+      alert('התשלום בוטל')
+      // Remove query params
+      window.history.replaceState({}, '', '/paywall')
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router])
 
@@ -98,38 +117,29 @@ export default function PaywallPage() {
   const handlePurchase = async () => {
     setProcessing(true)
     
-    // Check if running in Capacitor (native app)
-    const isNative = !!(window as any).Capacitor?.isNativePlatform?.()
-    
-    if (isNative) {
-      // Use Google Play Billing
-      // This will be implemented when we add the billing plugin
-      // For now, show a message
-      try {
-        // TODO: Implement Google Play Billing
-        // 1. Install @capgo/capacitor-purchases or similar
-        // 2. Configure products in Google Play Console
-        // 3. Call purchase API here
-        
-        alert('רכישה דרך Google Play תהיה זמינה בקרוב!')
-        
-        // Placeholder for future implementation:
-        // const productId = selectedPlan === 'monthly' 
-        //   ? 'stayclose_monthly_subscription' 
-        //   : 'stayclose_yearly_subscription'
-        // const result = await purchaseProduct(productId)
-        // if (result.success) router.push('/')
-        
-      } catch (error) {
-        console.error('Purchase error:', error)
-        alert('שגיאה ברכישה. אנא נסה שוב.')
+    try {
+      // Create Allpay payment link
+      const response = await postData<{
+        success: boolean
+        payment_url?: string
+        order_id?: string
+        error?: string
+      }>('/api/allpay/create-payment', {
+        plan_type: selectedPlan
+      })
+      
+      if (response.success && response.data?.payment_url) {
+        // Redirect to Allpay payment page
+        window.location.href = response.data.payment_url
+      } else {
+        alert(response.data?.error || 'שגיאה ביצירת קישור תשלום')
+        setProcessing(false)
       }
-    } else {
-      // Web - show message that purchases are only available in app
-      alert('רכישת מנוי זמינה רק דרך האפליקציה. הורד את האפליקציה מ-Google Play.')
+    } catch (error: any) {
+      console.error('Purchase error:', error)
+      alert(error.message || 'שגיאה ביצירת קישור תשלום')
+      setProcessing(false)
     }
-    
-    setProcessing(false)
   }
 
   if (loading) {
@@ -142,9 +152,11 @@ export default function PaywallPage() {
 
   const prices = subscriptionData?.prices
   const isLaunchPrice = prices?.is_launch_price
-  const monthlyPrice = prices?.monthly || 14.90
-  const yearlyPrice = prices?.yearly || 99.90
-  const yearlySavings = Math.round((1 - (yearlyPrice / 12) / monthlyPrice) * 100)
+  const monthlyPrice = prices?.monthly || 5.00
+  const yearlyPrice = prices?.yearly || 50.00
+  // חיסכון: משלם על 10 חודשים (50₪), מקבל 12 חודשים
+  // חיסכון = 2 חודשים (10₪) מתוך 12 חודשים חודשי (60₪)
+  const yearlySavings = Math.round((10 / 60) * 100)  // ~17%
 
   return (
     <main className={styles.main}>
@@ -159,19 +171,12 @@ export default function PaywallPage() {
 
         <div className={styles.header}>
           <MdStar className={styles.crownIcon} size={48} />
-          <h1 className={styles.title}>שדרג לפרימיום</h1>
+          <h1 className={styles.title}>תרום ותקבל גישה מלאה</h1>
           <p className={styles.subtitle}>
-            קבל גישה בלתי מוגבלת לכל הפיצרים
+            תמיכה בפרויקט = גישה בלתי מוגבלת לכל הפיצרים
           </p>
         </div>
 
-        {/* Launch Price Banner */}
-        {isLaunchPrice && (
-          <div className={styles.launchBanner}>
-            <MdLocalOffer size={20} />
-            <span>מחיר השקה מיוחד!</span>
-          </div>
-        )}
 
         {/* Features */}
         <div className={styles.features}>
@@ -217,7 +222,7 @@ export default function PaywallPage() {
             className={`${styles.pricingCard} ${selectedPlan === 'yearly' ? styles.selected : ''} ${styles.recommended}`}
             onClick={() => setSelectedPlan('yearly')}
           >
-            <div className={styles.savingsBadge}>חסכון {yearlySavings}%</div>
+            <div className={styles.savingsBadge}>2 חודשים במתנה!</div>
             <div className={styles.planName}>שנתי</div>
             <div className={styles.price}>
               <span className={styles.priceAmount}>{yearlyPrice.toFixed(2)}</span>
@@ -225,7 +230,11 @@ export default function PaywallPage() {
               <span className={styles.priceInterval}>/שנה</span>
             </div>
             <div className={styles.monthlyEquivalent}>
-              {(yearlyPrice / 12).toFixed(2)}₪ לחודש
+              {(yearlyPrice / 12).toFixed(2)}₪ לחודש (12 חודשים)
+              <br />
+              <small style={{ fontSize: '0.85em', opacity: 0.8 }}>
+                משלם על 10 חודשים, מקבל 12
+              </small>
             </div>
           </button>
         </div>
@@ -261,7 +270,7 @@ export default function PaywallPage() {
           onClick={handlePurchase}
           disabled={processing}
         >
-          {processing ? 'מעבד...' : 'המשך לתשלום'}
+          {processing ? 'מעבד...' : 'תרום עכשיו'}
         </button>
 
         {/* Terms */}
