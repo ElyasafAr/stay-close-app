@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslation } from '@/i18n/useTranslation'
 import { getContacts, createContact, deleteContact, Contact } from '@/services/contacts'
 import { getReminders, deleteReminder, Reminder } from '@/services/reminders'
+import { cancelLocalNotification, isAndroid } from '@/services/localNotifications'
 import { Loading } from '@/components/Loading'
 import { ReminderModal } from '@/components/ReminderModal'
 import { MdAdd, MdDelete, MdNotifications, MdNotificationsOff, MdTune, MdSend } from 'react-icons/md'
@@ -65,6 +66,16 @@ export default function ContactsPage() {
       return
     }
     try {
+      // באנדרואיד - ביטול התראה מקומית לפני מחיקה
+      if (isAndroid()) {
+        try {
+          await cancelLocalNotification(reminderId)
+        } catch (error) {
+          console.error('Failed to cancel local notification:', error)
+          // לא נכשיל את הפעולה אם יש בעיה עם התראות מקומיות
+        }
+      }
+      
       await deleteReminder(reminderId)
       await loadReminders()
     } catch (err) {

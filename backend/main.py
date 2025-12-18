@@ -143,22 +143,35 @@ def check_and_send_reminders():
                 notification_platform = user.notification_platform if user else 'both'
                 
                 # סנן טוקנים לפי העדפת המשתמש
+                # חשוב: באנדרואיד, ההתראות מקומיות - לא שולחים Push מהשרת
                 filtered_tokens = []
                 for pt in push_tokens:
                     try:
                         device_info = json.loads(pt.device_info) if pt.device_info else {}
                         platform = device_info.get('platform', 'web')
                         
+                        # באנדרואיד - לא שולחים Push (התראות מקומיות)
+                        if platform == 'android':
+                            print(f"⏭️ [BACKGROUND] Skipping Android push for reminder {db_reminder.id} (using local notifications)")
+                            continue
+                        
                         # בדיקה אם הפלטפורמה הזו כלולה בהעדפת המשתמש
                         if notification_platform == 'both':
                             filtered_tokens.append(pt)
-                        elif notification_platform == 'phone' and platform in ['android', 'ios']:
+                        elif notification_platform == 'phone' and platform in ['ios']:  # רק iOS, לא Android
                             filtered_tokens.append(pt)
                         elif notification_platform == 'browser' and platform == 'web':
                             filtered_tokens.append(pt)
                     except:
-                        # אם יש שגיאה בפרסור, שלח בכל מקרה
-                        filtered_tokens.append(pt)
+                        # אם יש שגיאה בפרסור, נבדוק אם זה לא אנדרואיד
+                        try:
+                            device_info = json.loads(pt.device_info) if pt.device_info else {}
+                            platform = device_info.get('platform', 'web')
+                            if platform != 'android':
+                                filtered_tokens.append(pt)
+                        except:
+                            # אם לא ניתן לזהות, נשלח (יכול להיות Web)
+                            filtered_tokens.append(pt)
                 
                 # שלח Push Notification לטוקנים המסוננים
                 contact_name = decrypt(contact.name_encrypted)

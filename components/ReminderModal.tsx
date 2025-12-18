@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { MdClose, MdNotifications } from 'react-icons/md'
 import { Reminder, ReminderCreate, ReminderType, createReminder, updateReminder } from '@/services/reminders'
 import { requestNotificationPermission } from '@/services/notifications'
+import { scheduleLocalNotification, cancelLocalNotification, isAndroid } from '@/services/localNotifications'
 import styles from './ReminderModal.module.css'
 
 interface ReminderModalProps {
@@ -153,10 +154,37 @@ export function ReminderModal({ contactId, contactName, existingReminder, onClos
         reminderData.timezone = 'Asia/Jerusalem'
       }
 
+      let savedReminder: Reminder
       if (existingReminder) {
-        await updateReminder(existingReminder.id, reminderData)
+        savedReminder = await updateReminder(existingReminder.id, reminderData)
+        
+        // באנדרואיד - ביטול התראה ישנה ותזמון חדשה
+        if (isAndroid()) {
+          try {
+            // ביטול התראה ישנה
+            await cancelLocalNotification(existingReminder.id)
+            
+            // תזמון התראה חדשה אם התזכורת פעילה
+            if (savedReminder.enabled && savedReminder.next_trigger) {
+              await scheduleLocalNotification(savedReminder, contactName)
+            }
+          } catch (error) {
+            console.error('Failed to update local notification:', error)
+            // לא נכשיל את הפעולה אם יש בעיה עם התראות מקומיות
+          }
+        }
       } else {
-        await createReminder(reminderData)
+        savedReminder = await createReminder(reminderData)
+        
+        // באנדרואיד - תזמון התראה מקומית אם התזכורת פעילה
+        if (isAndroid() && savedReminder.enabled && savedReminder.next_trigger) {
+          try {
+            await scheduleLocalNotification(savedReminder, contactName)
+          } catch (error) {
+            console.error('Failed to schedule local notification:', error)
+            // לא נכשיל את הפעולה אם יש בעיה עם התראות מקומיות
+          }
+        }
       }
 
       onSuccess()
