@@ -68,9 +68,17 @@ html.dark .title {
   line-height: 1.8;
   color: var(--text-secondary);
   text-align: center;
-  max-width: 600px;
+  max-width: 700px;
   margin: 0 auto;
   transition: color var(--transition-normal);
+}
+
+.description p {
+  margin-bottom: 12px;
+}
+
+.description div {
+  text-align: right;
 }
 
 .quickActions {
