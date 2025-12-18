@@ -28,7 +28,12 @@ export function ReminderChecker() {
           console.log('🔄 [ReminderChecker] Syncing reminders from server for Android...')
           const reminders = await getReminders()
           const contacts = await getContacts()
-          const contactNames = new Map(contacts.map(c => [c.id, c.name]))
+          // סנן רק contacts עם id מוגדר
+          const contactNames = new Map(
+            contacts
+              .filter(c => c.id !== undefined)
+              .map(c => [c.id!, c.name])
+          )
           await syncRemindersFromServer(reminders, contactNames)
           console.log('✅ [ReminderChecker] Reminders synced successfully')
         } catch (error) {

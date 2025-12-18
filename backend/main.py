@@ -803,10 +803,10 @@ async def check_reminders(
                     
                     for push_token in filtered_tokens:
                         send_push_notification(
-                            push_token.token,
-                            notification_title,
-                            notification_body,
-                            data={"reminder_id": db_reminder.id, "contact_id": contact.id}
+                            push_token=push_token.token,
+                            title=notification_title,
+                            body=notification_body,
+                            data={"reminder_id": str(db_reminder.id), "contact_id": str(contact.id)}
                         )
                 else:
                     print(f"⚠️ [CHECK] No push tokens found for user {user_id} (platform: {notification_platform})")
