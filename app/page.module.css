@@ -24,7 +24,7 @@
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-radius: 20px;
-  padding: 48px 32px;
+  padding: 32px 24px;
   box-shadow: var(--shadow-md);
   text-align: center;
   animation: slideUp 0.6s ease;
@@ -39,9 +39,9 @@ html.dark .welcomeCard {
 }
 
 .title {
-  font-size: 3rem;
+  font-size: 2.2rem;
   font-weight: 800;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -56,29 +56,52 @@ html.dark .title {
 }
 
 .subtitle {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   font-weight: 600;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
   color: var(--text-primary);
   transition: color var(--transition-normal);
 }
 
 .description {
-  font-size: 1.1rem;
-  line-height: 1.8;
+  font-size: 1rem;
+  line-height: 1.6;
   color: var(--text-secondary);
   text-align: center;
-  max-width: 700px;
+  max-width: 600px;
   margin: 0 auto;
   transition: color var(--transition-normal);
 }
 
-.description p {
+.howItWorks {
+  font-size: 1.1rem;
+  font-weight: 600;
   margin-bottom: 12px;
+  color: var(--text-primary);
 }
 
-.description div {
+.stepsList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
   text-align: right;
+  direction: rtl;
+}
+
+.stepsList li {
+  margin-bottom: 10px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.stepsList li strong {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.stepsList li:last-child {
+  margin-bottom: 0;
 }
 
 .quickActions {
