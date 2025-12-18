@@ -9,7 +9,7 @@ import {
   User as FirebaseUser,
   Auth
 } from 'firebase/auth'
-import { getAuth } from '@/lib/firebase'
+import { auth, getAuthInstance } from '@/lib/firebase'
 
 export interface User {
   user_id: string
@@ -215,7 +215,7 @@ export async function loginWithGoogle(): Promise<AuthResponse> {
     })
     
     console.log('🔵 [AUTH] Calling signInWithPopup...')
-    const firebaseAuth = getAuth()
+    const firebaseAuth = auth
     if (!firebaseAuth) {
       throw new Error('שגיאה בהתחברות. נא לנסות שוב.')
     }
@@ -304,7 +304,7 @@ export async function logout(): Promise<void> {
     }
     
     // התנתקות מ-Firebase Web
-    const firebaseAuth = getAuth()
+    const firebaseAuth = auth
     if (firebaseAuth) {
       await firebaseSignOut(firebaseAuth)
       console.log('✅ [AUTH] Web Firebase sign out successful')
