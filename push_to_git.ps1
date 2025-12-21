@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "UX Improvement: Auto-create new recipient on message generation - If user types a new recipient name but forgets to click 'Add', the recipient is created automatically when clicking 'Generate'"
+$commitMessage = "UX: Redirect to paywall if recipient limit is reached during auto-creation or manual creation in Messages page"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files

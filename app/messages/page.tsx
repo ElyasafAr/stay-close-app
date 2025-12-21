@@ -88,7 +88,12 @@ export default function MessagesPage() {
       setSelectedContact(newContact.id!)
       setNewRecipientName('')
     } catch (err: any) {
-      setError(err instanceof Error ? err.message : 'שגיאה ביצירת נמען')
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      if (errorMsg.includes('402') || errorMsg.includes('הגעת למגבלת')) {
+        router.push('/paywall');
+        return;
+      }
+      setError(errorMsg || 'שגיאה ביצירת נמען');
     } finally {
       setAddingRecipient(false)
     }
@@ -110,7 +115,12 @@ export default function MessagesPage() {
         setSelectedContact(newContact.id!);
         setNewRecipientName('');
       } catch (err: any) {
-        setError(err instanceof Error ? err.message : 'שגיאה ביצירת נמען אוטומטית');
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        if (errorMsg.includes('402') || errorMsg.includes('הגעת למגבלת')) {
+          router.push('/paywall');
+          return;
+        }
+        setError(errorMsg || 'שגיאה ביצירת נמען אוטומטית');
         setAddingRecipient(false);
         return;
       } finally {
