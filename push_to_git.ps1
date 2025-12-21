@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Bump version to 1.4.0: Fix desktop navigation (show Settings/About on PC) + Centralized versioning - Show Settings/About directly in top nav for PC version - Add user dropdown menu with Logout and Version info - Add version constants in lib/constants.ts - Display version in Settings and About pages"
+$commitMessage = "Fix build date in constants.ts"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files
