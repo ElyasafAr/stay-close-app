@@ -4,11 +4,8 @@ import { useState } from 'react'
 import { useTranslation } from '@/i18n/useTranslation'
 import { AiFillHeart } from 'react-icons/ai'
 import { MdEmail, MdSend, MdCheckCircle } from 'react-icons/md'
+import { APP_VERSION, BUILD_DATE, CONTACT_EMAIL } from '@/lib/constants'
 import styles from './page.module.css'
-
-// מספר גרסה - עדכן כאן בכל שחרור
-const APP_VERSION = '1.3.0'
-const BUILD_DATE = '2024-12-14'
 
 export default function AboutPage() {
   const { t } = useTranslation()
@@ -28,7 +25,7 @@ export default function AboutPage() {
       const body = encodeURIComponent(`${contactMessage}\n\n---\nנשלח מגרסה: ${APP_VERSION}\nאימייל: ${contactEmail || 'לא צוין'}`)
       
       // פתיחת לקוח אימייל
-      window.location.href = `mailto:elyasaf.ar@gmail.com?subject=${subject}&body=${body}`
+      window.location.href = `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`
       
       setIsSent(true)
       setContactMessage('')

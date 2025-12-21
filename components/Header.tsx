@@ -7,6 +7,7 @@ import { useTranslation } from '@/i18n/useTranslation'
 import { logout, getStoredUser, isAuthenticated } from '@/services/auth'
 import { getData } from '@/services/api'
 import { MdLogout, MdMenu, MdClose, MdAdminPanelSettings, MdPerson, MdSettings, MdInfo } from 'react-icons/md'
+import { APP_VERSION } from '@/lib/constants'
 import styles from './Header.module.css'
 
 export function Header() {
@@ -98,28 +99,23 @@ export function Header() {
     window.location.replace(isCapacitor ? '/login.html' : '/login')
   }
 
-  // Close mobile menu when clicking outside and prevent body scroll
+  // Close mobile menu and dropdown when clicking outside
   useEffect(() => {
-    if (showMobileMenu) {
-      // Prevent body scroll when menu is open
-      document.body.style.overflow = 'hidden'
-      document.body.style.position = 'fixed'
-      document.body.style.width = '100%'
-    } else {
-      // Restore body scroll when menu is closed
-      document.body.style.overflow = ''
-      document.body.style.position = ''
-      document.body.style.width = ''
-    }
-
     const handleClickOutside = (event: MouseEvent | TouchEvent) => {
       const target = event.target as HTMLElement
-      if (!target.closest(`.${styles.mobileMenu}`) && !target.closest(`.${styles.mobileMenuButton}`)) {
+      
+      // Close mobile menu
+      if (showMobileMenu && !target.closest(`.${styles.mobileMenu}`) && !target.closest(`.${styles.mobileMenuButton}`)) {
         setShowMobileMenu(false)
+      }
+      
+      // Close user dropdown
+      if (showUserDropdown && !target.closest(`.${styles.userMenu}`)) {
+        setShowUserDropdown(false)
       }
     }
 
-    if (showMobileMenu) {
+    if (showMobileMenu || showUserDropdown) {
       document.addEventListener('mousedown', handleClickOutside)
       document.addEventListener('touchstart', handleClickOutside)
     }
@@ -127,12 +123,8 @@ export function Header() {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
       document.removeEventListener('touchstart', handleClickOutside)
-      // Cleanup body styles
-      document.body.style.overflow = ''
-      document.body.style.position = ''
-      document.body.style.width = ''
     }
-  }, [showMobileMenu])
+  }, [showMobileMenu, showUserDropdown])
 
   // Close mobile menu when route changes
   useEffect(() => {
@@ -148,6 +140,8 @@ export function Header() {
   const navLinks = [
     { href: '/messages', label: 'הודעות' },
     { href: '/contacts', label: 'נמענים' },
+    { href: '/settings', label: 'הגדרות' },
+    { href: '/about', label: 'אודות' },
     // Admin link - only shown if isAdmin is true
     ...(isAdmin ? [{ href: '/admin', label: '🛠️ ניהול', isAdminLink: true }] : []),
   ]
@@ -195,12 +189,9 @@ export function Header() {
                       <p className={styles.userNameFull}>{user?.username}</p>
                       <p className={styles.userEmail}>{user?.email}</p>
                     </div>
-                    <Link href="/settings" className={styles.dropdownItem}>
-                      <MdSettings /> הגדרות
-                    </Link>
-                    <Link href="/about" className={styles.dropdownItem}>
-                      <MdInfo /> אודות
-                    </Link>
+                    <div className={styles.versionInfo}>
+                      <small>גרסה {APP_VERSION}</small>
+                    </div>
                     <div style={{ margin: '8px 0', borderTop: '1px solid var(--border-color)' }}></div>
                     <button onClick={handleLogout} className={styles.logoutButton}>
                       <MdLogout /> התנתק

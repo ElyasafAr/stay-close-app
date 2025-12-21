@@ -8,6 +8,7 @@ import { logout, getStoredUser, isAuthenticated } from '@/services/auth'
 import { getData, putData } from '@/services/api'
 import { MdSettings, MdLanguage, MdPalette, MdNotifications, MdLogout, MdPerson, MdPhoneAndroid, MdComputer, MdDevices, MdDeleteForever } from 'react-icons/md'
 import { deleteData } from '@/services/api'
+import { APP_VERSION } from '@/lib/constants'
 import styles from './page.module.css'
 
 export default function SettingsPage() {
@@ -228,6 +229,10 @@ export default function SettingsPage() {
               <MdDeleteForever style={{ fontSize: '24px' }} />
               <span>{isDeleting ? 'מוחק...' : 'מחק את החשבון שלי'}</span>
             </button>
+          </div>
+
+          <div className={styles.versionFooter}>
+            <p>Stay Close גרסה {APP_VERSION}</p>
           </div>
         </div>
       </div>

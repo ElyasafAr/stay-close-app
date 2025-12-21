@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Optimization audit: Improve efficiency across app - Backend: Optimize background job query to fetch only due reminders - Backend: Remove redundant CORS middleware - Frontend: Disable client-side polling for reminders (relying on FCM push) - Frontend: Cache FCM tokens to avoid unnecessary server registrations - Frontend: Replace dark mode setInterval with MutationObserver"
+$commitMessage = "Bump version to 1.4.0: Fix desktop navigation (show Settings/About on PC) + Centralized versioning - Show Settings/About directly in top nav for PC version - Add user dropdown menu with Logout and Version info - Add version constants in lib/constants.ts - Display version in Settings and About pages"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files

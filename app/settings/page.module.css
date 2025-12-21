@@ -338,3 +338,13 @@ html.dark .platformButton.active {
     padding: 14px 16px;
   }
 }
+
+.versionFooter {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-color);
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  opacity: 0.6;
+}
