@@ -95,19 +95,42 @@ export default function MessagesPage() {
   }
 
   const handleGenerate = async () => {
-    if (!selectedContact || selectedContact === 'new') {
-      setError('אנא בחר נמען')
-      return
+    let currentContactId = selectedContact;
+
+    // Handle auto-creation of new recipient if user forgot to click "Add"
+    if (currentContactId === 'new' && newRecipientName.trim()) {
+      try {
+        setAddingRecipient(true);
+        const newContact = await createContact({
+          name: newRecipientName.trim(),
+          default_tone: messageConfig.tone || 'friendly'
+        });
+        setContacts(prev => [...prev, newContact]);
+        currentContactId = newContact.id!;
+        setSelectedContact(newContact.id!);
+        setNewRecipientName('');
+      } catch (err: any) {
+        setError(err instanceof Error ? err.message : 'שגיאה ביצירת נמען אוטומטית');
+        setAddingRecipient(false);
+        return;
+      } finally {
+        setAddingRecipient(false);
+      }
+    }
+
+    if (!currentContactId || currentContactId === 'new') {
+      setError('אנא בחר נמען או הזן שם לנמען חדש');
+      return;
     }
 
     try {
-      setGenerating(true)
-      setError(null)
-      setGeneratedMessage(null)
+      setGenerating(true);
+      setError(null);
+      setGeneratedMessage(null);
 
       const request: MessageRequest = {
         ...messageConfig,
-        contact_id: selectedContact,
+        contact_id: currentContactId as number,
       }
 
       const result = await generateMessage(request)
@@ -375,11 +398,11 @@ export default function MessagesPage() {
 
             <button
               onClick={handleGenerate}
-              disabled={!selectedContact || generating}
+              disabled={(selectedContact === 'new' ? !newRecipientName.trim() : !selectedContact) || generating || addingRecipient}
               className={styles.generateButton}
             >
               <MdAutoAwesome style={{ fontSize: '20px' }} />
-              {generating ? t('messages.generating') : t('messages.generate')}
+              {generating ? t('messages.generating') : (addingRecipient ? 'יוצר נמען...' : t('messages.generate'))}
             </button>
           </div>
 

@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Cleanup and Maintenance: Archive old scripts and docs + Update TODO.md - Move 28+ old .ps1 scripts to scripts/archive/ - Move 20+ old .md docs to docs/archive/ - Remove temporary files - Update TODO.md with current project status"
+$commitMessage = "UX Improvement: Auto-create new recipient on message generation - If user types a new recipient name but forgets to click 'Add', the recipient is created automatically when clicking 'Generate'"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files
