@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Implement Allpay payment system + Fix Firebase auth - Add Allpay service and endpoints - Update backend/auth.py to use PostgreSQL and fix create_or_get_firebase_user arguments - Add Allpay fields to subscriptions table via migration - Update Paywall UI for Allpay donations - Add pricing update for 5ILS/month and 50ILS/year (2 months free)"
+$commitMessage = "Simplify app: 2 main screens (Messages & Recipients) + Terminology change - Set Messages as main screen - Change 'Contacts' to 'Recipients' throughout app - Add quick recipient creation in Messages page - Move Settings/About to hamburger menu"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files

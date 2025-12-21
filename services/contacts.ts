@@ -1,6 +1,6 @@
 /**
- * שירות לניהול אנשי קשר
- * מטפל בכל הפעולות הקשורות לאנשי קשר (CRUD)
+ * שירות לניהול נמענים
+ * מטפל בכל הפעולות הקשורות לנמענים (CRUD)
  */
 
 import { getData, postData, putData, deleteData } from './api'
@@ -13,56 +13,56 @@ export interface Contact {
 }
 
 /**
- * קבלת רשימת כל אנשי הקשר
+ * קבלת רשימת כל הנמענים
  */
 export async function getContacts(): Promise<Contact[]> {
   const response = await getData<Contact[]>('/api/contacts')
   if (response.success && response.data) {
     return response.data
   }
-  throw new Error(response.error || 'שגיאה בטעינת אנשי קשר')
+  throw new Error(response.error || 'שגיאה בטעינת נמענים')
 }
 
 /**
- * קבלת איש קשר ספציפי לפי ID
+ * קבלת נמען ספציפי לפי ID
  */
 export async function getContact(id: number): Promise<Contact> {
   const response = await getData<Contact>(`/api/contacts/${id}`)
   if (response.success && response.data) {
     return response.data
   }
-  throw new Error(response.error || 'שגיאה בטעינת איש קשר')
+  throw new Error(response.error || 'שגיאה בטעינת נמען')
 }
 
 /**
- * יצירת איש קשר חדש
+ * יצירת נמען חדש
  */
 export async function createContact(contact: Omit<Contact, 'id' | 'created_at'>): Promise<Contact> {
   const response = await postData<Contact>('/api/contacts', contact)
   if (response.success && response.data) {
     return response.data
   }
-  throw new Error(response.error || 'שגיאה ביצירת איש קשר')
+  throw new Error(response.error || 'שגיאה ביצירת נמען')
 }
 
 /**
- * עדכון איש קשר קיים
+ * עדכון נמען קיים
  */
 export async function updateContact(id: number, contact: Omit<Contact, 'id' | 'created_at'>): Promise<Contact> {
   const response = await putData<Contact>(`/api/contacts/${id}`, contact)
   if (response.success && response.data) {
     return response.data
   }
-  throw new Error(response.error || 'שגיאה בעדכון איש קשר')
+  throw new Error(response.error || 'שגיאה בעדכון נמען')
 }
 
 /**
- * מחיקת איש קשר
+ * מחיקת נמען
  */
 export async function deleteContact(id: number): Promise<void> {
   const response = await deleteData(`/api/contacts/${id}`)
   if (!response.success) {
-    throw new Error(response.error || 'שגיאה במחיקת איש קשר')
+    throw new Error(response.error || 'שגיאה במחיקת נמען')
   }
 }
 

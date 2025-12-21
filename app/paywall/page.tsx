@@ -186,7 +186,7 @@ export default function PaywallPage() {
           </div>
           <div className={styles.feature}>
             <MdCheck className={styles.featureIcon} />
-            <span>אנשי קשר ללא הגבלה</span>
+            <span>נמענים ללא הגבלה</span>
           </div>
           <div className={styles.feature}>
             <MdCheck className={styles.featureIcon} />

@@ -3,11 +3,11 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useTranslation } from '@/i18n/useTranslation'
-import { getContacts, Contact } from '@/services/contacts'
+import { getContacts, createContact, Contact } from '@/services/contacts'
 import { generateMessage, MessageRequest } from '@/services/messages'
 import { Loading } from '@/components/Loading'
 import { UsageBanner } from '@/components/UsageBanner'
-import { MdAutoAwesome, MdContentCopy, MdPerson, MdMessage, MdTune, MdEditNote, MdShare } from 'react-icons/md'
+import { MdAutoAwesome, MdContentCopy, MdPerson, MdMessage, MdTune, MdEditNote, MdShare, MdAdd } from 'react-icons/md'
 import { AiFillHeart, AiFillStar } from 'react-icons/ai'
 import styles from './page.module.css'
 
@@ -20,7 +20,9 @@ export default function MessagesPage() {
   const [generating, setGenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [generatedMessage, setGeneratedMessage] = useState<string | null>(null)
-  const [selectedContact, setSelectedContact] = useState<number | null>(null)
+  const [selectedContact, setSelectedContact] = useState<number | 'new' | null>(null)
+  const [newRecipientName, setNewRecipientName] = useState('')
+  const [addingRecipient, setAddingRecipient] = useState(false)
   const [messageConfig, setMessageConfig] = useState<MessageRequest>({
     contact_id: 0,
     message_type: 'custom',
@@ -64,15 +66,37 @@ export default function MessagesPage() {
       const data = await getContacts()
       setContacts(data)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'שגיאה בטעינת אנשי קשר')
+      setError(err instanceof Error ? err.message : 'שגיאה בטעינת נמענים')
     } finally {
       setLoading(false)
     }
   }
 
+  const handleAddRecipient = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newRecipientName.trim()) return
+
+    try {
+      setAddingRecipient(true)
+      setError(null)
+      const newContact = await createContact({
+        name: newRecipientName.trim(),
+        default_tone: 'friendly'
+      })
+      
+      setContacts(prev => [...prev, newContact])
+      setSelectedContact(newContact.id!)
+      setNewRecipientName('')
+    } catch (err: any) {
+      setError(err instanceof Error ? err.message : 'שגיאה ביצירת נמען')
+    } finally {
+      setAddingRecipient(false)
+    }
+  }
+
   const handleGenerate = async () => {
-    if (!selectedContact) {
-      setError('אנא בחר איש קשר')
+    if (!selectedContact || selectedContact === 'new') {
+      setError('אנא בחר נמען')
       return
     }
 
@@ -210,7 +234,7 @@ export default function MessagesPage() {
             <strong>שגיאה:</strong> {error}
             <br />
             <small>
-              טיפ: ודא שה-backend רץ, שיש GROQ_API_KEY מוגדר, ויש לפחות איש קשר אחד.
+              טיפ: ודא שה-backend רץ, שיש GROQ_API_KEY מוגדר, ויש לפחות נמען אחד.
             </small>
           </div>
         )}
@@ -223,16 +247,40 @@ export default function MessagesPage() {
             </h2>
             <select
               value={selectedContact || ''}
-              onChange={(e) => setSelectedContact(Number(e.target.value))}
+              onChange={(e) => {
+                const val = e.target.value
+                setSelectedContact(val === 'new' ? 'new' : (val ? Number(val) : null))
+              }}
               className={styles.select}
             >
-              <option value="">-- בחר איש קשר --</option>
+              <option value="">-- בחר נמען --</option>
               {contacts.map((contact) => (
                 <option key={contact.id} value={contact.id}>
                   {contact.name}
                 </option>
               ))}
+              <option value="new">+ הוסף נמען חדש...</option>
             </select>
+
+            {selectedContact === 'new' && (
+              <form onSubmit={handleAddRecipient} className={styles.addRecipientForm}>
+                <input
+                  type="text"
+                  placeholder="שם הנמען החדש"
+                  value={newRecipientName}
+                  onChange={(e) => setNewRecipientName(e.target.value)}
+                  className={styles.input}
+                  autoFocus
+                />
+                <button 
+                  type="submit" 
+                  disabled={addingRecipient || !newRecipientName.trim()}
+                  className={styles.addRecipientButton}
+                >
+                  <MdAdd /> {addingRecipient ? 'מוסיף...' : 'הוסף'}
+                </button>
+              </form>
+            )}
 
             <h2 className={styles.sectionTitle}>
               <MdMessage style={{ fontSize: '24px', color: '#a8d5e2' }} />

@@ -129,13 +129,16 @@ export function Header() {
   }
 
   const navLinks = [
-    { href: '/', label: t('navigation.home') },
-    { href: '/contacts', label: t('navigation.contacts') },
-    { href: '/messages', label: t('navigation.messages') },
-    { href: '/settings', label: t('navigation.settings') },
-    { href: '/about', label: t('navigation.about') },
+    { href: '/messages', label: 'הודעות' },
+    { href: '/contacts', label: 'נמענים' },
     // Admin link - only shown if isAdmin is true
     ...(isAdmin ? [{ href: '/admin', label: '🛠️ ניהול', isAdminLink: true }] : []),
+  ]
+
+  const menuLinks = [
+    ...navLinks,
+    { href: '/settings', label: '⚙️ הגדרות' },
+    { href: '/about', label: 'ℹ️ אודות' },
   ]
 
   return (
@@ -214,7 +217,7 @@ export function Header() {
         </div>
         
         <nav className={styles.mobileNavLinks}>
-          {navLinks.map((link) => (
+          {menuLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}

@@ -42,7 +42,7 @@ export default function ContactsPage() {
       const data = await getContacts()
       setContacts(data)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'שגיאה בטעינת אנשי קשר')
+      setError(err instanceof Error ? err.message : 'שגיאה בטעינת נמענים')
     } finally {
       setLoading(false)
     }
@@ -92,12 +92,12 @@ export default function ContactsPage() {
       setShowForm(false)
       await loadContacts()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'שגיאה ביצירת איש קשר')
+      setError(err instanceof Error ? err.message : 'שגיאה ביצירת נמען')
     }
   }
 
   const handleDelete = async (id: number) => {
-    if (!confirm('האם אתה בטוח שברצונך למחוק את איש הקשר הזה?')) {
+    if (!confirm('האם אתה בטוח שברצונך למחוק את הנמען הזה?')) {
       return
     }
     try {
@@ -105,7 +105,7 @@ export default function ContactsPage() {
       await deleteContact(id)
       await loadContacts()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'שגיאה במחיקת איש קשר')
+      setError(err instanceof Error ? err.message : 'שגיאה במחיקת נמען')
     }
   }
 
@@ -117,10 +117,10 @@ export default function ContactsPage() {
     <main className={styles.main}>
       <div className={styles.container}>
         <div className={styles.header}>
-          <h1 className={styles.title}>אנשי קשר</h1>
+          <h1 className={styles.title}>נמענים</h1>
           <button onClick={() => setShowForm(!showForm)} className={styles.addButton}>
             <MdAdd style={{ fontSize: '24px' }} />
-            {showForm ? 'ביטול' : 'הוסף איש קשר'}
+            {showForm ? 'ביטול' : 'הוסף נמען'}
           </button>
         </div>
 
@@ -132,7 +132,7 @@ export default function ContactsPage() {
 
         {showForm && (
           <form onSubmit={handleSubmit} className={styles.form}>
-            <h2 className={styles.formTitle}>הוסף איש קשר חדש</h2>
+            <h2 className={styles.formTitle}>הוסף נמען חדש</h2>
             <input
               type="text"
               placeholder="שם מלא"
@@ -180,9 +180,9 @@ export default function ContactsPage() {
           {contacts.length === 0 ? (
             <div className={styles.empty}>
               <div className={styles.emptyIcon}>💙</div>
-              <p>אין אנשי קשר עדיין</p>
+              <p>אין נמענים עדיין</p>
               <p style={{ fontSize: '0.9rem', marginTop: '8px', opacity: 0.7 }}>
-                לחץ על &quot;הוסף איש קשר&quot; כדי להתחיל
+                לחץ על &quot;הוסף נמען&quot; כדי להתחיל
               </p>
             </div>
           ) : (

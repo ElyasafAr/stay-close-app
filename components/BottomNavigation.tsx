@@ -17,11 +17,8 @@ export function BottomNavigation() {
   }, [pathname]) // רק כשהדף משתנה
 
   const navItems = [
-    { href: '/', label: 'בית', icon: MdHome },
-    { href: '/contacts', label: 'אנשי קשר', icon: MdContacts },
     { href: '/messages', label: 'הודעות', icon: MdMessage },
-    { href: '/settings', label: 'הגדרות', icon: MdSettings },
-    { href: '/about', label: 'אודות', icon: MdInfo },
+    { href: '/contacts', label: 'נמענים', icon: MdContacts },
   ]
 
   // אם המשתמש לא מחובר, לא להציג את ה-navigation

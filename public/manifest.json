@@ -27,8 +27,8 @@
   "screenshots": [],
   "shortcuts": [
     {
-      "name": "אנשי קשר",
-      "short_name": "אנשי קשר",
+      "name": "נמענים",
+      "short_name": "נמענים",
       "description": "צפה ברשימת אנשי הקשר",
       "url": "/contacts",
       "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
@@ -42,6 +42,7 @@
     }
   ]
 }
+
 
 
 
