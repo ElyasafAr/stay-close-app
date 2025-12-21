@@ -369,7 +369,38 @@ html.dark .mobileMenuOverlay {
   opacity: 1;
 }
 
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  color: var(--text-primary);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-radius: 12px;
+  transition: all 200ms ease;
+}
+
+.dropdownItem:hover {
+  background: rgba(168, 213, 226, 0.15);
+  color: var(--color-primary-dark);
+}
+
+html.dark .dropdownItem:hover {
+  background: rgba(79, 195, 247, 0.2);
+  color: var(--color-primary);
+}
+
+.desktopUserMenu {
+  display: flex;
+  align-items: center;
+}
+
 @media (max-width: 768px) {
+  .desktopUserMenu {
+    display: none;
+  }
   .mobileMenuButton {
     display: flex !important;
     align-items: center;

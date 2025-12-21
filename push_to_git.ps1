@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Simplify app: 2 main screens (Messages & Recipients) + Terminology change - Set Messages as main screen - Change 'Contacts' to 'Recipients' throughout app - Add quick recipient creation in Messages page - Move Settings/About to hamburger menu"
+$commitMessage = "Fix desktop navigation: Add user dropdown menu with Settings, About and Logout for PC version"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files

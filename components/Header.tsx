@@ -6,7 +6,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import { useTranslation } from '@/i18n/useTranslation'
 import { logout, getStoredUser, isAuthenticated } from '@/services/auth'
 import { getData } from '@/services/api'
-import { MdLogout, MdMenu, MdClose, MdAdminPanelSettings } from 'react-icons/md'
+import { MdLogout, MdMenu, MdClose, MdAdminPanelSettings, MdPerson, MdSettings, MdInfo } from 'react-icons/md'
 import styles from './Header.module.css'
 
 export function Header() {
@@ -17,6 +17,8 @@ export function Header() {
   const [showMobileMenu, setShowMobileMenu] = useState(false)
   const [isDarkMode, setIsDarkMode] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
+
+  const [showUserDropdown, setShowUserDropdown] = useState(false)
 
   // Detect dark mode
   useEffect(() => {
@@ -121,6 +123,7 @@ export function Header() {
   // Close mobile menu when route changes
   useEffect(() => {
     setShowMobileMenu(false)
+    setShowUserDropdown(false)
   }, [pathname])
 
   // אם המשתמש לא מחובר, לא להציג את ה-Header
@@ -159,6 +162,38 @@ export function Header() {
                   {link.label}
                 </Link>
               ))}
+            </div>
+
+            {/* Desktop User Menu */}
+            <div className={styles.desktopUserMenu}>
+              <div className={styles.userMenu}>
+                <button 
+                  className={styles.userButton}
+                  onClick={() => setShowUserDropdown(!showUserDropdown)}
+                >
+                  <MdPerson className={styles.userIcon} />
+                  <span className={styles.userName}>{user?.username || 'משתמש'}</span>
+                </button>
+
+                {showUserDropdown && (
+                  <div className={styles.dropdown}>
+                    <div className={styles.userInfo}>
+                      <p className={styles.userNameFull}>{user?.username}</p>
+                      <p className={styles.userEmail}>{user?.email}</p>
+                    </div>
+                    <Link href="/settings" className={styles.dropdownItem}>
+                      <MdSettings /> הגדרות
+                    </Link>
+                    <Link href="/about" className={styles.dropdownItem}>
+                      <MdInfo /> אודות
+                    </Link>
+                    <div style={{ margin: '8px 0', borderTop: '1px solid var(--border-color)' }}></div>
+                    <button onClick={handleLogout} className={styles.logoutButton}>
+                      <MdLogout /> התנתק
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
             
             {/* Mobile Hamburger Button - מצד ימין */}
