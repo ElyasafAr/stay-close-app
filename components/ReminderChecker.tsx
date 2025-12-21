@@ -51,41 +51,16 @@ export function ReminderChecker() {
 
     // התחלת בדיקה תקופתית - רק אם המשתמש מחובר
     // הערה: באנדרואיד, ההתראות המקומיות יעבדו גם בלי בדיקה תקופתית
-    // אבל נשאיר את זה ל-Web
+    // ב-Web, אנחנו משתמשים ב-Push Notifications (FCM) מהשרת,
+    // ולכן אין צורך לבצע Polling מה-frontend (חוסך זיכרון ומשאבי שרת).
+    /*
     const cleanup = startReminderChecker(
       async () => {
-        // בדיקה אם המשתמש מחובר לפני ניסיון לבדוק התראות
-        if (!isAuthenticated()) {
-          return [] // אם לא מחובר, מחזירים רשימה ריקה בשקט
-        }
-        
-        // באנדרואיד - לא צריך לבדוק (התראות מקומיות)
-        if (isAndroid()) {
-          return []
-        }
-        
-        try {
-          return await checkReminders()
-        } catch (error) {
-          // אם יש שגיאת authentication, לא נדפיס שגיאה (יכול להיות שהמשתמש התנתק)
-          if (error instanceof Error && error.message.includes('Not authenticated')) {
-            return []
-          }
-          console.error('שגיאה בבדיקת התראות:', error)
-          return []
-        }
-      },
-      async (contactId: number) => {
-        try {
-          return await getContact(contactId)
-        } catch (error) {
-          console.error('שגיאה בטעינת איש קשר:', error)
-          throw error
-        }
+        // ...
       }
     )
-
     return cleanup
+    */
   }, [])
 
   return null // קומפוננטה לא מציגה כלום

@@ -20,16 +20,30 @@ export function Header() {
 
   const [showUserDropdown, setShowUserDropdown] = useState(false)
 
-  // Detect dark mode
+  // Detect dark mode using MutationObserver (much more efficient than setInterval)
   useEffect(() => {
     const checkDarkMode = () => {
-      const isDark = document.documentElement.classList.contains('dark')
-      setIsDarkMode(isDark)
+      setIsDarkMode(document.documentElement.classList.contains('dark'))
     }
+    
+    // Initial check
     checkDarkMode()
-    // Check periodically for theme changes
-    const interval = setInterval(checkDarkMode, 500)
-    return () => clearInterval(interval)
+
+    // Observe class changes on html element
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'class') {
+          checkDarkMode()
+        }
+      })
+    })
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    })
+
+    return () => observer.disconnect()
   }, [])
 
   useEffect(() => {

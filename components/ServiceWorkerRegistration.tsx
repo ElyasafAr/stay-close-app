@@ -98,7 +98,13 @@ export function ServiceWorkerRegistration() {
           console.log('✅ [FCM] Token received:', token.substring(0, 30) + '...')
           setFcmToken(token)
           
-          // שליחת ה-token ל-backend
+          // שליחת ה-token ל-backend (רק אם הוא חדש)
+          const lastSentToken = localStorage.getItem('last_fcm_token')
+          if (lastSentToken === token) {
+            console.log('ℹ️ [FCM] Token already sent to backend, skipping')
+            return
+          }
+
           console.log('🔍 [FCM] Sending token to backend...')
           const tokenData = {
           token: token,
@@ -113,6 +119,7 @@ export function ServiceWorkerRegistration() {
           try {
             const response = await postData('/api/push-tokens', tokenData)
             console.log('✅ [FCM] Token sent to backend:', response)
+            localStorage.setItem('last_fcm_token', token)
           } catch (error) {
             console.error('❌ [FCM] Error sending token to backend:', error)
           }

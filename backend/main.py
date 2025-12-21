@@ -51,12 +51,21 @@ def check_and_send_reminders():
         now = datetime.now(timezone.utc)
         print(f"🔍 [BACKGROUND] Checking reminders at {now}")
         
-        # מצא כל ההתראות שצריכות להתפעל
+        # מצא רק התראות שצריכות להתפעל כעת או בעבר
         all_reminders = db.query(DBReminder).filter(
-            DBReminder.enabled == True
+            DBReminder.enabled == True,
+            (
+                # התראה חד-פעמית שזמנה הגיע וטרם הופעלה
+                ((DBReminder.reminder_type == 'one_time') & 
+                 (DBReminder.scheduled_datetime <= now) & 
+                 (DBReminder.one_time_triggered == False)) |
+                # התראה חזרתית שזמנה הגיע
+                ((DBReminder.reminder_type != 'one_time') & 
+                 (DBReminder.next_trigger <= now))
+            )
         ).all()
         
-        print(f"🔍 [BACKGROUND] Found {len(all_reminders)} enabled reminders")
+        print(f"🔍 [BACKGROUND] Found {len(all_reminders)} due reminders")
         
         triggered_count = 0
         for db_reminder in all_reminders:
@@ -260,45 +269,6 @@ allowed_origins.append("http://stay-close-app-front-production.up.railway.app")
 # לוגים לבדיקה
 print(f"[CORS] Allowed origins: {allowed_origins}")
 
-# Additional middleware to ensure CORS headers are always set
-# Handle OPTIONS preflight requests explicitly
-@app.middleware("http")
-async def add_cors_headers(request: Request, call_next):
-    """Ensure CORS headers are always present, especially for OPTIONS preflight"""
-    origin = request.headers.get("origin")
-    
-    # Handle OPTIONS preflight requests immediately
-    if request.method == "OPTIONS":
-        print(f"[CORS] OPTIONS preflight request from origin: {origin}")
-        if origin and origin in allowed_origins:
-            response = Response(status_code=200)
-            response.headers["Access-Control-Allow-Origin"] = origin
-            response.headers["Access-Control-Allow-Credentials"] = "true"
-            response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-            response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With, Accept, Origin"
-            response.headers["Access-Control-Max-Age"] = "3600"
-            print(f"[CORS] ✅ OPTIONS response sent for origin: {origin}")
-            return response
-        else:
-            print(f"[CORS] ❌ OPTIONS denied for origin: {origin}")
-    
-    response = await call_next(request)
-    
-    # Always add CORS headers if origin is provided and in allowed list
-    if origin:
-        if origin in allowed_origins:
-            response.headers["Access-Control-Allow-Origin"] = origin
-            response.headers["Access-Control-Allow-Credentials"] = "true"
-            response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-            response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With, Accept, Origin"
-            response.headers["Access-Control-Expose-Headers"] = "*"
-            print(f"[CORS] Added headers for origin: {origin}")
-        else:
-            print(f"[CORS] Origin not allowed: {origin}")
-            print(f"[CORS] Allowed origins: {allowed_origins}")
-    
-    return response
-
 # CORS configuration
 # When allow_credentials=True, cannot use allow_origins=["*"]
 # Must specify exact origins
@@ -416,19 +386,6 @@ def get_reminder_by_id(db: Session, reminder_id: int, user_id: str) -> Optional[
         DBReminder.id == reminder_id,
         DBReminder.user_id == user_id
     ).first()
-
-def calculate_next_trigger(interval_type: str, interval_value: int, last_triggered: Optional[datetime] = None) -> datetime:
-    """מחשב את זמן ההתראה הבאה (ל-recurring בלבד - תאימות לאחור)"""
-    now = datetime.now(timezone.utc)
-    if interval_type == 'hours':
-        delta = timedelta(hours=interval_value)
-    else:  # days
-        delta = timedelta(days=interval_value)
-    
-    if last_triggered:
-        return last_triggered + delta
-    else:
-        return now + delta
 
 def calculate_next_trigger_advanced(
     reminder_type: str,
