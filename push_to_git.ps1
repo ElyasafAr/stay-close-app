@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Visual Upgrade: Implement 'Modern Warmth' style - Version 1.5.1 - Glassmorphism effects with background blur - Animated greeting with user's name and time-based greeting - Cleaned up typography and increased hierarchy - Enhanced buttons and inputs with better hover/focus states"
+$commitMessage = "Visual and UX Upgrade v1.5.1: Fix Dark Mode contrast + Add message generation loading state - Improve readability in Dark Mode with better contrast and darker glass panels - Add animated loading box while AI generates messages to prevent 'frozen' feeling - Update version to 1.5.1 and remove 'warm' from subtitle"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files

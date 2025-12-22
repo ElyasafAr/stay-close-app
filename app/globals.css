@@ -110,9 +110,14 @@ html.dark {
   --bg-gradient: linear-gradient(135deg, #0a0e1a 0%, #111827 30%, #1a1f2e 60%, #1f2937 100%);
   
   /* Dark text - VERY light for maximum readability */
-  --text-primary: #f9fafb;
-  --text-secondary: #e5e7eb;
-  --text-light: #9ca3af;
+  --text-primary: #ffffff;
+  --text-secondary: #cbd5e1;
+  --text-light: #94a3b8;
+  
+  /* Dark Glassmorphism */
+  --glass-bg: rgba(30, 41, 59, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-blur: 16px;
   
   /* Dark borders - Subtle but visible */
   --border-color: rgba(96, 165, 250, 0.2);

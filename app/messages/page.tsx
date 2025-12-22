@@ -462,7 +462,12 @@ export default function MessagesPage() {
               <AiFillStar style={{ fontSize: '24px', color: '#ffd6a5' }} />
               {t('messages.generatedMessage')}
             </h2>
-            {generatedMessage ? (
+            {generating ? (
+              <div className={styles.generatingBox}>
+                <MdAutoAwesome className={styles.generatingIcon} />
+                <div className={styles.generatingText}>{t('messages.generating')}</div>
+              </div>
+            ) : generatedMessage ? (
               <div className={styles.messageBox}>
                 <div className={styles.messageContent}>{generatedMessage}</div>
                 <div className={styles.buttonGroup}>
