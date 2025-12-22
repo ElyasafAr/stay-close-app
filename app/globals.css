@@ -86,6 +86,7 @@ body {
 
 /* Dark theme variables - DRAMATIC contrast and modern design */
 html.dark {
+  color-scheme: dark;
   /* Dark theme colors - Bright, vibrant, high contrast */
   --color-primary: #60a5fa;
   --color-primary-light: #93c5fd;

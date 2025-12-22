@@ -170,14 +170,29 @@ html.dark .messagePanel {
 
 html.dark .select,
 html.dark .textarea {
-  background: rgba(15, 23, 42, 0.6);
+  background: #1e293b;
   border-color: rgba(255, 255, 255, 0.2);
   color: #ffffff;
 }
 
+html.dark .select option {
+  background: #1e293b;
+  color: #ffffff;
+}
+
+html.dark .select:hover,
+html.dark .textarea:hover {
+  background: #2d3748;
+  border-color: var(--color-primary);
+}
+
+html.dark .textarea::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
 html.dark .select:focus,
 html.dark .textarea:focus {
-  background: rgba(15, 23, 42, 0.9);
+  background: #0f172a;
   border-color: var(--color-primary);
   box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.3);
 }
@@ -195,9 +210,18 @@ html.dark .textarea:focus {
 }
 
 html.dark .input {
-  background: rgba(15, 23, 42, 0.6);
+  background: #1e293b;
   border-color: rgba(255, 255, 255, 0.2);
   color: #ffffff;
+}
+
+html.dark .input:hover {
+  background: #2d3748;
+  border-color: var(--color-primary);
+}
+
+html.dark .input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .input:focus {
@@ -249,18 +273,7 @@ html.dark .input:focus {
   to { opacity: 1; transform: translateY(0); }
 }
 
-html.dark .select,
-html.dark .textarea {
-  border-color: rgba(96, 165, 250, 0.2);
-  background: var(--bg-card);
-}
-
-html.dark .select:focus,
-html.dark .textarea:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
-  background: #374151;
-}
+/* REMOVED DUPLICATE DARK MODE RULES */
 
 .select:focus,
 .textarea:focus {
@@ -357,7 +370,6 @@ html.dark .generateButton:hover:not(:disabled) {
   background: var(--bg-card);
   border-radius: 24px;
   border: 2px dashed var(--color-primary);
-  animation: pulse 2s infinite;
 }
 
 .generatingIcon {
