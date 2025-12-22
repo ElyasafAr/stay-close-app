@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Visual Fix v1.5.3: Robust Desktop Dark Mode Select fix - Add global CSS rules for select/option in dark mode - Force color-scheme: dark and explicit backgrounds for select dropdowns on Desktop - Ensure version 1.5.3 across all files"
+$commitMessage = "Android Sync v1.5.3: Sync native versioning - Update versionCode to 10503 and versionName to 1.5.3 in build.gradle - Prepare for Play Store upload"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files
