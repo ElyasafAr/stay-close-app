@@ -1915,7 +1915,17 @@ async def generate_message(
         'celebration': 'ברכה על חגיגה'
     }.get(request.message_type, request.message_type)
     
-    prompt = f"""צור הודעה בעברית מסוג {message_type_hebrew} עבור {contact_name}.
+    # Translate language to Hebrew name for the prompt
+    language_name = {
+        'he': 'עברית',
+        'en': 'אנגלית',
+        'ru': 'רוסית',
+        'ar': 'ערבית',
+        'fr': 'צרפתית',
+        'es': 'ספרדית'
+    }.get(request.language, 'עברית')
+    
+    prompt = f"""צור הודעה ב{language_name} מסוג {message_type_hebrew} עבור {contact_name}.
 טון: {tone}
 """
     if request.additional_context:

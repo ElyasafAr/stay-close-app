@@ -7,7 +7,7 @@ import { getContacts, createContact, Contact } from '@/services/contacts'
 import { generateMessage, MessageRequest } from '@/services/messages'
 import { Loading } from '@/components/Loading'
 import { UsageBanner } from '@/components/UsageBanner'
-import { MdAutoAwesome, MdContentCopy, MdPerson, MdMessage, MdTune, MdEditNote, MdShare, MdAdd } from 'react-icons/md'
+import { MdAutoAwesome, MdContentCopy, MdPerson, MdMessage, MdTune, MdEditNote, MdShare, MdAdd, MdLanguage } from 'react-icons/md'
 import { AiFillHeart, AiFillStar } from 'react-icons/ai'
 import styles from './page.module.css'
 
@@ -389,6 +389,26 @@ export default function MessagesPage() {
               <option value="empathetic">{t('messages.tones.empathetic')}</option>
               <option value="encouraging">{t('messages.tones.encouraging')}</option>
               <option value="grateful">{t('messages.tones.grateful')}</option>
+            </select>
+
+            <h2 className={styles.sectionTitle}>
+              <MdLanguage style={{ fontSize: '24px', color: '#a8d5e2' }} />
+              {t('messages.language')}
+            </h2>
+            <select
+              value={messageConfig.language}
+              onChange={(e) => setMessageConfig({
+                ...messageConfig,
+                language: e.target.value as MessageRequest['language'],
+              })}
+              className={styles.select}
+            >
+              <option value="he">{t('messages.languages.he')}</option>
+              <option value="en">{t('messages.languages.en')}</option>
+              <option value="ru">{t('messages.languages.ru')}</option>
+              <option value="ar">{t('messages.languages.ar')}</option>
+              <option value="fr">{t('messages.languages.fr')}</option>
+              <option value="es">{t('messages.languages.es')}</option>
             </select>
 
             <h2 className={styles.sectionTitle}>
