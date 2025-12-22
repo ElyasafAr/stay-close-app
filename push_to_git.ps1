@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Add support for custom message language - Version 1.5.0: Users can now choose the language of the generated message (Hebrew, English, Russian, Arabic, French, Spanish) in the Messages page."
+$commitMessage = "Visual Upgrade: Implement 'Modern Warmth' style - Version 1.5.1 - Glassmorphism effects with background blur - Animated greeting with user's name and time-based greeting - Cleaned up typography and increased hierarchy - Enhanced buttons and inputs with better hover/focus states"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files

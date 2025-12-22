@@ -5,9 +5,10 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { useTranslation } from '@/i18n/useTranslation'
 import { getContacts, createContact, Contact } from '@/services/contacts'
 import { generateMessage, MessageRequest } from '@/services/messages'
+import { getStoredUser } from '@/services/auth'
 import { Loading } from '@/components/Loading'
 import { UsageBanner } from '@/components/UsageBanner'
-import { MdAutoAwesome, MdContentCopy, MdPerson, MdMessage, MdTune, MdEditNote, MdShare, MdAdd, MdLanguage } from 'react-icons/md'
+import { MdAutoAwesome, MdContentCopy, MdPerson, MdMessage, MdTune, MdEditNote, MdShare, MdAdd, MdLanguage, MdWavingHand } from 'react-icons/md'
 import { AiFillHeart, AiFillStar } from 'react-icons/ai'
 import styles from './page.module.css'
 
@@ -15,6 +16,8 @@ export default function MessagesPage() {
   const { t } = useTranslation()
   const router = useRouter()
   const searchParams = useSearchParams()
+  const [user, setUser] = useState<any>(null)
+  const [greeting, setGreeting] = useState('')
   const [contacts, setContacts] = useState<Contact[]>([])
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
@@ -30,6 +33,18 @@ export default function MessagesPage() {
     additional_context: '',
     language: 'he',
   })
+
+  // Load user and set greeting
+  useEffect(() => {
+    const storedUser = getStoredUser()
+    setUser(storedUser)
+    
+    const hour = new Date().getHours()
+    if (hour >= 5 && hour < 12) setGreeting('בוקר טוב')
+    else if (hour >= 12 && hour < 17) setGreeting('צהריים טובים')
+    else if (hour >= 17 && hour < 21) setGreeting('ערב נעים')
+    else setGreeting('לילה טוב')
+  }, [])
 
   useEffect(() => {
     loadContacts()
@@ -256,8 +271,14 @@ export default function MessagesPage() {
   return (
     <main className={styles.main}>
       <div className={styles.container}>
-        <h1 className={styles.title}>{t('messages.title')}</h1>
-        <p className={styles.subtitle}>{t('messages.subtitle')}</p>
+        <div className={styles.welcomeSection}>
+          <div className={styles.greeting}>
+            <MdWavingHand className={styles.greetingIcon} />
+            <span>{greeting}, {user?.username || 'אורח'}</span>
+          </div>
+          <h1 className={styles.title}>{t('messages.title')}</h1>
+          <p className={styles.subtitle}>{t('messages.subtitle')}</p>
+        </div>
 
         {/* באנר שימוש/Trial */}
         <UsageBanner />

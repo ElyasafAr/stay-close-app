@@ -24,39 +24,44 @@ body {
 }
 
 :root {
-  /* צבעים פסטליים */
-  --color-primary: #a8d5e2;
-  --color-primary-light: #d4e9f0;
-  --color-primary-dark: #7fb8c9;
+  /* Modern Warmth Palette */
+  --color-primary: #7fb8c9;
+  --color-primary-light: #e0f2f7;
+  --color-primary-dark: #5a9bad;
   
   --color-secondary: #f4a5ae;
-  --color-secondary-light: #f9d0d5;
-  --color-secondary-dark: #e87a87;
+  --color-secondary-light: #fde8ea;
+  --color-secondary-dark: #d97d8a;
   
   --color-accent: #ffd6a5;
-  --color-accent-light: #ffe8cc;
-  --color-accent-dark: #ffc470;
+  --color-accent-light: #fff4e6;
+  --color-accent-dark: #e6b38a;
   
   --color-success: #a8e6cf;
   --color-warning: #ffd93d;
   --color-error: #ff9a9e;
   
-  /* רקעים */
+  /* Modern Backgrounds */
   --bg-primary: #ffffff;
-  --bg-secondary: #f8f9fa;
-  --bg-card: #ffffff;
-  --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  --bg-secondary: #f8fafc;
+  --bg-card: rgba(255, 255, 255, 0.8);
+  --bg-gradient: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
   
-  /* טקסט */
-  --text-primary: #2d3748;
-  --text-secondary: #718096;
-  --text-light: #a0aec0;
+  /* Text */
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --text-light: #94a3b8;
   
-  /* פינות מעוגלות */
+  /* Glassmorphism Defaults */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.4);
+  --glass-blur: 12px;
+  
+  /* Dimensions & Radius */
   --radius-sm: 12px;
   --radius-md: 20px;
-  --radius-lg: 28px;
-  --radius-xl: 36px;
+  --radius-lg: 32px;
+  --radius-xl: 40px;
   --radius-full: 9999px;
   
   /* ריווח */
