@@ -151,19 +151,20 @@ html.dark .form {
 
 html.dark .input,
 html.dark .textarea {
-  background: #1e293b;
+  background-color: #1e293b;
   border-color: rgba(255, 255, 255, 0.2);
   color: #ffffff;
+  color-scheme: dark;
 }
 
 html.dark .input option {
-  background: #1e293b;
+  background-color: #1e293b;
   color: #ffffff;
 }
 
 html.dark .input:hover,
 html.dark .textarea:hover {
-  background: #2d3748;
+  background-color: #2d3748;
   border-color: var(--color-primary);
 }
 

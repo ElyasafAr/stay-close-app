@@ -170,19 +170,21 @@ html.dark .messagePanel {
 
 html.dark .select,
 html.dark .textarea {
-  background: #1e293b;
+  background-color: #1e293b;
   border-color: rgba(255, 255, 255, 0.2);
   color: #ffffff;
+  color-scheme: dark;
 }
 
+/* Rely on browser's native dark mode for options when possible */
 html.dark .select option {
-  background: #1e293b;
+  background-color: #1e293b;
   color: #ffffff;
 }
 
 html.dark .select:hover,
 html.dark .textarea:hover {
-  background: #2d3748;
+  background-color: #2d3748;
   border-color: var(--color-primary);
 }
 
@@ -210,13 +212,14 @@ html.dark .textarea:focus {
 }
 
 html.dark .input {
-  background: #1e293b;
+  background-color: #1e293b;
   border-color: rgba(255, 255, 255, 0.2);
   color: #ffffff;
+  color-scheme: dark;
 }
 
 html.dark .input:hover {
-  background: #2d3748;
+  background-color: #2d3748;
   border-color: var(--color-primary);
 }
 

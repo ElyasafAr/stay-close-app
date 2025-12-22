@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Visual and UX Fixes v1.5.2: Improve Dark Mode contrast + Clean up animations - Remove pulse animation from generating box - Fix dropdown (select) readability in Dark Mode with color-scheme: dark - Improve recipient name and info readability in Contacts page - Fix placeholder and input contrast in Dark Mode"
+$commitMessage = "Visual Fix v1.5.3: Robust Desktop Dark Mode Select fix - Add global CSS rules for select/option in dark mode - Force color-scheme: dark and explicit backgrounds for select dropdowns on Desktop - Ensure version 1.5.3 across all files"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files
