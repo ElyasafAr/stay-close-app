@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Android Sync v1.5.3: Sync native versioning - Update versionCode to 10503 and versionName to 1.5.3 in build.gradle - Prepare for Play Store upload"
+$commitMessage = "Visual Fix v1.5.4: Fix Input text color in Messages page Dark Mode - Ensure background-color is used instead of background to prevent color collisions - Fix focusing state in Dark Mode for better contrast - Prepare for Contact Us form implementation"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files

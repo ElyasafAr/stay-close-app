@@ -235,7 +235,7 @@ html.dark .input::placeholder {
 }
 
 html.dark .input:focus {
-  background: rgba(15, 23, 42, 0.9);
+  background-color: #0f172a;
   box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.3);
 }
 
