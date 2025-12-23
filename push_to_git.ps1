@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Admin Support Management v1.5.6: Manage Contact Us messages from Admin Dashboard - Add API endpoints to fetch and update support tickets - Implement Tickets section in Admin Page with status management - Fix input focus contrast in dark mode across pages"
+$commitMessage = "Build Fix v1.5.7: Fix fetchApi export error and ESLint warnings - Update services/support.ts to use exported postData instead of private fetchApi - Fix missing dependency warning in app/admin/page.tsx - Ensure clean build on Railway"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files
