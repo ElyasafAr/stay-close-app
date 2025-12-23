@@ -209,3 +209,28 @@ class CouponUsage(Base):
     coupon = relationship("Coupon", back_populates="usages")
     user = relationship("User")
 
+
+class SupportTicket(Base):
+    """Support Ticket model - stores contact us messages"""
+    __tablename__ = "support_tickets"
+    
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    user_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True)
+    
+    # Message content
+    subject = Column(String, nullable=False)
+    message = Column(Text, nullable=False)
+    
+    # Metadata for tracking
+    status = Column(String, nullable=False, default='open')  # 'open', 'in_progress', 'resolved', 'closed'
+    priority = Column(String, nullable=False, default='medium')  # 'low', 'medium', 'high', 'urgent'
+    
+    # If user is not logged in, we can store their email (or even if logged in, for direct reply)
+    email = Column(String, nullable=True)
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    
+    # Relationship
+    user = relationship("User")
+

@@ -1,0 +1,209 @@
+.main {
+  min-height: 100vh;
+  padding: 24px 16px;
+  background: var(--bg-gradient);
+  direction: rtl;
+}
+
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.iconButton {
+  background: white;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.iconButton:hover {
+  transform: translateX(4px);
+  box-shadow: var(--shadow-md);
+}
+
+.card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  padding: 32px;
+  border-radius: 24px;
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-xl);
+}
+
+.infoSection {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 32px;
+  padding: 16px;
+  background: rgba(127, 184, 201, 0.1);
+  border-radius: 16px;
+  color: var(--color-primary-dark);
+}
+
+.infoIcon {
+  font-size: 2.5rem;
+  flex-shrink: 0;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.field label {
+  font-weight: 700;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+.input,
+.textarea {
+  width: 100%;
+  padding: 14px 18px;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  font-size: 16px;
+  background: rgba(255, 255, 255, 0.5);
+  color: var(--text-primary);
+  transition: all 0.3s ease;
+}
+
+.input:focus,
+.textarea:focus {
+  background: white;
+  border-color: var(--color-primary);
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(127, 184, 201, 0.15);
+}
+
+html.dark .input,
+html.dark .textarea {
+  background-color: #1e293b !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+  color-scheme: dark !important;
+}
+
+html.dark .input:focus,
+html.dark .textarea:focus {
+  background-color: #0f172a !important;
+  border-color: var(--color-primary) !important;
+}
+
+.submitButton {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  color: white;
+  border: none;
+  border-radius: 16px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  box-shadow: 0 4px 15px rgba(127, 184, 201, 0.3);
+  transition: all 0.3s ease;
+}
+
+.submitButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(127, 184, 201, 0.4);
+}
+
+.submitButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+  padding: 12px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.successCard {
+  background: white;
+  padding: 48px 32px;
+  border-radius: 32px;
+  text-align: center;
+  box-shadow: var(--shadow-xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  animation: scaleIn 0.5s ease;
+}
+
+.successIcon {
+  font-size: 5rem;
+  color: #4ade80;
+}
+
+.backButton {
+  margin-top: 16px;
+  padding: 14px 28px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 9999px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+html.dark .card {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+html.dark .iconButton {
+  background: #1e293b;
+  color: var(--color-primary-light);
+}
+
+html.dark .successCard {
+  background: #1e293b;
+  color: white;
+}

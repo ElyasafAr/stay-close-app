@@ -141,6 +141,7 @@ export function Header() {
     { href: '/messages', label: 'הודעות' },
     { href: '/contacts', label: 'נמענים' },
     { href: '/settings', label: 'הגדרות' },
+    { href: '/contact', label: 'צור קשר' },
     { href: '/about', label: 'אודות' },
     // Admin link - only shown if isAdmin is true
     ...(isAdmin ? [{ href: '/admin', label: '🛠️ ניהול', isAdminLink: true }] : []),
@@ -149,6 +150,7 @@ export function Header() {
   const menuLinks = [
     ...navLinks,
     { href: '/settings', label: '⚙️ הגדרות' },
+    { href: '/contact', label: '✉️ צור קשר' },
     { href: '/about', label: 'ℹ️ אודות' },
   ]
 

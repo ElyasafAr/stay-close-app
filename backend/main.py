@@ -26,7 +26,7 @@ from database import get_db, init_db, SessionLocal
 from models import User, Contact as DBContact, Reminder as DBReminder, PushToken
 from auth import (
     register_user, authenticate_user, create_access_token,
-    get_current_user, create_or_get_google_user, create_or_get_firebase_user, verify_token
+    get_current_user, get_current_user_optional, create_or_get_google_user, create_or_get_firebase_user, verify_token
 )
 from encryption import encrypt, decrypt
 import threading
@@ -1410,6 +1410,50 @@ class PurchaseVerification(BaseModel):
     purchase_token: str
     product_id: str
     order_id: str
+
+# ========== SUPPORT TICKETS ENDPOINTS ==========
+
+class SupportTicketCreate(BaseModel):
+    """מודל ליצירת פניית תמיכה"""
+    subject: str
+    message: str
+    email: Optional[str] = None
+
+@app.post("/api/support/ticket")
+async def create_support_ticket(
+    ticket: SupportTicketCreate,
+    current_user: Optional[dict] = Depends(get_current_user_optional),
+    db: Session = Depends(get_db)
+):
+    """יצירת פניית תמיכה חדשה"""
+    from models import SupportTicket
+    
+    user_id = current_user["user_id"] if current_user else None
+    
+    # If logged in and email not provided, use user's email
+    email = ticket.email
+    if not email and current_user:
+        email = current_user.get("email")
+    
+    db_ticket = SupportTicket(
+        user_id=user_id,
+        subject=ticket.subject,
+        message=ticket.message,
+        email=email,
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc)
+    )
+    
+    try:
+        db.add(db_ticket)
+        db.commit()
+        db.refresh(db_ticket)
+        print(f"✅ [SUPPORT] Created ticket {db_ticket.id} from {'user ' + user_id if user_id else 'guest'}")
+        return {"success": True, "ticket_id": db_ticket.id}
+    except Exception as e:
+        db.rollback()
+        print(f"❌ [SUPPORT] Error creating ticket: {e}")
+        raise HTTPException(status_code=500, detail="שגיאה בשמירת הפנייה")
 
 @app.post("/api/subscription/verify")
 async def verify_subscription(

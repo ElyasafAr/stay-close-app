@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Visual Fix v1.5.4: Fix Input text color in Messages page Dark Mode - Ensure background-color is used instead of background to prevent color collisions - Fix focusing state in Dark Mode for better contrast - Prepare for Contact Us form implementation"
+$commitMessage = "Visual Fix + Contact Us v1.5.5: Fix Additional Context contrast + Internal Contact Us form - Fix textarea contrast in Dark Mode with !important rules - Implement internal Contact Us form (no email app required) - Add support_tickets table and API endpoint - Link Contact Us in Header"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files

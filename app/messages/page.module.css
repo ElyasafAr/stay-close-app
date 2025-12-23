@@ -169,74 +169,37 @@ html.dark .messagePanel {
 }
 
 html.dark .select,
-html.dark .textarea {
-  background-color: #1e293b;
-  border-color: rgba(255, 255, 255, 0.2);
-  color: #ffffff;
-  color-scheme: dark;
+html.dark .textarea,
+html.dark .input {
+  background-color: #1e293b !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+  color-scheme: dark !important;
 }
 
-/* Rely on browser's native dark mode for options when possible */
+html.dark .textarea::placeholder,
+html.dark .input::placeholder {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
 html.dark .select option {
-  background-color: #1e293b;
-  color: #ffffff;
+  background-color: #1e293b !important;
+  color: #ffffff !important;
 }
 
 html.dark .select:hover,
-html.dark .textarea:hover {
-  background-color: #2d3748;
-  border-color: var(--color-primary);
-}
-
-html.dark .textarea::placeholder {
-  color: rgba(255, 255, 255, 0.7);
+html.dark .textarea:hover,
+html.dark .input:hover {
+  background-color: #2d3748 !important;
+  border-color: var(--color-primary) !important;
 }
 
 html.dark .select:focus,
-html.dark .textarea:focus {
-  background: #0f172a;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.3);
-}
-
-.input {
-  width: 100%;
-  padding: 14px 18px;
-  border: 1px solid var(--border-color);
-  border-radius: 14px;
-  font-size: 16px;
-  direction: rtl;
-  background: rgba(255, 255, 255, 0.5);
-  color: var(--text-primary);
-  transition: all 0.3s ease;
-}
-
-html.dark .input {
-  background-color: #1e293b;
-  border-color: rgba(255, 255, 255, 0.2);
-  color: #ffffff;
-  color-scheme: dark;
-}
-
-html.dark .input:hover {
-  background-color: #2d3748;
-  border-color: var(--color-primary);
-}
-
-html.dark .input::placeholder {
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.input:focus {
-  background: #ffffff;
-  border-color: var(--color-primary);
-  outline: none;
-  box-shadow: 0 0 0 4px rgba(127, 184, 201, 0.15);
-}
-
+html.dark .textarea:focus,
 html.dark .input:focus {
-  background-color: #0f172a;
-  box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.3);
+  background-color: #0f172a !important;
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.3) !important;
 }
 
 .addRecipientForm {

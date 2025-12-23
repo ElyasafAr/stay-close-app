@@ -28,6 +28,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Security scheme
 security = HTTPBearer()
+security_optional = HTTPBearer(auto_error=False)
 
 def hash_password(password: str) -> str:
     """מצפין סיסמה"""
@@ -101,6 +102,18 @@ def get_current_user(
     """מחזיר את המשתמש הנוכחי תוך שימוש בבסיס הנתונים"""
     # Import here to avoid circular dependency if needed, but it should be fine at top
     return verify_token(credentials, db)
+
+def get_current_user_optional(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security_optional),
+    db: Session = Depends(get_db)
+) -> Optional[dict]:
+    """מחזיר את המשתמש הנוכחי אם קיים, אחרת None"""
+    if not credentials or not credentials.credentials:
+        return None
+    try:
+        return verify_token(credentials, db)
+    except:
+        return None
 
 def register_user(username: str, email: str, password: str, db: Session) -> dict:
     """רושם משתמש חדש בבסיס הנתונים"""

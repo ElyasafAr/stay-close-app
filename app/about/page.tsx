@@ -5,6 +5,7 @@ import { useTranslation } from '@/i18n/useTranslation'
 import { AiFillHeart } from 'react-icons/ai'
 import { MdEmail, MdSend, MdCheckCircle } from 'react-icons/md'
 import { APP_VERSION, BUILD_DATE, CONTACT_EMAIL } from '@/lib/constants'
+import { sendSupportTicket } from '@/services/support'
 import styles from './page.module.css'
 
 export default function AboutPage() {
@@ -12,32 +13,35 @@ export default function AboutPage() {
   const [showContactForm, setShowContactForm] = useState(false)
   const [contactMessage, setContactMessage] = useState('')
   const [contactEmail, setContactEmail] = useState('')
+  const [contactSubject, setContactSubject] = useState('פידבק מאפליקציית Stay Close')
   const [isSending, setIsSending] = useState(false)
   const [isSent, setIsSent] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleSendFeedback = async () => {
     if (!contactMessage.trim()) return
     
     setIsSending(true)
+    setError(null)
     try {
-      // שליחה לאימייל דרך mailto או API
-      const subject = encodeURIComponent('פידבק מאפליקציית Stay Close')
-      const body = encodeURIComponent(`${contactMessage}\n\n---\nנשלח מגרסה: ${APP_VERSION}\nאימייל: ${contactEmail || 'לא צוין'}`)
-      
-      // פתיחת לקוח אימייל
-      window.location.href = `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`
+      await sendSupportTicket({
+        subject: contactSubject,
+        message: contactMessage,
+        email: contactEmail || undefined
+      });
       
       setIsSent(true)
       setContactMessage('')
       setContactEmail('')
       
-      // אפס את ההודעה אחרי 3 שניות
+      // Reset after 5 seconds
       setTimeout(() => {
         setIsSent(false)
         setShowContactForm(false)
-      }, 3000)
-    } catch (error) {
-      console.error('Error sending feedback:', error)
+      }, 5000)
+    } catch (err) {
+      console.error('Error sending feedback:', err)
+      setError('שגיאה בשליחת ההודעה. אנא נסה שוב מאוחר יותר.')
     } finally {
       setIsSending(false)
     }
@@ -86,9 +90,17 @@ export default function AboutPage() {
               ) : (
                 <>
                   <h3>שלח לנו הודעה</h3>
+                  {error && <div className={styles.formError}>{error}</div>}
+                  <input
+                    type="text"
+                    placeholder="נושא הפנייה"
+                    value={contactSubject}
+                    onChange={(e) => setContactSubject(e.target.value)}
+                    className={styles.contactInput}
+                  />
                   <input
                     type="email"
-                    placeholder="האימייל שלך (אופציונלי)"
+                    placeholder="האימייל שלך למענה (אופציונלי)"
                     value={contactEmail}
                     onChange={(e) => setContactEmail(e.target.value)}
                     className={styles.contactInput}

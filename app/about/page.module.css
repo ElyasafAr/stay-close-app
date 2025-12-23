@@ -213,6 +213,17 @@ html.dark .contactTextarea:focus {
   cursor: not-allowed;
 }
 
+.formError {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+  padding: 12px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
+}
+
 .successMessage {
   text-align: center;
   padding: 24px;

@@ -478,6 +478,37 @@ def _run_migrations():
             db.commit()
             print("✅ [DATABASE] Migration completed: Allpay pricing settings added")
         
+        # Migration 13: Create support_tickets table
+        check_support_tickets = text("""
+            SELECT table_name 
+            FROM information_schema.tables 
+            WHERE table_name='support_tickets';
+        """)
+        
+        result_support_tickets = db.execute(check_support_tickets).fetchone()
+        
+        if not result_support_tickets:
+            print("🔵 [DATABASE] Running migration: Creating support_tickets table...")
+            create_support_tickets = text("""
+                CREATE TABLE support_tickets (
+                    id SERIAL PRIMARY KEY,
+                    user_id VARCHAR,
+                    subject VARCHAR NOT NULL,
+                    message TEXT NOT NULL,
+                    status VARCHAR NOT NULL DEFAULT 'open',
+                    priority VARCHAR NOT NULL DEFAULT 'medium',
+                    email VARCHAR,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                );
+                CREATE INDEX idx_support_tickets_user_id ON support_tickets(user_id);
+                CREATE INDEX idx_support_tickets_status ON support_tickets(status);
+            """)
+            db.execute(create_support_tickets)
+            db.commit()
+            print("✅ [DATABASE] Migration completed: support_tickets table created")
+        
         print("✅ [DATABASE] All migrations completed successfully")
     except Exception as e:
         db.rollback()
