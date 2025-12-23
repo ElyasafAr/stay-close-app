@@ -132,15 +132,31 @@ html.dark {
 }
 
 /* Fix for Select Dropdowns on Desktop Chrome/Edge in Dark Mode */
-html.dark select {
+html.dark select,
+html.dark input,
+html.dark textarea {
   color-scheme: dark !important;
   background-color: #1e293b !important;
   color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+html.dark select:focus,
+html.dark input:focus,
+html.dark textarea:focus {
+  background-color: #0f172a !important;
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.3) !important;
 }
 
 html.dark select option {
   background-color: #1e293b !important;
   color: #ffffff !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: rgba(255, 255, 255, 0.5) !important;
 }
 
 /* Light theme (explicit) - Enhanced with modern design */

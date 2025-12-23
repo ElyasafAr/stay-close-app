@@ -73,6 +73,100 @@
   color: white;
 }
 
+/* Tabs Navigation */
+.tabsNav {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 32px;
+  background: var(--glass-bg);
+  padding: 8px;
+  border-radius: 16px;
+  border: 1px solid var(--glass-border);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tabsNav::-webkit-scrollbar {
+  display: none;
+}
+
+.tabButton {
+  padding: 12px 24px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.tabButton:hover {
+  background: rgba(127, 184, 201, 0.1);
+  color: var(--color-primary);
+}
+
+.tabButton.activeTab {
+  background: var(--color-primary);
+  color: white;
+}
+
+.tabBadge {
+  background: #ef4444;
+  color: white;
+  font-size: 0.75rem;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 20px;
+  font-weight: 700;
+}
+
+.tabContent {
+  animation: tabFadeIn 0.3s ease-out;
+}
+
+@keyframes tabFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Support Stats */
+.ticketStats {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+/* Delete Ticket Button */
+.ticketHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.deleteTicketButton {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.deleteTicketButton:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
 /* Stats Grid */
 .statsGrid {
   display: grid;

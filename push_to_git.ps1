@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Build Fix v1.5.7: Fix fetchApi export error and ESLint warnings - Update services/support.ts to use exported postData instead of private fetchApi - Fix missing dependency warning in app/admin/page.tsx - Ensure clean build on Railway"
+$commitMessage = "Admin & UI Upgrade v1.5.8: Ticket Management + Dark Mode Fixes - Reorganize Admin Dashboard with tabs for cleaner UX - Add ability to delete support tickets (backend + frontend) - Fix persistent Dark Mode contrast issues for inputs and textareas globally - Improve Admin Dashboard with badges for open tickets"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files

@@ -1882,6 +1882,28 @@ async def update_ticket_status(
     
     return {"success": True}
 
+@app.delete("/api/admin/support/tickets/{ticket_id}")
+async def delete_support_ticket(
+    ticket_id: int,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """מחיקת פניית תמיכה (Admin only)"""
+    user_id = current_user["user_id"]
+    
+    if not is_admin(db, user_id):
+        raise HTTPException(status_code=403, detail="אין הרשאת מנהל")
+    
+    from models import SupportTicket
+    db_ticket = db.query(SupportTicket).filter(SupportTicket.id == ticket_id).first()
+    if not db_ticket:
+        raise HTTPException(status_code=404, detail="פנייה לא נמצאה")
+    
+    db.delete(db_ticket)
+    db.commit()
+    
+    return {"success": True}
+
 # ========== USAGE ENDPOINTS ==========
 
 @app.get("/api/usage/status")
