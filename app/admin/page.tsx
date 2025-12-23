@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { getData, putData, postData } from '@/services/api'
 import { isAuthenticated } from '@/services/auth'
-import { MdDashboard, MdPeople, MdMessage, MdAttachMoney, MdSettings, MdWarning, MdRefresh, MdLocalOffer, MdAdd } from 'react-icons/md'
+import { MdDashboard, MdPeople, MdMessage, MdAttachMoney, MdSettings, MdWarning, MdRefresh, MdLocalOffer, MdAdd, MdEmail, MdCheckCircle, MdPending, MdHourglassEmpty, MdClose } from 'react-icons/md'
 import styles from './page.module.css'
 
 interface AdminStats {
@@ -32,6 +32,18 @@ interface AdminStats {
   charts: {
     daily_messages: Array<{ date: string; messages: number }>
   }
+}
+
+interface SupportTicket {
+  id: number
+  user_id: string | null
+  subject: string
+  message: string
+  status: 'open' | 'in_progress' | 'resolved' | 'closed'
+  priority: string
+  email: string | null
+  created_at: string
+  updated_at: string
 }
 
 interface AppSettings {
@@ -72,6 +84,7 @@ export default function AdminPage() {
   const [editedSettings, setEditedSettings] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
   const [coupons, setCoupons] = useState<CouponData[]>([])
+  const [tickets, setTickets] = useState<SupportTicket[]>([])
   const [showCouponForm, setShowCouponForm] = useState(false)
   const [newCoupon, setNewCoupon] = useState({
     code: '',
@@ -97,10 +110,11 @@ export default function AdminPage() {
     setError(null)
     
     try {
-      const [statsRes, settingsRes, couponsRes] = await Promise.all([
+      const [statsRes, settingsRes, couponsRes, ticketsRes] = await Promise.all([
         getData<AdminStats>('/api/admin/stats'),
         getData<AppSettings>('/api/admin/settings'),
-        getData<CouponData[]>('/api/admin/coupons')
+        getData<CouponData[]>('/api/admin/coupons'),
+        getData<SupportTicket[]>('/api/admin/support/tickets')
       ])
       
       if (statsRes.success && statsRes.data) {
@@ -119,6 +133,10 @@ export default function AdminPage() {
       
       if (couponsRes.success && couponsRes.data) {
         setCoupons(couponsRes.data)
+      }
+
+      if (ticketsRes.success && ticketsRes.data) {
+        setTickets(ticketsRes.data)
       }
     } catch (err: any) {
       if (err.message?.includes('403')) {
@@ -146,6 +164,15 @@ export default function AdminPage() {
       alert('שגיאה בשמירת הגדרה')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleUpdateTicketStatus = async (ticketId: number, status: string) => {
+    try {
+      await putData(`/api/admin/support/tickets/${ticketId}/status?status=${status}`, {})
+      loadData()
+    } catch (err) {
+      alert('שגיאה בעדכון סטטוס פנייה')
     }
   }
 
@@ -291,6 +318,66 @@ export default function AdminPage() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* Support Tickets Section */}
+        <div className={styles.ticketsSection}>
+          <h2 className={styles.sectionTitle}>
+            <MdEmail size={24} />
+            פניות צור קשר
+          </h2>
+          <div className={styles.ticketsList}>
+            {tickets.length === 0 ? (
+              <p className={styles.noTickets}>אין פניות חדשות</p>
+            ) : (
+              tickets.map(ticket => (
+                <div key={ticket.id} className={`${styles.ticketCard} ${styles[ticket.status]}`}>
+                  <div className={styles.ticketHeader}>
+                    <div className={styles.ticketMainInfo}>
+                      <span className={styles.ticketId}>#{ticket.id}</span>
+                      <h3 className={styles.ticketSubject}>{ticket.subject}</h3>
+                    </div>
+                    <span className={`${styles.ticketStatus} ${styles[ticket.status]}`}>
+                      {ticket.status === 'open' ? 'חדש' : 
+                       ticket.status === 'in_progress' ? 'בטיפול' : 
+                       ticket.status === 'resolved' ? 'טופל' : 'סגור'}
+                    </span>
+                  </div>
+                  <div className={styles.ticketMeta}>
+                    <span>מאת: {ticket.email || 'אורח'}</span>
+                    <span>תאריך: {new Date(ticket.created_at).toLocaleDateString('he-IL')}</span>
+                  </div>
+                  <div className={styles.ticketMessage}>{ticket.message}</div>
+                  <div className={styles.ticketActions}>
+                    {ticket.status !== 'in_progress' && ticket.status !== 'resolved' && (
+                      <button 
+                        className={styles.statusButton} 
+                        onClick={() => handleUpdateTicketStatus(ticket.id, 'in_progress')}
+                      >
+                        <MdHourglassEmpty /> בטיפול
+                      </button>
+                    )}
+                    {ticket.status !== 'resolved' && (
+                      <button 
+                        className={`${styles.statusButton} ${styles.resolve}`}
+                        onClick={() => handleUpdateTicketStatus(ticket.id, 'resolved')}
+                      >
+                        <MdCheckCircle /> לסמן כטופל
+                      </button>
+                    )}
+                    {ticket.status !== 'closed' && (
+                      <button 
+                        className={`${styles.statusButton} ${styles.close}`}
+                        onClick={() => handleUpdateTicketStatus(ticket.id, 'closed')}
+                      >
+                        <MdClose /> לסגור
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
 

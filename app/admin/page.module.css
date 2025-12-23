@@ -270,6 +270,135 @@
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
+/* Support Tickets Section */
+.ticketsSection {
+  background: var(--bg-card);
+  padding: 24px;
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  margin-bottom: 32px;
+}
+
+.ticketsList {
+  display: grid;
+  gap: 16px;
+}
+
+.noTickets {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 20px;
+}
+
+.ticketCard {
+  background: var(--bg-primary);
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  border-right: 4px solid #94a3b8;
+  transition: all 200ms;
+}
+
+.ticketCard.open { border-right-color: #3b82f6; }
+.ticketCard.in_progress { border-right-color: #f59e0b; }
+.ticketCard.resolved { border-right-color: #10b981; }
+.ticketCard.closed { border-right-color: #94a3b8; opacity: 0.8; }
+
+.ticketHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.ticketMainInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ticketId {
+  font-family: monospace;
+  font-weight: 700;
+  color: var(--text-light);
+  font-size: 0.9rem;
+}
+
+.ticketSubject {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.ticketStatus {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.ticketStatus.open { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+.ticketStatus.in_progress { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+.ticketStatus.resolved { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+.ticketStatus.closed { background: rgba(148, 163, 184, 0.1); color: #94a3b8; }
+
+.ticketMeta {
+  display: flex;
+  gap: 16px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.ticketMessage {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  margin-bottom: 20px;
+}
+
+.ticketActions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.statusButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 200ms;
+}
+
+.statusButton:hover {
+  background: var(--color-primary-light);
+  border-color: var(--color-primary);
+}
+
+.statusButton.resolve:hover {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border-color: #10b981;
+}
+
+.statusButton.close:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border-color: #ef4444;
+}
+
 /* Coupons Section */
 .couponsSection {
   background: var(--bg-card);

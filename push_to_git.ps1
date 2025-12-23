@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Visual Fix + Contact Us v1.5.5: Fix Additional Context contrast + Internal Contact Us form - Fix textarea contrast in Dark Mode with !important rules - Implement internal Contact Us form (no email app required) - Add support_tickets table and API endpoint - Link Contact Us in Header"
+$commitMessage = "Admin Support Management v1.5.6: Manage Contact Us messages from Admin Dashboard - Add API endpoints to fetch and update support tickets - Implement Tickets section in Admin Page with status management - Fix input focus contrast in dark mode across pages"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files

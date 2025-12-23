@@ -1419,6 +1419,21 @@ class SupportTicketCreate(BaseModel):
     message: str
     email: Optional[str] = None
 
+class SupportTicketResponse(BaseModel):
+    """מודל לתצוגת פניית תמיכה"""
+    id: int
+    user_id: Optional[str]
+    subject: str
+    message: str
+    status: str
+    priority: str
+    email: Optional[str]
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
 @app.post("/api/support/ticket")
 async def create_support_ticket(
     ticket: SupportTicketCreate,
@@ -1828,6 +1843,44 @@ async def add_admin_email(
             print(f"✅ [ADMIN] Added admin email: {email}")
     
     return {"message": "מייל מנהל נוסף", "admin_emails": admin_emails}
+
+@app.get("/api/admin/support/tickets", response_model=List[SupportTicketResponse])
+async def get_admin_support_tickets(
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """קבלת כל פניות התמיכה (Admin only)"""
+    user_id = current_user["user_id"]
+    
+    if not is_admin(db, user_id):
+        raise HTTPException(status_code=403, detail="אין הרשאת מנהל")
+    
+    from models import SupportTicket
+    return db.query(SupportTicket).order_by(SupportTicket.created_at.desc()).all()
+
+@app.put("/api/admin/support/tickets/{ticket_id}/status")
+async def update_ticket_status(
+    ticket_id: int,
+    status: str,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """עדכון סטטוס פנייה (Admin only)"""
+    user_id = current_user["user_id"]
+    
+    if not is_admin(db, user_id):
+        raise HTTPException(status_code=403, detail="אין הרשאת מנהל")
+    
+    from models import SupportTicket
+    db_ticket = db.query(SupportTicket).filter(SupportTicket.id == ticket_id).first()
+    if not db_ticket:
+        raise HTTPException(status_code=404, detail="פנייה לא נמצאה")
+    
+    db_ticket.status = status
+    db_ticket.updated_at = datetime.now(timezone.utc)
+    db.commit()
+    
+    return {"success": True}
 
 # ========== USAGE ENDPOINTS ==========
 
