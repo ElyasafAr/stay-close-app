@@ -148,10 +148,12 @@ export function Header() {
   ]
 
   const menuLinks = [
-    ...navLinks,
+    { href: '/messages', label: '🏠 בית' },
+    { href: '/contacts', label: '👥 נמענים' },
     { href: '/settings', label: '⚙️ הגדרות' },
     { href: '/contact', label: '✉️ צור קשר' },
     { href: '/about', label: 'ℹ️ אודות' },
+    ...(isAdmin ? [{ href: '/admin', label: '🛠️ פאנל ניהול', isAdminLink: true }] : []),
   ]
 
   return (

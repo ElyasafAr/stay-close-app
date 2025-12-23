@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Admin & UI Upgrade v1.5.8: Ticket Management + Dark Mode Fixes - Reorganize Admin Dashboard with tabs for cleaner UX - Add ability to delete support tickets (backend + frontend) - Fix persistent Dark Mode contrast issues for inputs and textareas globally - Improve Admin Dashboard with badges for open tickets"
+$commitMessage = "UI Cleanup v1.5.9: Fix duplicate menu items & Clean up About page - Remove duplicate About/Settings/Contact links in mobile menu - Remove redundant contact form from About page and link to dedicated Contact page - Improve mobile navigation UX with icons"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files
