@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "UI Cleanup v1.5.9: Fix duplicate menu items & Clean up About page - Remove duplicate About/Settings/Contact links in mobile menu - Remove redundant contact form from About page and link to dedicated Contact page - Improve mobile navigation UX with icons"
+$commitMessage = "UI Refinement v1.6.0: Revert 'Home' to 'Messages' in mobile menu - Ensure consistency between desktop and mobile labels - Use message icon for the main navigation link - Bump version to 1.6.0"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files

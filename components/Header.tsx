@@ -148,7 +148,7 @@ export function Header() {
   ]
 
   const menuLinks = [
-    { href: '/messages', label: '🏠 בית' },
+    { href: '/messages', label: '💬 הודעות' },
     { href: '/contacts', label: '👥 נמענים' },
     { href: '/settings', label: '⚙️ הגדרות' },
     { href: '/contact', label: '✉️ צור קשר' },
