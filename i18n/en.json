@@ -405,6 +405,7 @@
       "email": "Email:"
     }
   },
+  "paywall": {
     "title": "Donate and Get Full Access",
     "subtitle": "Support the project = unlimited access to all features",
     "features": {

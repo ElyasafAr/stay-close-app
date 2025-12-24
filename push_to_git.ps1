@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "i18n Completion v1.6.2: Full App Translation + Terms & Privacy - Complete translation for Paywall, Login, Privacy, and Terms pages - Fix missing translation keys in Messages and Contacts pages - Ensure consistent multi-language support across all user-facing screens - Prepare for global launch"
+$commitMessage = "i18n Fix v1.6.3: Resolve Deployment Crash - Fix syntax error in messages page (duplicate closing tags) - Fix JSON syntax errors in en.json and he.json (missing paywall key) - Bump version to 1.6.3"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files
