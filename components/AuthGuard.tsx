@@ -27,12 +27,13 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       const user = typeof window !== 'undefined' ? localStorage.getItem('user') : null
       const isAuth = !!(token && user)
       
-      console.log(`🛡️ [AuthGuard] checkAuth: isAuth=${isAuth}`)
       setAuthenticated(isAuth)
 
       if (!isAuth && !publicPaths.includes(window.location.pathname)) {
         router.replace('/login')
       }
+      
+      // Only set loading to false once on initial mount
       setLoading(false)
     }
 

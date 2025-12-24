@@ -161,33 +161,19 @@ export function Header() {
     ...(isAdmin ? [{ href: '/admin', label: `🛠️ ${t('navigation.admin')}`, isAdminLink: true }] : []),
   ]
 
-  const handleLinkClick = (href: string) => {
-    console.log(`🖱️ [Header] Navigating to: ${href}`)
+  const handleLinkClick = () => {
     setShowMobileMenu(false)
     setShowUserDropdown(false)
-    
-    if (typeof window !== 'undefined') {
-      // 1. Try Next.js router first (smooth)
-      router.push(href)
-      
-      // 2. Safety fallback: if pathname doesn't change within 300ms, force it
-      setTimeout(() => {
-        if (window.location.pathname !== href && !window.location.pathname.startsWith(href)) {
-          console.log(`🚀 [Header] Router stuck, forcing navigation to: ${href}`)
-          window.location.href = href
-        }
-      }, 300)
-    }
   }
 
   // Use state-based auth check to avoid hydration mismatch
-  const isAuth = mounted && isAuthenticated()
+  const isAuth = mounted && authenticated
 
   return (
     <>
       <header className={styles.header}>
         <nav className={styles.nav}>
-          <Link href="/" className={styles.logo} onClick={() => handleLinkClick('/')}>
+          <Link href="/" className={styles.logo} onClick={handleLinkClick}>
             {mounted ? t('app.name') : 'Stay Close'}
           </Link>
           
@@ -199,7 +185,7 @@ export function Header() {
                     key={link.href}
                     href={link.href}
                     className={`${styles.navLink} ${pathname === link.href ? styles.active : ''}`}
-                    onClick={() => handleLinkClick(link.href)}
+                    onClick={handleLinkClick}
                   >
                     {link.label}
                   </Link>
