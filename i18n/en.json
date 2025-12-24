@@ -45,29 +45,7 @@
     "backHome": "Back to Home",
     "error": "Error sending inquiry. Please try again later."
   },
-  "reminders": {
-    "title": "Set Reminder",
-    "editTitle": "Edit Reminder",
-    "sendTo": "Send message to {{name}}",
-    "type": "Reminder Type",
-    "oneTime": "One-time (Specific date & time)",
-    "recurring": "Recurring (Every X hours/days)",
-    "weekly": "Weekly (Specific day/s)",
-    "daily": "Daily (Every day at specific time)",
-    "date": "Date",
-    "time": "Time",
-    "frequency": "Frequency",
-    "weekdays": "Days of the week",
-    "active": "Active reminder",
-    "save": "Save",
-    "update": "Update",
-    "saving": "Saving...",
-    "errorDateTime": "Please select date and time",
-    "errorFrequency": "Please enter a valid frequency",
-    "errorWeekdays": "Please select at least one day",
-    "errorTime": "Please select a time",
-    "errorSaving": "Error saving reminder"
-  },
+  "contacts": {
     "title": "Contacts",
     "addContact": "Add Contact",
     "addNewContact": "Add New Contact",
@@ -239,6 +217,220 @@
       "encouraging": "Encouraging",
       "grateful": "Grateful"
     }
+  },
+  "reminders": {
+    "title": "Set Reminder",
+    "editTitle": "Edit Reminder",
+    "sendTo": "Send message to {{name}}",
+    "type": "Reminder Type",
+    "oneTime": "One-time (Specific date & time)",
+    "recurring": "Recurring (Every X hours/days)",
+    "weekly": "Weekly (Specific day/s)",
+    "daily": "Daily (Every day at specific time)",
+    "date": "Date",
+    "time": "Time",
+    "frequency": "Frequency",
+    "weekdays": "Days of the week",
+    "active": "Active reminder",
+    "save": "Save",
+    "update": "Update",
+    "saving": "Saving...",
+    "errorDateTime": "Please select date and time",
+    "errorFrequency": "Please enter a valid frequency",
+    "errorWeekdays": "Please select at least one day",
+    "errorTime": "Please select a time",
+    "errorSaving": "Error saving reminder"
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "lastUpdated": "Last updated: December 2024",
+    "intro": {
+      "title": "1. Introduction",
+      "content": "Welcome to Stay Close (\"the App\", \"we\", \"us\", \"our\"). We are committed to protecting your privacy and keeping your personal information secure. This Privacy Policy explains how we collect, use, and protect your information."
+    },
+    "collection": {
+      "title": "2. Information We Collect",
+      "userProvided": {
+        "title": "2.1 Information you provide to us:",
+        "account": "Account details: Email address, username",
+        "contacts": "Contacts: Names of people you want to keep in touch with",
+        "settings": "Settings: Notification preferences, language, theme"
+      },
+      "automated": {
+        "title": "2.2 Information collected automatically:",
+        "device": "Device type and operating system",
+        "usage": "App usage data (number of messages generated)",
+        "push": "Push notification token"
+      }
+    },
+    "usage": {
+      "title": "3. How We Use the Information",
+      "item1": "Creating personalized messages using artificial intelligence",
+      "item2": "Sending reminder notifications based on your settings",
+      "item3": "Improving the service and app experience",
+      "item4": "Technical support and communication with you"
+    },
+    "security": {
+      "title": "4. Data Security",
+      "intro": "We use advanced security measures to protect your information:",
+      "encryption": "Encryption: Sensitive data (names, emails) is encrypted using AES encryption",
+      "secureComm": "Secure Communication: All communication is conducted over HTTPS",
+      "backup": "Secure Backup: Information is stored on secure servers"
+    },
+    "thirdParties": {
+      "title": "5. Sharing Information with Third Parties",
+      "intro": "We do not sell your personal information. We only share information with:",
+      "firebase": "Google Firebase: For authentication and push notifications",
+      "ai": "xAI/Groq: For generating messages (no personal identification)",
+      "payments": "Allpay: For payment processing"
+    },
+    "rights": {
+      "title": "6. Your Rights",
+      "intro": "You have the right to:",
+      "access": "Access information: Request a copy of your information",
+      "correct": "Correct information: Update incorrect details",
+      "delete": "Delete information: Request account and data deletion",
+      "revoke": "Revoke consent: Turn off notifications at any time",
+      "contact": "To contact us regarding privacy:"
+    },
+    "retention": {
+      "title": "7. Data Retention",
+      "content": "We keep your information as long as your account is active. After account deletion, data will be deleted within 30 days."
+    },
+    "children": {
+      "title": "8. Children",
+      "content": "The app is intended for users aged 13 and older. We do not knowingly collect information from children under 13."
+    },
+    "changes": {
+      "title": "9. Policy Changes",
+      "content": "We may update this policy from time to time. Material changes will be posted in the app and via email."
+    },
+    "contactInfo": {
+      "title": "10. Contact Us",
+      "content": "For questions regarding the Privacy Policy:",
+      "email": "Email:"
+    }
+  },
+  "terms": {
+    "title": "Terms of Use",
+    "lastUpdated": "Last updated: December 2024",
+    "intro": {
+      "title": "1. Agreement to Terms",
+      "content": "By using the Stay Close app (\"the App\"), you agree to these terms of use. If you do not agree to the terms, please stop using the app."
+    },
+    "usage": {
+      "title": "2. Description of Service",
+      "content": "Stay Close is an app that helps you keep in touch with important people in your life. The app provides:",
+      "item1": "Contact and reminder management",
+      "item2": "Personalized message creation using artificial intelligence",
+      "item3": "Push reminder notifications"
+    },
+    "account": {
+      "title": "3. Registration and Account",
+      "item1": "You must be at least 13 years old to use the app",
+      "item2": "You must provide accurate information when registering",
+      "item3": "You are responsible for maintaining the confidentiality of your access details",
+      "item4": "You are responsible for all activity in your account"
+    },
+    "payments": {
+      "title": "4. Subscriptions and Payments",
+      "trial": {
+        "title": "4.1 Trial Period",
+        "content": "New users receive 14 days of free trial with full access to all features."
+      },
+      "paid": {
+        "title": "4.2 Paid Subscription",
+        "item1": "The subscription renews automatically at the end of the period",
+        "item2": "Payment is processed through secure payment providers",
+        "item3": "You can cancel your subscription at any time through account settings"
+      },
+      "cancellation": {
+        "title": "4.3 Cancellation and Refunds",
+        "item1": "Subscription cancellation will take effect at the end of the paid period",
+        "item2": "Refunds are according to the payment provider's policy",
+        "item3": "Within 14 days of purchase - eligibility for a full refund by law"
+      }
+    },
+    "aiContent": {
+      "title": "5. Content Generated by AI",
+      "important": "Important to understand:",
+      "item1": "Messages are generated automatically by artificial intelligence (AI)",
+      "item2": "The app does not provide personal, emotional, or professional advice",
+      "item3": "You are responsible for checking and editing every message before sending",
+      "item4": "We are not responsible for the content of the messages or their consequences"
+    },
+    "allowedUsage": {
+      "title": "6. Permitted and Prohibited Use",
+      "allowed": {
+        "title": "6.1 Permitted Use:",
+        "item1": "Sending personal messages to friends and family",
+        "item2": "Managing personal reminders"
+      },
+      "forbidden": {
+        "title": "6.2 Prohibited Use:",
+        "item1": "Sending spam or commercial messages",
+        "item2": "Harassment, threats, or offensive behavior",
+        "item3": "Impersonating other people",
+        "item4": "Using for illegal activity",
+        "item5": "Attempting to hack or damage the system"
+      }
+    },
+    "limitation": {
+      "title": "7. Limitation of Liability",
+      "content": "The app is provided \"AS IS\". We are not responsible for any direct or indirect damage resulting from the use of the app, including:",
+      "item1": "Content of generated messages",
+      "item2": "Technical malfunctions or service interruptions",
+      "item3": "Loss of data",
+      "item4": "Consequences of sent messages"
+    },
+    "ip": {
+      "title": "8. Intellectual Property",
+      "content": "All rights in the app, including design, code, and trademarks, belong to us. You may not copy, modify, or distribute parts of the app."
+    },
+    "termination": {
+      "title": "9. Termination of Service",
+      "content": "We may suspend or close your account if you violate these terms. You may close your account at any time through the settings or by contacting us."
+    },
+    "changes": {
+      "title": "10. Changes to Terms",
+      "content": "We may update these terms from time to time. Material changes will be posted in the app. Continued use after changes constitutes agreement to the updated terms."
+    },
+    "law": {
+      "title": "11. Governing Law and Jurisdiction",
+      "content": "These terms are subject to the laws of the State of Israel. Any dispute will be discussed in the competent courts in Israel."
+    },
+    "contact": {
+      "title": "12. Contact Us",
+      "content": "For questions regarding the terms of use:",
+      "email": "Email:"
+    }
+  },
+    "title": "Donate and Get Full Access",
+    "subtitle": "Support the project = unlimited access to all features",
+    "features": {
+      "unlimitedMessages": "Unlimited Messages",
+      "unlimitedContacts": "Unlimited Contacts",
+      "allTones": "All Tones and Styles",
+      "customReminders": "Custom Reminders",
+      "prioritySupport": "Priority Support"
+    },
+    "plans": {
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "recommended": "2 Months Free!",
+      "monthlyEquivalent": "{{amount}}₪ per month (12 months)",
+      "savingsNote": "Pay for 10 months, get 12"
+    },
+    "coupon": {
+      "placeholder": "Have a coupon code?",
+      "apply": "Apply",
+      "invalid": "Invalid coupon"
+    },
+    "purchase": "Donate Now",
+    "processing": "Processing...",
+    "termsNote": "By clicking \"Continue to payment\" you agree to the",
+    "paymentCancelled": "Payment cancelled",
+    "trialDaysRemaining": "You have {{count}} trial days left"
   },
   "common": {
     "loading": "Loading...",

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslation } from '@/i18n/useTranslation'
 import { getData, postData } from '@/services/api'
 import { isAuthenticated } from '@/services/auth'
 import { MdStar, MdCheck, MdClose, MdLocalOffer, MdConfirmationNumber } from 'react-icons/md'
@@ -24,6 +25,7 @@ interface SubscriptionStatus {
 }
 
 export default function PaywallPage() {
+  const { t } = useTranslation()
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [subscriptionData, setSubscriptionData] = useState<SubscriptionStatus | null>(null)
@@ -54,7 +56,7 @@ export default function PaywallPage() {
       }, 1000)
     } else if (cancel === 'true') {
       // Payment cancelled
-      alert('התשלום בוטל')
+      alert(t('paywall.paymentCancelled'))
       // Remove query params
       window.history.replaceState({}, '', '/paywall')
     }
@@ -107,7 +109,7 @@ export default function PaywallPage() {
     } catch (error: any) {
       setCouponResult({
         success: false,
-        message: error.message || 'קופון לא תקף'
+        message: error.message || t('paywall.coupon.invalid')
       })
     } finally {
       setApplyingCoupon(false)
@@ -132,12 +134,12 @@ export default function PaywallPage() {
         // Redirect to Allpay payment page
         window.location.href = response.data.payment_url
       } else {
-        alert(response.data?.error || 'שגיאה ביצירת קישור תשלום')
+        alert(response.data?.error || t('common.error'))
         setProcessing(false)
       }
     } catch (error: any) {
       console.error('Purchase error:', error)
-      alert(error.message || 'שגיאה ביצירת קישור תשלום')
+      alert(error.message || t('common.error'))
       setProcessing(false)
     }
   }
@@ -145,7 +147,7 @@ export default function PaywallPage() {
   if (loading) {
     return (
       <main className={styles.main}>
-        <div className={styles.loading}>טוען...</div>
+        <div className={styles.loading}>{t('common.loading')}</div>
       </main>
     )
   }
@@ -171,9 +173,9 @@ export default function PaywallPage() {
 
         <div className={styles.header}>
           <MdStar className={styles.crownIcon} size={48} />
-          <h1 className={styles.title}>תרום ותקבל גישה מלאה</h1>
+          <h1 className={styles.title}>{t('paywall.title')}</h1>
           <p className={styles.subtitle}>
-            תמיכה בפרויקט = גישה בלתי מוגבלת לכל הפיצרים
+            {t('paywall.subtitle')}
           </p>
         </div>
 
@@ -182,23 +184,23 @@ export default function PaywallPage() {
         <div className={styles.features}>
           <div className={styles.feature}>
             <MdCheck className={styles.featureIcon} />
-            <span>הודעות ללא הגבלה</span>
+            <span>{t('paywall.features.unlimitedMessages')}</span>
           </div>
           <div className={styles.feature}>
             <MdCheck className={styles.featureIcon} />
-            <span>נמענים ללא הגבלה</span>
+            <span>{t('paywall.features.unlimitedContacts')}</span>
           </div>
           <div className={styles.feature}>
             <MdCheck className={styles.featureIcon} />
-            <span>כל הטונים והסגנונות</span>
+            <span>{t('paywall.features.allTones')}</span>
           </div>
           <div className={styles.feature}>
             <MdCheck className={styles.featureIcon} />
-            <span>התראות מותאמות אישית</span>
+            <span>{t('paywall.features.customReminders')}</span>
           </div>
           <div className={styles.feature}>
             <MdCheck className={styles.featureIcon} />
-            <span>תמיכה בעדיפות</span>
+            <span>{t('paywall.features.prioritySupport')}</span>
           </div>
         </div>
 
@@ -209,11 +211,11 @@ export default function PaywallPage() {
             className={`${styles.pricingCard} ${selectedPlan === 'monthly' ? styles.selected : ''}`}
             onClick={() => setSelectedPlan('monthly')}
           >
-            <div className={styles.planName}>חודשי</div>
+            <div className={styles.planName}>{t('paywall.plans.monthly')}</div>
             <div className={styles.price}>
               <span className={styles.priceAmount}>{monthlyPrice.toFixed(2)}</span>
               <span className={styles.priceCurrency}>₪</span>
-              <span className={styles.priceInterval}>/חודש</span>
+              <span className={styles.priceInterval}>/{language === 'he' ? 'חודש' : 'month'}</span>
             </div>
           </button>
 
@@ -222,18 +224,18 @@ export default function PaywallPage() {
             className={`${styles.pricingCard} ${selectedPlan === 'yearly' ? styles.selected : ''} ${styles.recommended}`}
             onClick={() => setSelectedPlan('yearly')}
           >
-            <div className={styles.savingsBadge}>2 חודשים במתנה!</div>
-            <div className={styles.planName}>שנתי</div>
+            <div className={styles.savingsBadge}>{t('paywall.plans.recommended')}</div>
+            <div className={styles.planName}>{t('paywall.plans.yearly')}</div>
             <div className={styles.price}>
               <span className={styles.priceAmount}>{yearlyPrice.toFixed(2)}</span>
               <span className={styles.priceCurrency}>₪</span>
-              <span className={styles.priceInterval}>/שנה</span>
+              <span className={styles.priceInterval}>/{language === 'he' ? 'שנה' : 'year'}</span>
             </div>
             <div className={styles.monthlyEquivalent}>
-              {(yearlyPrice / 12).toFixed(2)}₪ לחודש (12 חודשים)
+              {t('paywall.plans.monthlyEquivalent').replace('{{amount}}', (yearlyPrice / 12).toFixed(2))}
               <br />
               <small style={{ fontSize: '0.85em', opacity: 0.8 }}>
-                משלם על 10 חודשים, מקבל 12
+                {t('paywall.plans.savingsNote')}
               </small>
             </div>
           </button>
@@ -245,7 +247,7 @@ export default function PaywallPage() {
             <MdConfirmationNumber size={20} />
             <input
               type="text"
-              placeholder="יש לך קוד קופון?"
+              placeholder={t('paywall.coupon.placeholder')}
               value={couponCode}
               onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
               disabled={applyingCoupon}
@@ -254,7 +256,7 @@ export default function PaywallPage() {
               onClick={handleApplyCoupon}
               disabled={!couponCode.trim() || applyingCoupon}
             >
-              {applyingCoupon ? '...' : 'הפעל'}
+              {applyingCoupon ? '...' : t('paywall.coupon.apply')}
             </button>
           </div>
           {couponResult && (
@@ -270,21 +272,21 @@ export default function PaywallPage() {
           onClick={handlePurchase}
           disabled={processing}
         >
-          {processing ? 'מעבד...' : 'תרום עכשיו'}
+          {processing ? t('paywall.processing') : t('paywall.purchase')}
         </button>
 
         {/* Terms */}
         <p className={styles.terms}>
-          בלחיצה על ״המשך לתשלום״ אתה מסכים ל
-          <a href="/terms">תנאי השימוש</a>
-          {' '}ול
-          <a href="/privacy">מדיניות הפרטיות</a>
+          {t('paywall.termsNote')}
+          <a href="/terms">{t('auth.terms')}</a>
+          {' '}{t('auth.or')}{' '}
+          <a href="/privacy">{t('auth.privacy')}</a>
         </p>
 
         {/* Trial info */}
         {subscriptionData?.status === 'trial' && subscriptionData.trial_days_remaining > 0 && (
           <div className={styles.trialInfo}>
-            נותרו לך {subscriptionData.trial_days_remaining} ימי ניסיון
+            {t('paywall.trialDaysRemaining').replace('{{count}}', subscriptionData.trial_days_remaining.toString())}
           </div>
         )}
       </div>

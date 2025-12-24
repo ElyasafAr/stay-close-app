@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "i18n & Multi-language v1.6.1: English Support + Dynamic RTL/LTR - Add en.json translation file - Implement multi-language support in useTranslation hook - Add language selector to Settings page - Update all main pages (Messages, Contacts, About, Login, Reminders) to use translation keys - Add support for dynamic RTL/LTR layout based on selected language - Start using logical CSS properties for better cross-language support"
+$commitMessage = "i18n Completion v1.6.2: Full App Translation + Terms & Privacy - Complete translation for Paywall, Login, Privacy, and Terms pages - Fix missing translation keys in Messages and Contacts pages - Ensure consistent multi-language support across all user-facing screens - Prepare for global launch"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files

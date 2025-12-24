@@ -1,118 +1,104 @@
 'use client'
 
+import { useTranslation } from '@/i18n/useTranslation'
 import styles from './page.module.css'
 
 export default function PrivacyPage() {
+  const { t } = useTranslation()
+  
   return (
     <main className={styles.main}>
       <div className={styles.container}>
-        <h1 className={styles.title}>מדיניות פרטיות</h1>
-        <p className={styles.lastUpdated}>עודכן לאחרונה: דצמבר 2024</p>
+        <h1 className={styles.title}>{t('privacy.title')}</h1>
+        <p className={styles.lastUpdated}>{t('privacy.lastUpdated')}</p>
 
         <section className={styles.section}>
-          <h2>1. מבוא</h2>
-          <p>
-            ברוכים הבאים ל-Stay Close (״האפליקציה״, ״אנחנו״, ״שלנו״). 
-            אנו מחויבים להגן על פרטיותך ולשמור על המידע האישי שלך בצורה מאובטחת.
-            מדיניות פרטיות זו מסבירה כיצד אנו אוספים, משתמשים ומגנים על המידע שלך.
-          </p>
+          <h2>{t('privacy.intro.title')}</h2>
+          <p>{t('privacy.intro.content')}</p>
         </section>
 
         <section className={styles.section}>
-          <h2>2. מידע שאנו אוספים</h2>
-          <h3>2.1 מידע שאתה מספק לנו:</h3>
+          <h2>{t('privacy.collection.title')}</h2>
+          <h3>{t('privacy.collection.userProvided.title')}</h3>
           <ul>
-            <li><strong>פרטי חשבון:</strong> כתובת אימייל, שם משתמש</li>
-            <li><strong>אנשי קשר:</strong> שמות של אנשים שאתה רוצה לשמור איתם קשר</li>
-            <li><strong>הגדרות:</strong> העדפות התראות, שפה, ערכת נושא</li>
+            <li>{t('privacy.collection.userProvided.account')}</li>
+            <li>{t('privacy.collection.userProvided.contacts')}</li>
+            <li>{t('privacy.collection.userProvided.settings')}</li>
           </ul>
           
-          <h3>2.2 מידע שנאסף אוטומטית:</h3>
+          <h3>{t('privacy.collection.automated.title')}</h3>
           <ul>
-            <li>סוג המכשיר ומערכת ההפעלה</li>
-            <li>נתוני שימוש באפליקציה (מספר הודעות שנוצרו)</li>
-            <li>Token להתראות Push</li>
+            <li>{t('privacy.collection.automated.device')}</li>
+            <li>{t('privacy.collection.automated.usage')}</li>
+            <li>{t('privacy.collection.automated.push')}</li>
           </ul>
         </section>
 
         <section className={styles.section}>
-          <h2>3. כיצד אנו משתמשים במידע</h2>
+          <h2>{t('privacy.usage.title')}</h2>
           <ul>
-            <li>יצירת הודעות מותאמות אישית באמצעות בינה מלאכותית</li>
-            <li>שליחת התראות תזכורת לפי הגדרותיך</li>
-            <li>שיפור השירות והחוויה באפליקציה</li>
-            <li>תמיכה טכנית ותקשורת עמך</li>
+            <li>{t('privacy.usage.item1')}</li>
+            <li>{t('privacy.usage.item2')}</li>
+            <li>{t('privacy.usage.item3')}</li>
+            <li>{t('privacy.usage.item4')}</li>
           </ul>
         </section>
 
         <section className={styles.section}>
-          <h2>4. אבטחת מידע</h2>
-          <p>
-            אנו משתמשים באמצעי אבטחה מתקדמים להגנה על המידע שלך:
-          </p>
+          <h2>{t('privacy.security.title')}</h2>
+          <p>{t('privacy.security.intro')}</p>
           <ul>
-            <li><strong>הצפנה:</strong> מידע רגיש (שמות, אימיילים) מוצפן בהצפנת AES</li>
-            <li><strong>תקשורת מאובטחת:</strong> כל התקשורת מתבצעת דרך HTTPS</li>
-            <li><strong>גיבוי מאובטח:</strong> המידע מאוחסן בשרתים מאובטחים</li>
+            <li>{t('privacy.security.encryption')}</li>
+            <li>{t('privacy.security.secureComm')}</li>
+            <li>{t('privacy.security.backup')}</li>
           </ul>
         </section>
 
         <section className={styles.section}>
-          <h2>5. שיתוף מידע עם צדדים שלישיים</h2>
-          <p>
-            אנו לא מוכרים את המידע האישי שלך. אנו משתפים מידע רק עם:
-          </p>
+          <h2>{t('privacy.thirdParties.title')}</h2>
+          <p>{t('privacy.thirdParties.intro')}</p>
           <ul>
-            <li><strong>Google Firebase:</strong> לצורך אימות והתראות Push</li>
-            <li><strong>xAI/Groq:</strong> לצורך יצירת הודעות (ללא זיהוי אישי)</li>
-            <li><strong>Google Play:</strong> לצורך עיבוד תשלומים</li>
+            <li>{t('privacy.thirdParties.firebase')}</li>
+            <li>{t('privacy.thirdParties.ai')}</li>
+            <li>{t('privacy.thirdParties.payments')}</li>
           </ul>
         </section>
 
         <section className={styles.section}>
-          <h2>6. הזכויות שלך</h2>
-          <p>יש לך זכות:</p>
+          <h2>{t('privacy.rights.title')}</h2>
+          <p>{t('privacy.rights.intro')}</p>
           <ul>
-            <li><strong>לגשת למידע:</strong> לבקש עותק של המידע שלך</li>
-            <li><strong>לתקן מידע:</strong> לעדכן פרטים שגויים</li>
-            <li><strong>למחוק מידע:</strong> לבקש מחיקת החשבון וכל המידע</li>
-            <li><strong>לבטל הסכמה:</strong> לכבות התראות בכל עת</li>
+            <li>{t('privacy.rights.access')}</li>
+            <li>{t('privacy.rights.correct')}</li>
+            <li>{t('privacy.rights.delete')}</li>
+            <li>{t('privacy.rights.revoke')}</li>
           </ul>
           <p>
-            ליצירת קשר בנושא פרטיות: <a href="mailto:elyasaf.ar@gmail.com">elyasaf.ar@gmail.com</a>
+            {t('privacy.rights.contact')} <a href="mailto:elyasaf.ar@gmail.com">elyasaf.ar@gmail.com</a>
           </p>
         </section>
 
         <section className={styles.section}>
-          <h2>7. שמירת מידע</h2>
-          <p>
-            אנו שומרים את המידע שלך כל עוד החשבון שלך פעיל.
-            לאחר מחיקת חשבון, המידע יימחק תוך 30 יום.
-          </p>
+          <h2>{t('privacy.retention.title')}</h2>
+          <p>{t('privacy.retention.content')}</p>
         </section>
 
         <section className={styles.section}>
-          <h2>8. ילדים</h2>
-          <p>
-            האפליקציה מיועדת למשתמשים בני 13 ומעלה.
-            אנו לא אוספים ביודעין מידע מילדים מתחת לגיל 13.
-          </p>
+          <h2>{t('privacy.children.title')}</h2>
+          <p>{t('privacy.children.content')}</p>
         </section>
 
         <section className={styles.section}>
-          <h2>9. שינויים במדיניות</h2>
-          <p>
-            אנו עשויים לעדכן מדיניות זו מעת לעת.
-            שינויים מהותיים יפורסמו באפליקציה ובאימייל.
-          </p>
+          <h2>{t('privacy.changes.title')}</h2>
+          <p>{t('privacy.changes.content')}</p>
         </section>
 
         <section className={styles.section}>
-          <h2>10. יצירת קשר</h2>
+          <h2>{t('privacy.contactInfo.title')}</h2>
           <p>
-            לשאלות בנוגע למדיניות הפרטיות:
+            {t('privacy.contactInfo.content')}
             <br />
-            אימייל: <a href="mailto:elyasaf.ar@gmail.com">elyasaf.ar@gmail.com</a>
+            {t('privacy.contactInfo.email')} <a href="mailto:elyasaf.ar@gmail.com">elyasaf.ar@gmail.com</a>
           </p>
         </section>
       </div>
