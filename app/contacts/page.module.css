@@ -2,7 +2,6 @@
   min-height: 100vh;
   padding: 24px 16px 24px;
   background: var(--bg-gradient);
-  direction: rtl;
   animation: fadeIn 0.5s ease;
   transition: background var(--transition-normal);
 }
@@ -93,7 +92,6 @@ html.dark .addButton:hover {
   color: #c62828;
   border-radius: 20px;
   margin-bottom: 24px;
-  text-align: right;
   box-shadow: 0 4px 16px rgba(255, 154, 158, 0.2);
   font-weight: 600;
 }
@@ -133,7 +131,6 @@ html.dark .form {
   border: 1.5px solid var(--border-color);
   border-radius: 10px;
   font-size: 15px;
-  direction: rtl;
   font-family: inherit;
   background: var(--bg-primary);
   transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -233,7 +230,6 @@ html.dark .select:focus {
   padding: 28px;
   border-radius: 16px;
   box-shadow: var(--shadow-sm);
-  text-align: right;
   transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
@@ -433,7 +429,6 @@ html.dark .sendMessageButton {
 }
 
 .empty {
-  text-align: center;
   padding: 64px 32px;
   color: #a0aec0;
   font-size: 1.2rem;
