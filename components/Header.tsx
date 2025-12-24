@@ -162,9 +162,22 @@ export function Header() {
   ]
 
   const handleLinkClick = (href: string) => {
-    console.log(`🖱️ [Header] handleLinkClick: target=${href}`)
+    console.log(`🖱️ [Header] Navigating to: ${href}`)
     setShowMobileMenu(false)
     setShowUserDropdown(false)
+    
+    if (typeof window !== 'undefined') {
+      // 1. Try Next.js router first (smooth)
+      router.push(href)
+      
+      // 2. Safety fallback: if pathname doesn't change within 300ms, force it
+      setTimeout(() => {
+        if (window.location.pathname !== href && !window.location.pathname.startsWith(href)) {
+          console.log(`🚀 [Header] Router stuck, forcing navigation to: ${href}`)
+          window.location.href = href
+        }
+      }, 300)
+    }
   }
 
   // Use state-based auth check to avoid hydration mismatch
