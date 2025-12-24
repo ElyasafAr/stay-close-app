@@ -156,80 +156,87 @@ export function Header() {
     ...(isAdmin ? [{ href: '/admin', label: `🛠️ ${t('navigation.admin')}`, isAdminLink: true }] : []),
   ]
 
-  const handleLinkClick = () => {
+  const handleLinkClick = (href: string) => {
+    console.log(`🖱️ [Header] Clicked link: ${href}`)
     setShowMobileMenu(false)
     setShowUserDropdown(false)
   }
+
+  // תמיד להחזיר JSX, לא להחזיר null מוקדם כדי לא לשבור את React
+  const isAuth = typeof window !== 'undefined' ? isAuthenticated() : false
 
   return (
     <>
       <header className={styles.header}>
         <nav className={styles.nav}>
-          <Link href="/" className={styles.logo} onClick={handleLinkClick}>
+          <Link href="/" className={styles.logo} onClick={() => handleLinkClick('/')}>
             {t('app.name')}
           </Link>
-          <div className={styles.navRight}>
-            <div className={styles.navLinks}>
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`${styles.navLink} ${pathname === link.href ? styles.active : ''}`}
-                  onClick={handleLinkClick}
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </div>
-
-            {/* Desktop User Menu */}
-            <div className={styles.desktopUserMenu}>
-              <div className={styles.userMenu}>
-                <button 
-                  className={styles.userButton}
-                  onClick={() => setShowUserDropdown(!showUserDropdown)}
-                >
-                  <MdPerson className={styles.userIcon} />
-                  <span className={styles.userName}>{user?.username || t('messages.greetings.guest')}</span>
-                </button>
-
-                {showUserDropdown && (
-                  <div className={styles.dropdown}>
-                    <div className={styles.userInfo}>
-                      <p className={styles.userNameFull}>{user?.username}</p>
-                      <p className={styles.userEmail}>{user?.email}</p>
-                    </div>
-                    <div className={styles.versionInfo}>
-                      <small>{t('settings.version')} {APP_VERSION}</small>
-                    </div>
-                    <div style={{ margin: '8px 0', borderTop: '1px solid var(--border-color)' }}></div>
-                    <button onClick={handleLogout} className={styles.logoutButton}>
-                      <MdLogout /> {t('settings.logout')}
-                    </button>
-                  </div>
-                )}
+          
+          {isAuth && (
+            <div className={styles.navRight}>
+              <div className={styles.navLinks}>
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={`${styles.navLink} ${pathname === link.href ? styles.active : ''}`}
+                    onClick={() => handleLinkClick(link.href)}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
               </div>
+
+              {/* Desktop User Menu */}
+              <div className={styles.desktopUserMenu}>
+                <div className={styles.userMenu}>
+                  <button 
+                    className={styles.userButton}
+                    onClick={() => setShowUserDropdown(!showUserDropdown)}
+                  >
+                    <MdPerson className={styles.userIcon} />
+                    <span className={styles.userName}>{user?.username || t('messages.greetings.guest')}</span>
+                  </button>
+
+                  {showUserDropdown && (
+                    <div className={styles.dropdown}>
+                      <div className={styles.userInfo}>
+                        <p className={styles.userNameFull}>{user?.username}</p>
+                        <p className={styles.userEmail}>{user?.email}</p>
+                      </div>
+                      <div className={styles.versionInfo}>
+                        <small>{t('settings.version')} {APP_VERSION}</small>
+                      </div>
+                      <div style={{ margin: '8px 0', borderTop: '1px solid var(--border-color)' }}></div>
+                      <button onClick={handleLogout} className={styles.logoutButton}>
+                        <MdLogout /> {t('settings.logout')}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {/* Mobile Hamburger Button - מצד ימין */}
+              <button
+                className={styles.mobileMenuButton}
+                onClick={() => setShowMobileMenu(!showMobileMenu)}
+                aria-label="תפריט"
+                type="button"
+                style={{
+                  color: isDarkMode ? '#ffffff' : 'inherit',
+                  background: isDarkMode ? 'rgba(79, 195, 247, 0.2)' : 'transparent',
+                  border: isDarkMode ? '1px solid rgba(79, 195, 247, 0.4)' : 'none',
+                  borderRadius: '8px',
+                  padding: '8px'
+                }}
+              >
+                {showMobileMenu 
+                  ? <MdClose size={28} color={isDarkMode ? '#ffffff' : '#333333'} /> 
+                  : <MdMenu size={28} color={isDarkMode ? '#ffffff' : '#333333'} />}
+              </button>
             </div>
-            
-            {/* Mobile Hamburger Button - מצד ימין */}
-            <button
-              className={styles.mobileMenuButton}
-              onClick={() => setShowMobileMenu(!showMobileMenu)}
-              aria-label="תפריט"
-              type="button"
-              style={{
-                color: isDarkMode ? '#ffffff' : 'inherit',
-                background: isDarkMode ? 'rgba(79, 195, 247, 0.2)' : 'transparent',
-                border: isDarkMode ? '1px solid rgba(79, 195, 247, 0.4)' : 'none',
-                borderRadius: '8px',
-                padding: '8px'
-              }}
-            >
-              {showMobileMenu 
-                ? <MdClose size={28} color={isDarkMode ? '#ffffff' : '#333333'} /> 
-                : <MdMenu size={28} color={isDarkMode ? '#ffffff' : '#333333'} />}
-            </button>
-          </div>
+          )}
         </nav>
       </header>
 
