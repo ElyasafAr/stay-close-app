@@ -3,11 +3,13 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useTranslation } from '@/i18n/useTranslation'
 import { MdHome, MdContacts, MdMessage, MdSettings, MdInfo } from 'react-icons/md'
 import { isAuthenticated } from '@/services/auth'
 import styles from './BottomNavigation.module.css'
 
 export function BottomNavigation() {
+  const { t } = useTranslation()
   const pathname = usePathname()
   const [authenticated, setAuthenticated] = useState(false)
 
@@ -17,8 +19,8 @@ export function BottomNavigation() {
   }, [pathname]) // רק כשהדף משתנה
 
   const navItems = [
-    { href: '/messages', label: 'הודעות', icon: MdMessage },
-    { href: '/contacts', label: 'נמענים', icon: MdContacts },
+    { href: '/messages', label: t('navigation.messages'), icon: MdMessage },
+    { href: '/contacts', label: t('navigation.contacts'), icon: MdContacts },
   ]
 
   // אם המשתמש לא מחובר, לא להציג את ה-navigation

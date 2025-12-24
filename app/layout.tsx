@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { Header } from '@/components/Header'
+import { BottomNavigation } from '@/components/BottomNavigation'
 import { AuthGuard } from '@/components/AuthGuard'
 import { ReminderChecker } from '@/components/ReminderChecker'
 import { ThemeProvider } from '@/components/ThemeProvider'
@@ -33,6 +34,7 @@ export default function RootLayout({
           <main>
             {children}
           </main>
+          <BottomNavigation />
           <ReminderChecker />
         </AuthGuard>
       </body>

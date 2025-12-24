@@ -12,7 +12,7 @@ const translations: Record<string, any> = {
 type TranslationKey = string
 
 // Recursive function to get nested translation
-function getNestedTranslation(obj: any, key: string): string {
+function getNestedTranslation(obj: any, key: string): any {
   const keys = key.split('.')
   let value = obj
   
@@ -24,7 +24,7 @@ function getNestedTranslation(obj: any, key: string): string {
     }
   }
   
-  return typeof value === 'string' ? value : key
+  return value
 }
 
 export function useTranslation() {
@@ -100,7 +100,7 @@ export function useTranslation() {
     }
   }, [])
 
-  const t = (key: TranslationKey): string => {
+  const t = (key: TranslationKey): any => {
     const currentTranslations = translations[language] || translations['he']
     return getNestedTranslation(currentTranslations, key)
   }
