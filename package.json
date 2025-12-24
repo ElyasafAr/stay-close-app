@@ -1,6 +1,6 @@
 {
   "name": "stay-close-app",
-  "version": "1.6.6",
+  "version": "1.6.8",
   "description": "Stay Close - אפליקציית קרבה בעברית",
   "scripts": {
     "dev": "next dev",

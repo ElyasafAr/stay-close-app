@@ -33,23 +33,25 @@ export function useTranslation() {
   useEffect(() => {
     // Load language from settings (check both app_language and app_settings)
     if (typeof window !== 'undefined') {
-      // First check app_language (for backward compatibility)
       let savedLanguage = localStorage.getItem('app_language')
+      console.log('🌐 [useTranslation] Initial language check (app_language):', savedLanguage)
       
-      // If not found, check app_settings
       if (!savedLanguage) {
         const savedSettings = localStorage.getItem('app_settings')
         if (savedSettings) {
           try {
             const parsed = JSON.parse(savedSettings)
-            savedLanguage = parsed.language || 'he'
+            savedLanguage = parsed.language
+            console.log('🌐 [useTranslation] Language found in app_settings:', savedLanguage)
           } catch (error) {
-            console.error('Error parsing settings:', error)
+            console.error('🌐 [useTranslation] Error parsing settings:', error)
           }
         }
       }
       
-      setLanguage(savedLanguage || 'he')
+      const finalLang = savedLanguage || 'he'
+      console.log('🌐 [useTranslation] Setting initial language to:', finalLang)
+      setLanguage(finalLang)
     }
   }, [])
 
@@ -59,6 +61,7 @@ export function useTranslation() {
     
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'app_settings' || e.key === 'app_language') {
+        console.log('🌐 [useTranslation] Storage change detected:', e.key, e.newValue)
         if (e.key === 'app_settings' && e.newValue) {
           try {
             const parsed = JSON.parse(e.newValue)
@@ -66,7 +69,7 @@ export function useTranslation() {
               setLanguage(parsed.language)
             }
           } catch (error) {
-            console.error('Error parsing settings:', error)
+            console.error('🌐 [useTranslation] Error parsing settings:', error)
           }
         } else if (e.key === 'app_language' && e.newValue) {
           setLanguage(e.newValue)
@@ -74,24 +77,23 @@ export function useTranslation() {
       }
     }
     
-    window.addEventListener('storage', handleStorageChange)
-    
-    // Also listen for custom events (for same-tab updates)
     const handleCustomStorageChange = () => {
       const savedSettings = localStorage.getItem('app_settings')
+      console.log('🌐 [useTranslation] Custom event settingsUpdated triggered')
       if (savedSettings) {
         try {
           const parsed = JSON.parse(savedSettings)
           if (parsed.language) {
+            console.log('🌐 [useTranslation] Updating language to:', parsed.language)
             setLanguage(parsed.language)
           }
         } catch (error) {
-          console.error('Error parsing settings:', error)
+          console.error('🌐 [useTranslation] Error parsing settings:', error)
         }
       }
     }
     
-    // Listen for custom event
+    window.addEventListener('storage', handleStorageChange)
     window.addEventListener('settingsUpdated', handleCustomStorageChange)
     
     return () => {
@@ -102,7 +104,11 @@ export function useTranslation() {
 
   const t = (key: TranslationKey): any => {
     const currentTranslations = translations[language] || translations['he']
-    return getNestedTranslation(currentTranslations, key)
+    const result = getNestedTranslation(currentTranslations, key)
+    if (result === key) {
+      // console.warn(`🌐 [useTranslation] Missing translation for key: ${key} in language: ${language}`)
+    }
+    return result
   }
 
   return { t, language, setLanguage }

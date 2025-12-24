@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "i18n Fix v1.6.6: Fix Combo Box Data & Restore Navigation - Update 't' function to return objects/arrays correctly - Add BottomNavigation to RootLayout for mobile navigation - Localize BottomNavigation labels - Bump version to 1.6.6"
+$commitMessage = "i18n Debug v1.6.8: Add Comprehensive Logging - Add logs to useTranslation, ThemeProvider, and Header - Track language changes and navigation clicks - Resolve redundant navigation issues - Bump version to 1.6.8"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files

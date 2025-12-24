@@ -156,11 +156,16 @@ export function Header() {
     ...(isAdmin ? [{ href: '/admin', label: `🛠️ ${t('navigation.admin')}`, isAdminLink: true }] : []),
   ]
 
+  const handleLinkClick = (href: string) => {
+    console.log('🔗 [Header] Navigating to:', href)
+    setShowMobileMenu(false)
+  }
+
   return (
     <>
       <header className={styles.header}>
         <nav className={styles.nav}>
-          <Link href="/" className={styles.logo}>
+          <Link href="/" className={styles.logo} onClick={() => handleLinkClick('/')}>
             {t('app.name')}
           </Link>
           <div className={styles.navRight}>
@@ -170,6 +175,7 @@ export function Header() {
                   key={link.href}
                   href={link.href}
                   className={`${styles.navLink} ${pathname === link.href ? styles.active : ''}`}
+                  onClick={() => handleLinkClick(link.href)}
                 >
                   {link.label}
                 </Link>

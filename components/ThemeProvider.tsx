@@ -7,9 +7,10 @@ import { useEffect } from 'react'
  * This component ensures settings are applied immediately when the app loads
  */
 export function ThemeProvider() {
-  useEffect(() => {
+  const applySettings = () => {
     if (typeof window === 'undefined') return
 
+    console.log('🎨 [ThemeProvider] Applying settings...')
     // Load settings from localStorage
     const savedSettings = localStorage.getItem('app_settings')
     
@@ -21,6 +22,8 @@ export function ThemeProvider() {
         const theme = parsed.theme || 'light'
         const html = document.documentElement
         
+        console.log('🎨 [ThemeProvider] Theme:', theme, 'Language:', parsed.language)
+        
         // Remove all theme classes
         html.classList.remove('dark', 'light', 'auto')
         
@@ -29,7 +32,6 @@ export function ThemeProvider() {
         } else if (theme === 'light') {
           html.classList.add('light')
         } else if (theme === 'auto') {
-          // Auto theme: use system preference
           const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
           html.classList.add(prefersDark ? 'dark' : 'light')
         }
@@ -38,20 +40,36 @@ export function ThemeProvider() {
         const language = parsed.language || 'he'
         html.setAttribute('lang', language)
         html.setAttribute('dir', language === 'he' ? 'rtl' : 'ltr')
+        console.log('🎨 [ThemeProvider] Set HTML dir to:', language === 'he' ? 'rtl' : 'ltr')
         
-        // Also update app_language for backward compatibility
         localStorage.setItem('app_language', language)
       } catch (error) {
-        console.error('Error applying theme/language:', error)
+        console.error('🎨 [ThemeProvider] Error applying settings:', error)
       }
     } else {
-      // Apply defaults
+      console.log('🎨 [ThemeProvider] No settings found, applying defaults')
       const html = document.documentElement
       html.classList.add('light')
       html.setAttribute('lang', 'he')
       html.setAttribute('dir', 'rtl')
       localStorage.setItem('app_language', 'he')
     }
+  }
+
+  useEffect(() => {
+    // Initial apply
+    applySettings()
+    
+    // Listen for storage changes
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'app_settings' || e.key === 'app_language') {
+        applySettings()
+      }
+    }
+    
+    // Listen for custom settings update event
+    window.addEventListener('storage', handleStorageChange)
+    window.addEventListener('settingsUpdated', applySettings)
     
     // Listen for system theme changes (for auto theme)
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
@@ -74,11 +92,13 @@ export function ThemeProvider() {
     mediaQuery.addEventListener('change', handleThemeChange)
     
     return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      window.removeEventListener('settingsUpdated', applySettings)
       mediaQuery.removeEventListener('change', handleThemeChange)
     }
   }, [])
 
-  return null // This component doesn't render anything
+  return null
 }
 
 
