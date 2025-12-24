@@ -262,33 +262,44 @@ html.dark .mobileMenuButton:hover {
   display: none;
   position: fixed;
   top: 0;
-  inset-inline-end: 0; /* Logical property */
+  right: 0; /* Always start from right in CSS, we'll handle RTL/LTR in logic */
   width: 280px;
   max-width: 85vw;
   height: 100vh;
-  height: 100dvh; /* Dynamic viewport height for mobile */
+  height: 100dvh;
   background: var(--bg-primary);
-  box-shadow: 0 0 24px rgba(0, 0, 0, 0.2);
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.2);
   z-index: 10000;
   padding: 24px;
   overflow-y: auto;
-  transform: translateX(100%); /* We still use translateX for now, but we'll fix the open state */
+  transform: translateX(100%); /* Off-screen to the right */
   transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   will-change: transform;
 }
 
-/* Fix transform based on direction */
-:global([dir="rtl"]) .mobileMenu {
-  transform: translateX(100%);
-}
+/* Special case for LTR - menu should come from the left */
 :global([dir="ltr"]) .mobileMenu {
-  transform: translateX(-100%);
+  right: auto;
+  left: 0;
+  transform: translateX(-100%); /* Off-screen to the left */
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.2);
 }
 
 .mobileMenu.open {
   transform: translateX(0) !important;
+}
+
+html.dark .mobileMenu {
+  background: var(--bg-primary);
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.8);
+  border-left: 1px solid rgba(96, 165, 250, 0.2);
+}
+
+:global([dir="ltr"]) html.dark .mobileMenu {
+  border-left: none;
+  border-right: 1px solid rgba(96, 165, 250, 0.2);
 }
 
 .mobileMenuHeader {

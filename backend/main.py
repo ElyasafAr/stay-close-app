@@ -133,6 +133,15 @@ def check_and_send_reminders():
                     reminder_text = f'כל {interval_text}'
                 elif reminder_type == 'weekly':
                     weekday_names = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת']
+                    
+                    # Ensure weekdays is initialized before check
+                    weekdays = None
+                    if db_reminder.weekdays:
+                        try:
+                            weekdays = json.loads(db_reminder.weekdays)
+                        except (json.JSONDecodeError, TypeError):
+                            weekdays = None
+                            
                     if weekdays:
                         days = ', '.join([weekday_names[d] for d in weekdays])
                     else:
