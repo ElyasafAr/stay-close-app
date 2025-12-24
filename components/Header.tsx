@@ -156,36 +156,29 @@ export function Header() {
     ...(isAdmin ? [{ href: '/admin', label: `🛠️ ${t('navigation.admin')}`, isAdminLink: true }] : []),
   ]
 
-  const handleLinkClick = (href: string) => {
-    console.log(`🖱️ [Header] handleLinkClick: target=${href}`)
+  const handleLinkClick = () => {
     setShowMobileMenu(false)
     setShowUserDropdown(false)
-    
-    // ניווט "ברזל" - עוקף את ה-Router של Next.js אם הוא תקוע
-    if (typeof window !== 'undefined') {
-      console.log(`🚀 [Header] Executing window.location.href = ${href}`)
-      window.location.href = href
-    }
   }
 
   return (
     <>
       <header className={styles.header}>
         <nav className={styles.nav}>
-          <div className={styles.logo} onClick={() => handleLinkClick('/')} style={{ cursor: 'pointer' }}>
+          <Link href="/" className={styles.logo} onClick={handleLinkClick}>
             {t('app.name')}
-          </div>
+          </Link>
           <div className={styles.navRight}>
             <div className={styles.navLinks}>
               {navLinks.map((link) => (
-                <div
+                <Link
                   key={link.href}
+                  href={link.href}
                   className={`${styles.navLink} ${pathname === link.href ? styles.active : ''}`}
-                  onClick={() => handleLinkClick(link.href)}
-                  style={{ cursor: 'pointer' }}
+                  onClick={handleLinkClick}
                 >
                   {link.label}
-                </div>
+                </Link>
               ))}
             </div>
 
@@ -264,14 +257,14 @@ export function Header() {
         
         <nav className={styles.mobileNavLinks}>
           {menuLinks.map((link) => (
-            <div
+            <Link
               key={link.href}
+              href={link.href}
               className={`${styles.mobileNavLink} ${pathname === link.href ? styles.active : ''}`}
-              onClick={() => handleLinkClick(link.href)}
-              style={{ cursor: 'pointer' }}
+              onClick={handleLinkClick}
             >
               {link.label}
-            </div>
+            </Link>
           ))}
         </nav>
 

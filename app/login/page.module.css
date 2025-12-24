@@ -2,7 +2,6 @@
   min-height: 100vh;
   padding: 24px 16px;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  direction: rtl;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -51,7 +50,6 @@
   color: #c62828;
   border-radius: 20px;
   margin-bottom: 24px;
-  text-align: right;
   font-weight: 600;
   box-shadow: 0 4px 16px rgba(255, 154, 158, 0.2);
 }
@@ -86,12 +84,10 @@
 
 .input {
   width: 100%;
-  padding: 18px 56px 18px 20px; /* RTL: 56px מימין (לאייקון), 20px משמאל */
+  padding: 18px 56px 18px 20px; /* RTL default */
   border: 2px solid #d4e9f0;
   border-radius: 20px;
   font-size: 16px;
-  direction: rtl;
-  text-align: right; /* ודא שהטקסט מתחיל מימין */
   font-family: inherit;
   background: #ffffff;
   transition: all 300ms ease;
@@ -99,6 +95,16 @@
   position: relative;
   z-index: 1;
   box-sizing: border-box;
+}
+
+:global([dir="ltr"]) .input {
+  padding: 18px 20px 18px 56px; /* Swap padding for LTR icon */
+  text-align: left;
+}
+
+:global([dir="ltr"]) .inputIcon {
+  right: auto;
+  left: 20px;
 }
 
 .input:focus {
