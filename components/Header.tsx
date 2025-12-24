@@ -156,35 +156,29 @@ export function Header() {
     ...(isAdmin ? [{ href: '/admin', label: `🛠️ ${t('navigation.admin')}`, isAdminLink: true }] : []),
   ]
 
-  const handleLinkClick = (href: string) => {
-    console.log('🔗 [Header] Manual navigation to:', href)
+  const handleLinkClick = () => {
     setShowMobileMenu(false)
     setShowUserDropdown(false)
-    
-    // ניווט מפורש עם השהיה קלה כדי למנוע תקיעה ב-Mobile
-    setTimeout(() => {
-      router.push(href)
-    }, 10)
   }
 
   return (
     <>
       <header className={styles.header}>
         <nav className={styles.nav}>
-          <div className={styles.logo} onClick={() => handleLinkClick('/')} style={{ cursor: 'pointer' }}>
+          <Link href="/" className={styles.logo} onClick={handleLinkClick}>
             {t('app.name')}
-          </div>
+          </Link>
           <div className={styles.navRight}>
             <div className={styles.navLinks}>
               {navLinks.map((link) => (
-                <div
+                <Link
                   key={link.href}
+                  href={link.href}
                   className={`${styles.navLink} ${pathname === link.href ? styles.active : ''}`}
-                  onClick={() => handleLinkClick(link.href)}
-                  style={{ cursor: 'pointer' }}
+                  onClick={handleLinkClick}
                 >
                   {link.label}
-                </div>
+                </Link>
               ))}
             </div>
 
@@ -263,14 +257,14 @@ export function Header() {
         
         <nav className={styles.mobileNavLinks}>
           {menuLinks.map((link) => (
-            <div
+            <Link
               key={link.href}
+              href={link.href}
               className={`${styles.mobileNavLink} ${pathname === link.href ? styles.active : ''}`}
-              onClick={() => handleLinkClick(link.href)}
-              style={{ cursor: 'pointer' }}
+              onClick={handleLinkClick}
             >
               {link.label}
-            </div>
+            </Link>
           ))}
         </nav>
 

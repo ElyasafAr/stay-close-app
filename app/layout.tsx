@@ -29,9 +29,9 @@ export default function RootLayout({
     <html lang="he" suppressHydrationWarning>
       <body>
         <ThemeProvider />
+        <Header />
         <AuthGuard>
           <ServiceWorkerRegistration />
-          <Header />
           <main>
             {children}
           </main>
