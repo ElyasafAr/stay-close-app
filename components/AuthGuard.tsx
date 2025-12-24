@@ -10,8 +10,13 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const [loading, setLoading] = useState(true)
   const [authenticated, setAuthenticated] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
-  console.log(`🛡️ [AuthGuard] Render: pathname=${pathname}, loading=${loading}, authenticated=${authenticated}`)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  console.log(`🛡️ [AuthGuard] Render: pathname=${pathname}, loading=${loading}, authenticated=${authenticated}, mounted=${mounted}`)
 
   // דפים שפתוחים לכולם
   const publicPaths = ['/login', '/register']
@@ -52,7 +57,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     }
   }, [pathname, router])
 
-  if (loading) {
+  if (loading || !mounted) {
     return <Loading />
   }
 

@@ -18,8 +18,13 @@ export function Header() {
   const [showMobileMenu, setShowMobileMenu] = useState(false)
   const [isDarkMode, setIsDarkMode] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
-
   const [showUserDropdown, setShowUserDropdown] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  // Ensure component is mounted before rendering auth-dependent UI
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Detect dark mode using MutationObserver (much more efficient than setInterval)
   useEffect(() => {
@@ -157,20 +162,20 @@ export function Header() {
   ]
 
   const handleLinkClick = (href: string) => {
-    console.log(`🖱️ [Header] Clicked link: ${href}`)
+    console.log(`🖱️ [Header] handleLinkClick: target=${href}`)
     setShowMobileMenu(false)
     setShowUserDropdown(false)
   }
 
-  // תמיד להחזיר JSX, לא להחזיר null מוקדם כדי לא לשבור את React
-  const isAuth = typeof window !== 'undefined' ? isAuthenticated() : false
+  // Use state-based auth check to avoid hydration mismatch
+  const isAuth = mounted && isAuthenticated()
 
   return (
     <>
       <header className={styles.header}>
         <nav className={styles.nav}>
           <Link href="/" className={styles.logo} onClick={() => handleLinkClick('/')}>
-            {t('app.name')}
+            {mounted ? t('app.name') : 'Stay Close'}
           </Link>
           
           {isAuth && (
