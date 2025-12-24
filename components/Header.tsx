@@ -268,7 +268,7 @@ export function Header() {
               key={link.href}
               href={link.href}
               className={`${styles.mobileNavLink} ${pathname === link.href ? styles.active : ''}`}
-              onClick={handleLinkClick}
+              onClick={() => handleLinkClick(link.href)}
             >
               {link.label}
             </Link>
