@@ -237,29 +237,18 @@ export function Header() {
       {/* Mobile Menu Overlay */}
       <div
         className={`${styles.mobileMenuOverlay} ${showMobileMenu ? styles.open : ''}`}
-        onClick={(e) => {
-          e.stopPropagation()
-          setShowMobileMenu(false)
-        }}
-        onTouchStart={(e) => {
-          e.stopPropagation()
-          setShowMobileMenu(false)
-        }}
+        onClick={() => setShowMobileMenu(false)}
       />
 
       {/* Mobile Menu */}
       <div 
         className={`${styles.mobileMenu} ${showMobileMenu ? styles.open : ''}`}
-        onClick={(e) => e.stopPropagation()}
       >
         <div className={styles.mobileMenuHeader}>
           <h2>{t('app.name')}</h2>
           <button
             className={styles.mobileMenuClose}
-            onClick={(e) => {
-              e.stopPropagation()
-              setShowMobileMenu(false)
-            }}
+            onClick={() => setShowMobileMenu(false)}
             aria-label="סגור תפריט"
             type="button"
           >
@@ -273,8 +262,7 @@ export function Header() {
               key={link.href}
               href={link.href}
               className={`${styles.mobileNavLink} ${pathname === link.href ? styles.active : ''}`}
-              onClick={(e) => {
-                e.stopPropagation()
+              onClick={() => {
                 setShowMobileMenu(false)
               }}
             >
