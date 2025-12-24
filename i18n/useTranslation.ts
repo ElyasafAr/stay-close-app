@@ -12,6 +12,7 @@ export function useTranslation() {
   useEffect(() => {
     if (typeof window === 'undefined') return
     const saved = localStorage.getItem('app_language') || 'he'
+    console.log(`🌐 [useTranslation] Initial language check: ${saved}`)
     setLanguage(saved)
   }, [])
 

@@ -157,11 +157,13 @@ export function Header() {
   ]
 
   const handleLinkClick = (href: string) => {
+    console.log(`🖱️ [Header] handleLinkClick: target=${href}`)
     setShowMobileMenu(false)
     setShowUserDropdown(false)
     
     // ניווט "ברזל" - עוקף את ה-Router של Next.js אם הוא תקוע
     if (typeof window !== 'undefined') {
+      console.log(`🚀 [Header] Executing window.location.href = ${href}`)
       window.location.href = href
     }
   }

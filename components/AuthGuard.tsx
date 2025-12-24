@@ -11,6 +11,8 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [authenticated, setAuthenticated] = useState(false)
 
+  console.log(`🛡️ [AuthGuard] Render: pathname=${pathname}, loading=${loading}, authenticated=${authenticated}`)
+
   // דפים שפתוחים לכולם
   const publicPaths = ['/login', '/register']
 
@@ -20,11 +22,14 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       const user = typeof window !== 'undefined' ? localStorage.getItem('user') : null
       const isAuth = !!(token && user)
       
+      console.log(`🛡️ [AuthGuard] checkAuth: isAuth=${isAuth}, currentPath=${pathname}`)
       setAuthenticated(isAuth)
 
       if (!isAuth && !publicPaths.includes(pathname)) {
+        console.log('🛡️ [AuthGuard] Redirecting to /login')
         router.replace('/login')
       } else if (isAuth && pathname === '/login') {
+        console.log('🛡️ [AuthGuard] Redirecting to / (home)')
         router.replace('/')
       }
       setLoading(false)
