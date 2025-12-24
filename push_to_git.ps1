@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "i18n Fix v1.6.3: Resolve Deployment Crash - Fix syntax error in messages page (duplicate closing tags) - Fix JSON syntax errors in en.json and he.json (missing paywall key) - Bump version to 1.6.3"
+$commitMessage = "i18n Fix v1.6.4: Resolve Contact Page Crash - Fix missing 'language' variable in contact page - Correct arrow rotation logic for RTL/LTR - Bump version to 1.6.4"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files

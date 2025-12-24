@@ -9,7 +9,7 @@ import { getStoredUser } from '@/services/auth'
 import styles from './page.module.css'
 
 export default function ContactPage() {
-  const { t } = useTranslation()
+  const { t, language } = useTranslation()
   const router = useRouter()
   const [user, setUser] = useState<any>(null)
   const [subject, setSubject] = useState('')
@@ -57,7 +57,7 @@ export default function ContactPage() {
             <h1>{t('contact.successTitle')}</h1>
             <p>{t('contact.successText')}</p>
             <button onClick={() => router.push('/')} className={styles.backButton}>
-              <MdArrowBack /> {t('contact.backHome')}
+              <MdArrowBack style={{ transform: language === 'he' ? 'rotate(180deg)' : 'none' }} /> {t('contact.backHome')}
             </button>
           </div>
         </div>
@@ -70,7 +70,7 @@ export default function ContactPage() {
       <div className={styles.container}>
         <div className={styles.header}>
           <button onClick={() => router.back()} className={styles.iconButton}>
-            <MdArrowBack style={{ transform: language === 'en' ? 'rotate(180deg)' : 'none' }} />
+            <MdArrowBack style={{ transform: language === 'he' ? 'rotate(180deg)' : 'none' }} />
           </button>
           <h1 className={styles.title}>{t('contact.title')}</h1>
         </div>
