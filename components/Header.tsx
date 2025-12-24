@@ -156,29 +156,34 @@ export function Header() {
     ...(isAdmin ? [{ href: '/admin', label: `🛠️ ${t('navigation.admin')}`, isAdminLink: true }] : []),
   ]
 
-  const handleLinkClick = () => {
+  const handleLinkClick = (href: string) => {
     setShowMobileMenu(false)
     setShowUserDropdown(false)
+    
+    // ניווט "ברזל" - עוקף את ה-Router של Next.js אם הוא תקוע
+    if (typeof window !== 'undefined') {
+      window.location.href = href
+    }
   }
 
   return (
     <>
       <header className={styles.header}>
         <nav className={styles.nav}>
-          <Link href="/" className={styles.logo} onClick={handleLinkClick}>
+          <div className={styles.logo} onClick={() => handleLinkClick('/')} style={{ cursor: 'pointer' }}>
             {t('app.name')}
-          </Link>
+          </div>
           <div className={styles.navRight}>
             <div className={styles.navLinks}>
               {navLinks.map((link) => (
-                <Link
+                <div
                   key={link.href}
-                  href={link.href}
                   className={`${styles.navLink} ${pathname === link.href ? styles.active : ''}`}
-                  onClick={handleLinkClick}
+                  onClick={() => handleLinkClick(link.href)}
+                  style={{ cursor: 'pointer' }}
                 >
                   {link.label}
-                </Link>
+                </div>
               ))}
             </div>
 
@@ -257,14 +262,14 @@ export function Header() {
         
         <nav className={styles.mobileNavLinks}>
           {menuLinks.map((link) => (
-            <Link
+            <div
               key={link.href}
-              href={link.href}
               className={`${styles.mobileNavLink} ${pathname === link.href ? styles.active : ''}`}
-              onClick={handleLinkClick}
+              onClick={() => handleLinkClick(link.href)}
+              style={{ cursor: 'pointer' }}
             >
               {link.label}
-            </Link>
+            </div>
           ))}
         </nav>
 
