@@ -137,8 +137,7 @@ html.dark .navLink.active {
 .dropdown {
   position: absolute;
   top: calc(100% + 8px);
-  right: 0; /* RTL - align to right */
-  left: auto; /* Ensure it doesn't extend to left */
+  inset-inline-end: 0; /* Logical property for right in LTR, left in RTL */
   background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -149,8 +148,8 @@ html.dark .navLink.active {
   max-width: calc(100vw - 32px); /* Prevent overflow on mobile */
   z-index: 1000;
   animation: slideDown 0.3s ease;
-  /* Ensure dropdown stays within viewport on RTL */
-  transform-origin: top right;
+  /* Ensure dropdown stays within viewport */
+  transform-origin: top inline-end;
 }
 
 html.dark .dropdown {
@@ -263,31 +262,33 @@ html.dark .mobileMenuButton:hover {
   display: none;
   position: fixed;
   top: 0;
-  right: 0;
+  inset-inline-end: 0; /* Logical property */
   width: 280px;
   max-width: 85vw;
   height: 100vh;
   height: 100dvh; /* Dynamic viewport height for mobile */
   background: var(--bg-primary);
-  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0 24px rgba(0, 0, 0, 0.2);
   z-index: 10000;
   padding: 24px;
   overflow-y: auto;
-  transform: translateX(100%);
+  transform: translateX(100%); /* We still use translateX for now, but we'll fix the open state */
   transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   will-change: transform;
 }
 
-html.dark .mobileMenu {
-  background: var(--bg-primary);
-  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.8);
-  border-left: 1px solid rgba(96, 165, 250, 0.2);
+/* Fix transform based on direction */
+:global([dir="rtl"]) .mobileMenu {
+  transform: translateX(100%);
+}
+:global([dir="ltr"]) .mobileMenu {
+  transform: translateX(-100%);
 }
 
 .mobileMenu.open {
-  transform: translateX(0);
+  transform: translateX(0) !important;
 }
 
 .mobileMenuHeader {

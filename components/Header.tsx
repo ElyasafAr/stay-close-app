@@ -156,29 +156,32 @@ export function Header() {
     ...(isAdmin ? [{ href: '/admin', label: `🛠️ ${t('navigation.admin')}`, isAdminLink: true }] : []),
   ]
 
-  const handleLinkClick = (href: string) => {
-    console.log('🔗 [Header] Navigating to:', href)
+  const handleLinkClick = (e: React.MouseEvent, href: string) => {
+    e.preventDefault()
+    console.log('🔗 [Header] Force navigating to:', href)
     setShowMobileMenu(false)
+    setShowUserDropdown(false)
+    router.push(href)
   }
 
   return (
     <>
       <header className={styles.header}>
         <nav className={styles.nav}>
-          <Link href="/" className={styles.logo} onClick={() => handleLinkClick('/')}>
+          <a href="/" className={styles.logo} onClick={(e) => handleLinkClick(e, '/')}>
             {t('app.name')}
-          </Link>
+          </a>
           <div className={styles.navRight}>
             <div className={styles.navLinks}>
               {navLinks.map((link) => (
-                <Link
+                <a
                   key={link.href}
                   href={link.href}
                   className={`${styles.navLink} ${pathname === link.href ? styles.active : ''}`}
-                  onClick={() => handleLinkClick(link.href)}
+                  onClick={(e) => handleLinkClick(e, link.href)}
                 >
                   {link.label}
-                </Link>
+                </a>
               ))}
             </div>
 

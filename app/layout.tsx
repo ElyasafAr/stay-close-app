@@ -10,12 +10,14 @@ export const metadata: Metadata = {
   title: 'Stay Close - אפליקציית קרבה',
   description: 'אפליקציה לניהול קשרים וקרבה עם אנשים חשובים בחייך',
   manifest: '/manifest.json',
-  themeColor: '#7fb8c9',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
     title: 'Stay Close',
   },
+  other: {
+    'mobile-web-app-capable': 'yes',
+  }
 }
 
 export default function RootLayout({

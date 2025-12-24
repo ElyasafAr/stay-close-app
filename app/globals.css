@@ -10,7 +10,6 @@ html,
 body {
   max-width: 100vw;
   overflow-x: hidden;
-  direction: rtl;
   font-family: 'Nunito', 'Segoe UI', 'Arial Hebrew', 'David', 'Noto Sans Hebrew', sans-serif;
 }
 
@@ -176,8 +175,6 @@ a {
 /* תמיכה בעברית ו-RTL */
 body {
   font-family: 'Nunito', 'Segoe UI', 'Arial Hebrew', 'David', 'Noto Sans Hebrew', sans-serif;
-  text-align: right;
-  direction: rtl;
   font-weight: 400;
   line-height: 1.6;
 }
@@ -187,13 +184,8 @@ body {
   word-wrap: break-word;
 }
 
-html {
-  direction: rtl;
-}
-
 p, span, div, h1, h2, h3, h4, h5, h6 {
-  text-align: right;
-  direction: rtl;
+  /* No hardcoded direction, inherits from html dir attribute */
 }
 
 /* כפתורים מודרניים */
