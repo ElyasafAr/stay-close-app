@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { getData } from '@/services/api'
 import { isAuthenticated } from '@/services/auth'
+import { useTranslation } from '@/i18n/useTranslation'
 import styles from './UsageBanner.module.css'
 
 interface UsageStatus {
@@ -24,6 +25,7 @@ interface UsageStatus {
 }
 
 export function UsageBanner() {
+  const { t } = useTranslation()
   const router = useRouter()
   const [usageData, setUsageData] = useState<UsageStatus | null>(null)
   const [loading, setLoading] = useState(true)
@@ -57,12 +59,12 @@ export function UsageBanner() {
   if (subscription_status === 'trial' && trial_days_remaining > 0) {
     return (
       <div className={styles.trialBanner}>
-        <span>🎁 נותרו לך {trial_days_remaining} ימי ניסיון</span>
+        <span>{t('usage.trialRemaining').replace('{{days}}', trial_days_remaining.toString())}</span>
         <button 
           className={styles.upgradeButton}
           onClick={() => router.push('/paywall')}
         >
-          תרום עכשיו
+          {t('usage.donateNow')}
         </button>
       </div>
     )
@@ -77,15 +79,15 @@ export function UsageBanner() {
       <div className={`${styles.usageBanner} ${isLow ? styles.warning : ''}`}>
         <span>
           {remaining > 0 
-            ? `נותרו לך ${remaining} הודעות היום` 
-            : 'הגעת למגבלת ההודעות היומית'
+            ? t('usage.messagesRemaining').replace('{{count}}', remaining.toString())
+            : t('usage.limitReached')
           }
         </span>
         <button 
           className={styles.upgradeButton}
           onClick={() => router.push('/paywall')}
         >
-          תרום לללא הגבלה
+          {t('usage.donateUnlimited')}
         </button>
       </div>
     )

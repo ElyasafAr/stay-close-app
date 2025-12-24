@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "UI Refinement v1.6.0: Revert 'Home' to 'Messages' in mobile menu - Ensure consistency between desktop and mobile labels - Use message icon for the main navigation link - Bump version to 1.6.0"
+$commitMessage = "i18n & Multi-language v1.6.1: English Support + Dynamic RTL/LTR - Add en.json translation file - Implement multi-language support in useTranslation hook - Add language selector to Settings page - Update all main pages (Messages, Contacts, About, Login, Reminders) to use translation keys - Add support for dynamic RTL/LTR layout based on selected language - Start using logical CSS properties for better cross-language support"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files

@@ -42,7 +42,7 @@ export default function ContactPage() {
       setIsSent(true)
     } catch (err) {
       console.error('Error sending support ticket:', err)
-      setError('שגיאה בשליחת הפנייה. אנא נסה שוב מאוחר יותר.')
+      setError(t('contact.error'))
     } finally {
       setIsSending(false)
     }
@@ -54,10 +54,10 @@ export default function ContactPage() {
         <div className={styles.container}>
           <div className={styles.successCard}>
             <MdCheckCircle className={styles.successIcon} />
-            <h1>ההודעה נשלחה בהצלחה!</h1>
-            <p>תודה שפנית אלינו. אנחנו נחזור אליך בהקדם האפשרי.</p>
+            <h1>{t('contact.successTitle')}</h1>
+            <p>{t('contact.successText')}</p>
             <button onClick={() => router.push('/')} className={styles.backButton}>
-              <MdArrowBack /> חזרה לבית
+              <MdArrowBack /> {t('contact.backHome')}
             </button>
           </div>
         </div>
@@ -70,52 +70,52 @@ export default function ContactPage() {
       <div className={styles.container}>
         <div className={styles.header}>
           <button onClick={() => router.back()} className={styles.iconButton}>
-            <MdArrowBack />
+            <MdArrowBack style={{ transform: language === 'en' ? 'rotate(180deg)' : 'none' }} />
           </button>
-          <h1 className={styles.title}>צור קשר</h1>
+          <h1 className={styles.title}>{t('contact.title')}</h1>
         </div>
 
         <div className={styles.card}>
           <div className={styles.infoSection}>
             <MdQuestionAnswer className={styles.infoIcon} />
-            <p>נשמח לשמוע ממך! שלח לנו הצעה, דיווח על תקלה או כל שאלה שיש לך.</p>
+            <p>{t('contact.info')}</p>
           </div>
 
           <form onSubmit={handleSubmit} className={styles.form}>
             {error && <div className={styles.error}>{error}</div>}
             
             <div className={styles.field}>
-              <label htmlFor="subject">נושא הפנייה</label>
+              <label htmlFor="subject">{t('contact.subject')}</label>
               <input
                 id="subject"
                 type="text"
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
-                placeholder="לדוגמה: דיווח על באג, הצעת שיפור..."
+                placeholder={t('contact.subjectPlaceholder')}
                 required
                 className={styles.input}
               />
             </div>
 
             <div className={styles.field}>
-              <label htmlFor="email">אימייל למענה (אופציונלי)</label>
+              <label htmlFor="email">{t('contact.email')}</label>
               <input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="המייל שלך..."
+                placeholder={t('contact.emailPlaceholder')}
                 className={styles.input}
               />
             </div>
 
             <div className={styles.field}>
-              <label htmlFor="message">הודעה</label>
+              <label htmlFor="message">{t('contact.message')}</label>
               <textarea
                 id="message"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder="כתוב כאן את פרטי הפנייה..."
+                placeholder={t('contact.messagePlaceholder')}
                 required
                 className={styles.textarea}
                 rows={6}
@@ -127,7 +127,7 @@ export default function ContactPage() {
               className={styles.submitButton}
               disabled={isSending || !message.trim() || !subject.trim()}
             >
-              <MdSend /> {isSending ? 'שולח...' : 'שלח הודעה'}
+              <MdSend /> {isSending ? t('contact.sending') : t('contact.send')}
             </button>
           </form>
         </div>

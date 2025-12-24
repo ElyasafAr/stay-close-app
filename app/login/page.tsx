@@ -2,12 +2,14 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslation } from '@/i18n/useTranslation'
 import { login, register, loginWithGoogle } from '@/services/auth'
 import { MdEmail, MdLock, MdPerson } from 'react-icons/md'
 import { FaGoogle } from 'react-icons/fa'
 import styles from './page.module.css'
 
 export default function LoginPage() {
+  const { t } = useTranslation()
   const router = useRouter()
   const [isLogin, setIsLogin] = useState(true)
   const [loading, setLoading] = useState(false)
@@ -53,7 +55,7 @@ export default function LoginPage() {
       router.push('/')
     } catch (err) {
       console.error('❌ [LOGIN] Error:', err)
-      const errorMessage = err instanceof Error ? err.message : 'שגיאה'
+      const errorMessage = err instanceof Error ? err.message : t('common.error')
       console.error('❌ [LOGIN] Error message:', errorMessage)
       setError(errorMessage)
     } finally {
@@ -76,7 +78,7 @@ export default function LoginPage() {
       router.push('/')
     } catch (err) {
       console.error('❌ [LOGIN] Google login error:', err)
-      const errorMessage = err instanceof Error ? err.message : 'שגיאה בהתחברות עם Google'
+      const errorMessage = err instanceof Error ? err.message : t('auth.googleLoginError')
       console.error('❌ [LOGIN] Error message:', errorMessage)
       setError(errorMessage)
     } finally {
@@ -90,12 +92,12 @@ export default function LoginPage() {
         <div className={styles.card}>
           <div className={styles.header}>
             <h1 className={styles.title}>
-              {isLogin ? 'התחברות' : 'הרשמה'}
+              {isLogin ? t('auth.login') : t('auth.register')}
             </h1>
             <p className={styles.subtitle}>
               {isLogin 
-                ? 'ברוכים חזרה! התחברו לחשבון שלכם' 
-                : 'צרו חשבון חדש כדי להתחיל'}
+                ? t('auth.loginSubtitle') 
+                : t('auth.registerSubtitle')}
             </p>
           </div>
 
@@ -111,7 +113,7 @@ export default function LoginPage() {
                 <MdEmail className={styles.inputIcon} />
                 <input
                   type="email"
-                  placeholder="אימייל"
+                  placeholder={t('auth.email')}
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   required={!isLogin}
@@ -124,7 +126,7 @@ export default function LoginPage() {
               <MdPerson className={styles.inputIcon} />
               <input
                 type="text"
-                placeholder={isLogin ? 'שם משתמש או אימייל' : 'שם משתמש'}
+                placeholder={isLogin ? t('auth.usernameOrEmail') : t('auth.username')}
                 value={formData.username}
                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                 required
@@ -136,7 +138,7 @@ export default function LoginPage() {
               <MdLock className={styles.inputIcon} />
               <input
                 type="password"
-                placeholder="סיסמה"
+                placeholder={t('auth.password')}
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 required
@@ -154,10 +156,10 @@ export default function LoginPage() {
                   className={styles.checkbox}
                 />
                 <span>
-                  קראתי ואני מסכים/ה ל
-                  <a href="/terms" target="_blank" className={styles.link}>תנאי השימוש</a>
-                  {' '}ול
-                  <a href="/privacy" target="_blank" className={styles.link}>מדיניות הפרטיות</a>
+                  {t('auth.agreedToTerms')}
+                  <a href="/terms" target="_blank" className={styles.link}>{t('auth.terms')}</a>
+                  {' '}{t('auth.or')}{' '}
+                  <a href="/privacy" target="_blank" className={styles.link}>{t('auth.privacy')}</a>
                 </span>
               </label>
             )}
@@ -167,12 +169,14 @@ export default function LoginPage() {
               disabled={loading || (!isLogin && !agreedToTerms)}
               className={styles.submitButton}
             >
-              {loading ? 'מתחבר...' : isLogin ? 'התחבר' : 'הירשם'}
+              {loading 
+                ? (isLogin ? t('auth.loggingIn') : t('auth.registering')) 
+                : (isLogin ? t('auth.loginButton') : t('auth.registerButton'))}
             </button>
           </form>
 
           <div className={styles.divider}>
-            <span>או</span>
+            <span>{t('auth.or')}</span>
           </div>
 
           <button
@@ -181,7 +185,7 @@ export default function LoginPage() {
             className={styles.googleButton}
           >
             <FaGoogle className={styles.googleIcon} />
-            התחבר עם Google
+            {t('auth.googleLogin')}
           </button>
 
           <div className={styles.switch}>
@@ -196,8 +200,8 @@ export default function LoginPage() {
               className={styles.switchButton}
             >
               {isLogin 
-                ? 'אין לך חשבון? הירשם' 
-                : 'יש לך כבר חשבון? התחבר'}
+                ? t('auth.noAccount') 
+                : t('auth.hasAccount')}
             </button>
           </div>
         </div>

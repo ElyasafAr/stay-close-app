@@ -138,22 +138,22 @@ export function Header() {
   }
 
   const navLinks = [
-    { href: '/messages', label: 'הודעות' },
-    { href: '/contacts', label: 'נמענים' },
-    { href: '/settings', label: 'הגדרות' },
-    { href: '/contact', label: 'צור קשר' },
-    { href: '/about', label: 'אודות' },
+    { href: '/messages', label: t('navigation.messages') },
+    { href: '/contacts', label: t('navigation.contacts') },
+    { href: '/settings', label: t('navigation.settings') },
+    { href: '/contact', label: t('navigation.contact') },
+    { href: '/about', label: t('navigation.about') },
     // Admin link - only shown if isAdmin is true
-    ...(isAdmin ? [{ href: '/admin', label: '🛠️ ניהול', isAdminLink: true }] : []),
+    ...(isAdmin ? [{ href: '/admin', label: `🛠️ ${t('navigation.admin')}`, isAdminLink: true }] : []),
   ]
 
   const menuLinks = [
-    { href: '/messages', label: '💬 הודעות' },
-    { href: '/contacts', label: '👥 נמענים' },
-    { href: '/settings', label: '⚙️ הגדרות' },
-    { href: '/contact', label: '✉️ צור קשר' },
-    { href: '/about', label: 'ℹ️ אודות' },
-    ...(isAdmin ? [{ href: '/admin', label: '🛠️ פאנל ניהול', isAdminLink: true }] : []),
+    { href: '/messages', label: `💬 ${t('navigation.messages')}` },
+    { href: '/contacts', label: `👥 ${t('navigation.contacts')}` },
+    { href: '/settings', label: `⚙️ ${t('navigation.settings')}` },
+    { href: '/contact', label: `✉️ ${t('navigation.contact')}` },
+    { href: '/about', label: `ℹ️ ${t('navigation.about')}` },
+    ...(isAdmin ? [{ href: '/admin', label: `🛠️ ${t('navigation.admin')}`, isAdminLink: true }] : []),
   ]
 
   return (
@@ -184,7 +184,7 @@ export function Header() {
                   onClick={() => setShowUserDropdown(!showUserDropdown)}
                 >
                   <MdPerson className={styles.userIcon} />
-                  <span className={styles.userName}>{user?.username || 'משתמש'}</span>
+                  <span className={styles.userName}>{user?.username || t('messages.greetings.guest')}</span>
                 </button>
 
                 {showUserDropdown && (
@@ -194,11 +194,11 @@ export function Header() {
                       <p className={styles.userEmail}>{user?.email}</p>
                     </div>
                     <div className={styles.versionInfo}>
-                      <small>גרסה {APP_VERSION}</small>
+                      <small>{t('settings.version')} {APP_VERSION}</small>
                     </div>
                     <div style={{ margin: '8px 0', borderTop: '1px solid var(--border-color)' }}></div>
                     <button onClick={handleLogout} className={styles.logoutButton}>
-                      <MdLogout /> התנתק
+                      <MdLogout /> {t('settings.logout')}
                     </button>
                   </div>
                 )}
@@ -315,7 +315,7 @@ export function Header() {
               }}
             >
               <MdLogout />
-              <span>התנתק</span>
+              <span>{t('settings.logout')}</span>
             </button>
           </div>
         )}

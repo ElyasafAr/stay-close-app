@@ -42,7 +42,7 @@ export default function ContactsPage() {
       const data = await getContacts()
       setContacts(data)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'שגיאה בטעינת נמענים')
+      setError(err instanceof Error ? err.message : t('contacts.errorLoading'))
     } finally {
       setLoading(false)
     }
@@ -53,7 +53,7 @@ export default function ContactsPage() {
       const data = await getReminders()
       setReminders(data)
     } catch (err) {
-      console.error('שגיאה בטעינת התראות:', err)
+      console.error('Error loading reminders:', err)
     }
   }
 
@@ -62,7 +62,7 @@ export default function ContactsPage() {
   }
 
   const handleDeleteReminder = async (reminderId: number) => {
-    if (!confirm('האם אתה בטוח שברצונך למחוק את ההתראה?')) {
+    if (!confirm(t('contacts.deleteReminderConfirm'))) {
       return
     }
     try {
@@ -79,7 +79,7 @@ export default function ContactsPage() {
       await deleteReminder(reminderId)
       await loadReminders()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'שגיאה במחיקת התראה')
+      setError(err instanceof Error ? err.message : t('contacts.errorDeletingReminder'))
     }
   }
 
@@ -92,12 +92,12 @@ export default function ContactsPage() {
       setShowForm(false)
       await loadContacts()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'שגיאה ביצירת נמען')
+      setError(err instanceof Error ? err.message : t('contacts.errorCreating'))
     }
   }
 
   const handleDelete = async (id: number) => {
-    if (!confirm('האם אתה בטוח שברצונך למחוק את הנמען הזה?')) {
+    if (!confirm(t('contacts.deleteConfirm'))) {
       return
     }
     try {
@@ -105,7 +105,7 @@ export default function ContactsPage() {
       await deleteContact(id)
       await loadContacts()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'שגיאה במחיקת נמען')
+      setError(err instanceof Error ? err.message : t('contacts.errorDeleting'))
     }
   }
 
@@ -117,10 +117,10 @@ export default function ContactsPage() {
     <main className={styles.main}>
       <div className={styles.container}>
         <div className={styles.header}>
-          <h1 className={styles.title}>נמענים</h1>
+          <h1 className={styles.title}>{t('contacts.title')}</h1>
           <button onClick={() => setShowForm(!showForm)} className={styles.addButton}>
             <MdAdd style={{ fontSize: '24px' }} />
-            {showForm ? 'ביטול' : 'הוסף נמען'}
+            {showForm ? t('settings.cancel') : t('contacts.addContact')}
           </button>
         </div>
 
@@ -132,45 +132,31 @@ export default function ContactsPage() {
 
         {showForm && (
           <form onSubmit={handleSubmit} className={styles.form}>
-            <h2 className={styles.formTitle}>הוסף נמען חדש</h2>
+            <h2 className={styles.formTitle}>{t('contacts.addNewContact')}</h2>
             <input
               type="text"
-              placeholder="שם מלא"
+              placeholder={t('contacts.name')}
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               required
               className={styles.input}
             />
-            <label className={styles.label}>טון הודעה ברירת מחדל</label>
+            <label className={styles.label}>{t('contacts.defaultTone')}</label>
             <select
               value={formData.default_tone}
               onChange={(e) => setFormData({ ...formData, default_tone: e.target.value })}
               className={styles.input}
             >
-              <option value="friendly">ידידותי</option>
-              <option value="warm">חם</option>
-              <option value="casual">קליל</option>
-              <option value="formal">פורמלי</option>
-              <option value="humorous">הומוריסטי</option>
-              <option value="professional">מקצועי</option>
-              <option value="intimate">אינטימי</option>
-              <option value="supportive">תומך</option>
-              <option value="enthusiastic">נלהב</option>
-              <option value="gentle">עדין</option>
-              <option value="confident">בטוח</option>
-              <option value="playful">שובב</option>
-              <option value="sincere">כנה</option>
-              <option value="optimistic">אופטימי</option>
-              <option value="empathetic">אמפתי</option>
-              <option value="encouraging">מעודד</option>
-              <option value="grateful">אסיר תודה</option>
+              {Object.entries(t('messages.tones') as any).map(([key, label]) => (
+                <option key={key} value={key}>{label as string}</option>
+              ))}
             </select>
             <div className={styles.formActions}>
               <button type="button" onClick={() => setShowForm(false)} className={styles.cancelButton}>
-                ביטול
+                {t('settings.cancel')}
               </button>
               <button type="submit" className={styles.submitButton}>
-                שמור
+                {t('settings.save')}
               </button>
             </div>
           </form>
@@ -180,9 +166,9 @@ export default function ContactsPage() {
           {contacts.length === 0 ? (
             <div className={styles.empty}>
               <div className={styles.emptyIcon}>💙</div>
-              <p>אין נמענים עדיין</p>
+              <p>{t('contacts.noContacts')}</p>
               <p style={{ fontSize: '0.9rem', marginTop: '8px', opacity: 0.7 }}>
-                לחץ על &quot;הוסף נמען&quot; כדי להתחיל
+                {t('contacts.clickToAdd')}
               </p>
             </div>
           ) : (
@@ -199,25 +185,8 @@ export default function ContactsPage() {
                 {contact.default_tone && (
                   <p className={styles.contactInfo}>
                     <MdTune style={{ fontSize: '18px', color: '#a8d5e2' }} />
-                    טון ברירת מחדל: {
-                      contact.default_tone === 'friendly' ? 'ידידותי' :
-                      contact.default_tone === 'warm' ? 'חם' :
-                      contact.default_tone === 'casual' ? 'קליל' :
-                      contact.default_tone === 'formal' ? 'פורמלי' :
-                      contact.default_tone === 'humorous' ? 'הומוריסטי' :
-                      contact.default_tone === 'professional' ? 'מקצועי' :
-                      contact.default_tone === 'intimate' ? 'אינטימי' :
-                      contact.default_tone === 'supportive' ? 'תומך' :
-                      contact.default_tone === 'enthusiastic' ? 'נלהב' :
-                      contact.default_tone === 'gentle' ? 'עדין' :
-                      contact.default_tone === 'confident' ? 'בטוח' :
-                      contact.default_tone === 'playful' ? 'שובב' :
-                      contact.default_tone === 'sincere' ? 'כנה' :
-                      contact.default_tone === 'optimistic' ? 'אופטימי' :
-                      contact.default_tone === 'empathetic' ? 'אמפתי' :
-                      contact.default_tone === 'encouraging' ? 'מעודד' :
-                      contact.default_tone === 'grateful' ? 'אסיר תודה' :
-                      contact.default_tone
+                    {t('contacts.defaultTone')}: {
+                      (t('messages.tones') as any)[contact.default_tone] || contact.default_tone
                     }
                   </p>
                 )}
@@ -228,7 +197,7 @@ export default function ContactsPage() {
                   if (reminder.reminder_type === 'one_time') {
                     if (reminder.scheduled_datetime) {
                       const date = new Date(reminder.scheduled_datetime)
-                      reminderText = date.toLocaleDateString('he-IL', { 
+                      reminderText = date.toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US', { 
                         day: 'numeric', 
                         month: 'numeric', 
                         year: 'numeric',
@@ -236,21 +205,27 @@ export default function ContactsPage() {
                         minute: '2-digit'
                       })
                     } else {
-                      reminderText = 'תאריך ספציפי'
+                      reminderText = t('contacts.reminderTypes.oneTime')
                     }
                   } else if (reminder.reminder_type === 'recurring') {
-                    reminderText = `כל ${reminder.interval_value} ${reminder.interval_type === 'hours' ? 'שעות' : 'ימים'}`
+                    const intervalType = reminder.interval_type === 'hours' ? t('contacts.intervals.hours') : t('contacts.intervals.days')
+                    reminderText = t('contacts.reminderTypes.recurring')
+                      .replace('{{value}}', reminder.interval_value?.toString() || '1')
+                      .replace('{{type}}', intervalType)
                   } else if (reminder.reminder_type === 'weekly') {
-                    const weekdayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת']
+                    const weekdayNames = t('contacts.weekdays') as unknown as string[]
                     const days = reminder.weekdays?.map(d => weekdayNames[d]).join(', ') || ''
-                    reminderText = `${days}${reminder.specific_time ? ` בשעה ${reminder.specific_time}` : ''}`
+                    reminderText = t('contacts.reminderTypes.weekly')
+                      .replace('{{days}}', days)
+                      .replace('{{time}}', reminder.specific_time || '12:00')
                   } else if (reminder.reminder_type === 'daily') {
-                    reminderText = `כל יום בשעה ${reminder.specific_time || '12:00'}`
+                    reminderText = t('contacts.reminderTypes.daily')
+                      .replace('{{time}}', reminder.specific_time || '12:00')
                   }
                   
                   return (
                     <div className={styles.reminderBadge}>
-                      <MdNotifications style={{ fontSize: '16px', marginLeft: '4px' }} />
+                      <MdNotifications style={{ fontSize: '16px', marginInlineEnd: '4px' }} />
                       <span>{reminderText}</span>
                     </div>
                   )
@@ -262,7 +237,7 @@ export default function ContactsPage() {
                     disabled={!contact.id}
                   >
                     <MdSend style={{ fontSize: '18px' }} />
-                    שלח הודעה
+                    {t('contacts.sendMessage')}
                   </button>
                   <button
                     onClick={() => contact.id && setReminderModal({ 
@@ -276,12 +251,12 @@ export default function ContactsPage() {
                     {contact.id && getReminderForContact(contact.id) ? (
                       <>
                         <MdNotifications style={{ fontSize: '18px' }} />
-                        ערוך התראה
+                        {t('contacts.editReminder')}
                       </>
                     ) : (
                       <>
                         <MdNotificationsOff style={{ fontSize: '18px' }} />
-                        הגדר התראה
+                        {t('contacts.setReminder')}
                       </>
                     )}
                   </button>
@@ -290,7 +265,7 @@ export default function ContactsPage() {
                     className={styles.deleteButton}
                   >
                     <MdDelete style={{ fontSize: '18px' }} />
-                    מחק
+                    {t('contacts.delete')}
                   </button>
                 </div>
               </div>

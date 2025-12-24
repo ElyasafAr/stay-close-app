@@ -14,24 +14,24 @@ export default function AboutPage() {
   return (
     <main className={styles.main}>
       <div className={styles.container}>
-        <h1 className={styles.title}>{t('navigation.about')}</h1>
+        <h1 className={styles.title}>{t('about.title')}</h1>
         
         <div className={styles.content}>
           <div className={styles.icon}>💙</div>
           <p className={styles.paragraph}>
-            Stay Close היא אפליקציה שפותחה כדי לעזור לכם לשמור על קשר עם האנשים החשובים בחייכם.
+            {t('about.description1')}
           </p>
           <p className={styles.paragraph}>
-            האפליקציה מספקת כלים נוחים לניהול קשרים, תזכורות, והתראות כדי שלא תפספסו רגעים חשובים.
+            {t('about.description2')}
           </p>
           
           {/* מידע על גרסה */}
           <div className={styles.versionBox}>
             <p className={styles.versionText}>
-            <AiFillHeart style={{ color: '#f4a5ae', fontSize: '1.2rem', marginLeft: '4px' }} />
-              גרסה: <strong>{APP_VERSION}</strong>
+            <AiFillHeart style={{ color: '#f4a5ae', fontSize: '1.2rem', marginInlineEnd: '4px' }} />
+              {t('about.version')}: <strong>{APP_VERSION}</strong>
             </p>
-            <p className={styles.buildDate}>תאריך עדכון: {BUILD_DATE}</p>
+            <p className={styles.buildDate}>{t('about.buildDate')}: {BUILD_DATE}</p>
           </div>
 
           {/* כפתור צור קשר - מעבר לדף הייעודי */}
@@ -40,7 +40,7 @@ export default function AboutPage() {
             onClick={() => router.push('/contact')}
           >
             <MdEmail style={{ fontSize: '20px' }} />
-            צור קשר
+            {t('about.contact')}
           </button>
         </div>
       </div>

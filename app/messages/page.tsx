@@ -40,11 +40,11 @@ export default function MessagesPage() {
     setUser(storedUser)
     
     const hour = new Date().getHours()
-    if (hour >= 5 && hour < 12) setGreeting('בוקר טוב')
-    else if (hour >= 12 && hour < 17) setGreeting('צהריים טובים')
-    else if (hour >= 17 && hour < 21) setGreeting('ערב נעים')
-    else setGreeting('לילה טוב')
-  }, [])
+    if (hour >= 5 && hour < 12) setGreeting(t('messages.greetings.morning'))
+    else if (hour >= 12 && hour < 17) setGreeting(t('messages.greetings.afternoon'))
+    else if (hour >= 17 && hour < 21) setGreeting(t('messages.greetings.evening'))
+    else setGreeting(t('messages.greetings.night'))
+  }, [t])
 
   useEffect(() => {
     loadContacts()
@@ -63,7 +63,7 @@ export default function MessagesPage() {
 
   // Update default tone when contact is selected
   useEffect(() => {
-    if (selectedContact) {
+    if (selectedContact && selectedContact !== 'new') {
       const contact = contacts.find(c => c.id === selectedContact)
       if (contact && contact.default_tone) {
         setMessageConfig(prev => ({
@@ -81,7 +81,7 @@ export default function MessagesPage() {
       const data = await getContacts()
       setContacts(data)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'שגיאה בטעינת נמענים')
+      setError(err instanceof Error ? err.message : t('contacts.errorLoading'))
     } finally {
       setLoading(false)
     }
@@ -104,11 +104,11 @@ export default function MessagesPage() {
       setNewRecipientName('')
     } catch (err: any) {
       const errorMsg = err instanceof Error ? err.message : String(err);
-      if (errorMsg.includes('402') || errorMsg.includes('הגעת למגבלת')) {
+      if (errorMsg.includes('402') || errorMsg.includes('הגעת למגבלת') || errorMsg.includes('limit reached')) {
         router.push('/paywall');
         return;
       }
-      setError(errorMsg || 'שגיאה ביצירת נמען');
+      setError(errorMsg || t('messages.errorCreatingContact'));
     } finally {
       setAddingRecipient(false)
     }
@@ -131,11 +131,11 @@ export default function MessagesPage() {
         setNewRecipientName('');
       } catch (err: any) {
         const errorMsg = err instanceof Error ? err.message : String(err);
-        if (errorMsg.includes('402') || errorMsg.includes('הגעת למגבלת')) {
+        if (errorMsg.includes('402') || errorMsg.includes('הגעת למגבלת') || errorMsg.includes('limit reached')) {
           router.push('/paywall');
           return;
         }
-        setError(errorMsg || 'שגיאה ביצירת נמען אוטומטית');
+        setError(errorMsg || t('messages.errorCreatingContact'));
         setAddingRecipient(false);
         return;
       } finally {
@@ -144,7 +144,7 @@ export default function MessagesPage() {
     }
 
     if (!currentContactId || currentContactId === 'new') {
-      setError('אנא בחר נמען או הזן שם לנמען חדש');
+      setError(t('messages.errorNoContact'));
       return;
     }
 
@@ -163,12 +163,12 @@ export default function MessagesPage() {
     } catch (err: any) {
       // Check if this is a payment required error (usage limit reached)
       const errorMsg = err instanceof Error ? err.message : String(err)
-      if (errorMsg.includes('402') || errorMsg.includes('הגעת למגבלת')) {
+      if (errorMsg.includes('402') || errorMsg.includes('הגעת למגבלת') || errorMsg.includes('limit reached')) {
         // Redirect to paywall
         router.push('/paywall')
         return
       }
-      setError(errorMsg || 'שגיאה ביצירת הודעה')
+      setError(errorMsg || t('messages.errorGenerating'))
     } finally {
       setGenerating(false)
     }
@@ -181,7 +181,7 @@ export default function MessagesPage() {
       // Try modern clipboard API first
       if (navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(generatedMessage)
-        alert('ההודעה הועתקה ללוח!')
+        alert(t('messages.copied'))
       } else {
         // Fallback for older browsers/mobile
         const textArea = document.createElement('textarea')
@@ -196,13 +196,13 @@ export default function MessagesPage() {
         try {
           const successful = document.execCommand('copy')
           if (successful) {
-            alert('ההודעה הועתקה ללוח!')
+            alert(t('messages.copied'))
           } else {
             throw new Error('Copy command failed')
           }
         } catch (err) {
           // Last resort - show the text for manual copy
-          alert('העתק את ההודעה:\n\n' + generatedMessage)
+          alert(t('messages.copy') + ':\n\n' + generatedMessage)
         } finally {
           document.body.removeChild(textArea)
         }
@@ -210,51 +210,36 @@ export default function MessagesPage() {
     } catch (err) {
       console.error('Failed to copy:', err)
       // Last resort - show the text for manual copy
-      alert('העתק את ההודעה:\n\n' + generatedMessage)
+      alert(t('messages.copy') + ':\n\n' + generatedMessage)
     }
   }
 
   const handleShare = async () => {
-    console.log('🟢 [SHARE] handleShare called')
-    console.log('🟢 [SHARE] generatedMessage:', generatedMessage?.substring(0, 50))
-    
-    if (!generatedMessage) {
-      console.log('🟢 [SHARE] No message to share, returning')
-      return
-    }
+    if (!generatedMessage) return
 
     try {
       // Check if running on Capacitor (native)
       const isNative = !!(window as any).Capacitor?.isNativePlatform?.()
-      console.log('🟢 [SHARE] isNative:', isNative)
-      console.log('🟢 [SHARE] navigator.share available:', !!navigator.share)
       
       if (isNative) {
-        console.log('🟢 [SHARE] Using Capacitor Share plugin...')
         // Use Capacitor Share plugin on native
         const { Share } = await import('@capacitor/share')
-        console.log('🟢 [SHARE] Share plugin imported, calling share...')
-        const result = await Share.share({
+        await Share.share({
           text: generatedMessage,
-          title: 'הודעה מותאמת אישית',
-          dialogTitle: 'שתף הודעה'
+          title: t('messages.shareTitle'),
+          dialogTitle: t('messages.shareDialog')
         })
-        console.log('🟢 [SHARE] Share result:', result)
       } else if (navigator.share) {
-        console.log('🟢 [SHARE] Using Web Share API...')
         // Use Web Share API on web
         await navigator.share({
           text: generatedMessage,
-          title: 'הודעה מותאמת אישית'
+          title: t('messages.shareTitle')
         })
-        console.log('🟢 [SHARE] Web Share completed')
       } else {
-        console.log('🟢 [SHARE] No share API available, falling back to copy')
         // Fallback: copy to clipboard and show message
         await handleCopy()
       }
     } catch (err) {
-      console.error('🟢 [SHARE] Error:', err)
       // User cancelled or error occurred
       if (err instanceof Error && err.name !== 'AbortError') {
         console.error('Share failed:', err)
@@ -274,7 +259,7 @@ export default function MessagesPage() {
         <div className={styles.welcomeSection}>
           <div className={styles.greeting}>
             <MdWavingHand className={styles.greetingIcon} />
-            <span>{greeting}, {user?.username || 'אורח'}</span>
+            <span>{greeting}, {user?.username || t('messages.greetings.guest')}</span>
           </div>
           <h1 className={styles.title}>{t('messages.title')}</h1>
           <p className={styles.subtitle}>{t('messages.subtitle')}</p>
@@ -285,18 +270,14 @@ export default function MessagesPage() {
 
         {error && (
           <div className={styles.error}>
-            <strong>שגיאה:</strong> {error}
-            <br />
-            <small>
-              טיפ: ודא שה-backend רץ, שיש GROQ_API_KEY מוגדר, ויש לפחות נמען אחד.
-            </small>
+            <strong>{t('common.error')}:</strong> {error}
           </div>
         )}
 
         <div className={styles.content}>
           <div className={styles.configPanel}>
             <h2 className={styles.sectionTitle}>
-              <MdPerson style={{ fontSize: '24px', color: '#a8d5e2' }} />
+              <MdPerson style={{ fontSize: '24px', color: '#a8d5e2', marginInlineEnd: '8px' }} />
               {t('messages.selectContact')}
             </h2>
             <select
@@ -307,20 +288,20 @@ export default function MessagesPage() {
               }}
               className={styles.select}
             >
-              <option value="">-- בחר נמען --</option>
+              <option value="">{t('messages.selectContactPlaceholder')}</option>
               {contacts.map((contact) => (
                 <option key={contact.id} value={contact.id}>
                   {contact.name}
                 </option>
               ))}
-              <option value="new">+ הוסף נמען חדש...</option>
+              <option value="new">{t('messages.addNewContactOption')}</option>
             </select>
 
             {selectedContact === 'new' && (
               <form onSubmit={handleAddRecipient} className={styles.addRecipientForm}>
                 <input
                   type="text"
-                  placeholder="שם הנמען החדש"
+                  placeholder={t('messages.newContactNamePlaceholder')}
                   value={newRecipientName}
                   onChange={(e) => setNewRecipientName(e.target.value)}
                   className={styles.input}
@@ -331,13 +312,13 @@ export default function MessagesPage() {
                   disabled={addingRecipient || !newRecipientName.trim()}
                   className={styles.addRecipientButton}
                 >
-                  <MdAdd /> {addingRecipient ? 'מוסיף...' : 'הוסף'}
+                  <MdAdd /> {addingRecipient ? t('messages.addingRecipient') : t('contacts.addContact')}
                 </button>
               </form>
             )}
 
             <h2 className={styles.sectionTitle}>
-              <MdMessage style={{ fontSize: '24px', color: '#a8d5e2' }} />
+              <MdMessage style={{ fontSize: '24px', color: '#a8d5e2', marginInlineEnd: '8px' }} />
               {t('messages.messageType')}
             </h2>
             <select
@@ -348,41 +329,13 @@ export default function MessagesPage() {
               })}
               className={styles.select}
             >
-              <option value="custom">{t('messages.types.custom')}</option>
-              <option value="checkin">{t('messages.types.checkin')}</option>
-              <option value="birthday">{t('messages.types.birthday')}</option>
-              <option value="holiday">{t('messages.types.holiday')}</option>
-              <option value="congratulations">{t('messages.types.congratulations')}</option>
-              <option value="thank_you">{t('messages.types.thank_you')}</option>
-              <option value="apology">{t('messages.types.apology')}</option>
-              <option value="support">{t('messages.types.support')}</option>
-              <option value="invitation">{t('messages.types.invitation')}</option>
-              <option value="thinking_of_you">{t('messages.types.thinking_of_you')}</option>
-              <option value="anniversary">{t('messages.types.anniversary')}</option>
-              <option value="get_well">{t('messages.types.get_well')}</option>
-              <option value="new_job">{t('messages.types.new_job')}</option>
-              <option value="graduation">{t('messages.types.graduation')}</option>
-              <option value="achievement">{t('messages.types.achievement')}</option>
-              <option value="encouragement">{t('messages.types.encouragement')}</option>
-              <option value="condolences">{t('messages.types.condolences')}</option>
-              <option value="farewell">{t('messages.types.farewell')}</option>
-              <option value="new_beginning">{t('messages.types.new_beginning')}</option>
-              <option value="special_thanks">{t('messages.types.special_thanks')}</option>
-              <option value="moving">{t('messages.types.moving')}</option>
-              <option value="wedding">{t('messages.types.wedding')}</option>
-              <option value="pregnancy">{t('messages.types.pregnancy')}</option>
-              <option value="birth">{t('messages.types.birth')}</option>
-              <option value="promotion">{t('messages.types.promotion')}</option>
-              <option value="retirement">{t('messages.types.retirement')}</option>
-              <option value="reunion">{t('messages.types.reunion')}</option>
-              <option value="appreciation">{t('messages.types.appreciation')}</option>
-              <option value="miss_you">{t('messages.types.miss_you')}</option>
-              <option value="good_luck">{t('messages.types.good_luck')}</option>
-              <option value="celebration">{t('messages.types.celebration')}</option>
+              {Object.entries(t('messages.types') as any).map(([key, label]) => (
+                <option key={key} value={key}>{label as string}</option>
+              ))}
             </select>
 
             <h2 className={styles.sectionTitle}>
-              <MdTune style={{ fontSize: '24px', color: '#a8d5e2' }} />
+              <MdTune style={{ fontSize: '24px', color: '#a8d5e2', marginInlineEnd: '8px' }} />
               {t('messages.tone')}
             </h2>
             <select
@@ -393,27 +346,13 @@ export default function MessagesPage() {
               })}
               className={styles.select}
             >
-              <option value="friendly">{t('messages.tones.friendly')}</option>
-              <option value="warm">{t('messages.tones.warm')}</option>
-              <option value="casual">{t('messages.tones.casual')}</option>
-              <option value="formal">{t('messages.tones.formal')}</option>
-              <option value="humorous">{t('messages.tones.humorous')}</option>
-              <option value="professional">{t('messages.tones.professional')}</option>
-              <option value="intimate">{t('messages.tones.intimate')}</option>
-              <option value="supportive">{t('messages.tones.supportive')}</option>
-              <option value="enthusiastic">{t('messages.tones.enthusiastic')}</option>
-              <option value="gentle">{t('messages.tones.gentle')}</option>
-              <option value="confident">{t('messages.tones.confident')}</option>
-              <option value="playful">{t('messages.tones.playful')}</option>
-              <option value="sincere">{t('messages.tones.sincere')}</option>
-              <option value="optimistic">{t('messages.tones.optimistic')}</option>
-              <option value="empathetic">{t('messages.tones.empathetic')}</option>
-              <option value="encouraging">{t('messages.tones.encouraging')}</option>
-              <option value="grateful">{t('messages.tones.grateful')}</option>
+              {Object.entries(t('messages.tones') as any).map(([key, label]) => (
+                <option key={key} value={key}>{label as string}</option>
+              ))}
             </select>
 
             <h2 className={styles.sectionTitle}>
-              <MdLanguage style={{ fontSize: '24px', color: '#a8d5e2' }} />
+              <MdLanguage style={{ fontSize: '24px', color: '#a8d5e2', marginInlineEnd: '8px' }} />
               {t('messages.language')}
             </h2>
             <select
@@ -424,16 +363,13 @@ export default function MessagesPage() {
               })}
               className={styles.select}
             >
-              <option value="he">{t('messages.languages.he')}</option>
-              <option value="en">{t('messages.languages.en')}</option>
-              <option value="ru">{t('messages.languages.ru')}</option>
-              <option value="ar">{t('messages.languages.ar')}</option>
-              <option value="fr">{t('messages.languages.fr')}</option>
-              <option value="es">{t('messages.languages.es')}</option>
+              {Object.entries(t('messages.languages') as any).map(([key, label]) => (
+                <option key={key} value={key}>{label as string}</option>
+              ))}
             </select>
 
             <h2 className={styles.sectionTitle}>
-              <MdEditNote style={{ fontSize: '24px', color: '#a8d5e2' }} />
+              <MdEditNote style={{ fontSize: '24px', color: '#a8d5e2', marginInlineEnd: '8px' }} />
               {t('messages.additionalContext')}
             </h2>
             <textarea
@@ -453,13 +389,13 @@ export default function MessagesPage() {
               className={styles.generateButton}
             >
               <MdAutoAwesome style={{ fontSize: '20px' }} />
-              {generating ? t('messages.generating') : (addingRecipient ? 'יוצר נמען...' : t('messages.generate'))}
+              {generating ? t('messages.generating') : (addingRecipient ? t('messages.addingRecipient') : t('messages.generate'))}
             </button>
           </div>
 
           <div className={styles.messagePanel}>
             <h2 className={styles.sectionTitle}>
-              <AiFillStar style={{ fontSize: '24px', color: '#ffd6a5' }} />
+              <AiFillStar style={{ fontSize: '24px', color: '#ffd6a5', marginInlineEnd: '8px' }} />
               {t('messages.generatedMessage')}
             </h2>
             {generating ? (
@@ -490,6 +426,8 @@ export default function MessagesPage() {
           </div>
         </div>
       </div>
+    </main>
+  )
     </main>
   )
 }

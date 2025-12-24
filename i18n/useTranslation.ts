@@ -1,10 +1,15 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import translations from './he.json'
+import he from './he.json'
+import en from './en.json'
+
+const translations: Record<string, any> = {
+  he,
+  en
+}
 
 type TranslationKey = string
-type TranslationObject = typeof translations
 
 // Recursive function to get nested translation
 function getNestedTranslation(obj: any, key: string): string {
@@ -96,9 +101,9 @@ export function useTranslation() {
   }, [])
 
   const t = (key: TranslationKey): string => {
-    return getNestedTranslation(translations, key)
+    const currentTranslations = translations[language] || translations['he']
+    return getNestedTranslation(currentTranslations, key)
   }
 
   return { t, language, setLanguage }
 }
-

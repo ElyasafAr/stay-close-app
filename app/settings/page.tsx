@@ -12,7 +12,7 @@ import { APP_VERSION } from '@/lib/constants'
 import styles from './page.module.css'
 
 export default function SettingsPage() {
-  const { t } = useTranslation()
+  const { t, language } = useTranslation()
   const router = useRouter()
   const { settings, updateSettings, saveSettings } = useSettings()
   const [showSuccess, setShowSuccess] = useState(false)
@@ -21,18 +21,11 @@ export default function SettingsPage() {
   const user = getStoredUser()
 
   const handleDeleteAccount = async () => {
-    const confirmed = confirm(
-      'האם אתה בטוח שברצונך למחוק את החשבון?\n\n' +
-      'פעולה זו תמחק את כל המידע שלך לצמיתות:\n' +
-      '• כל אנשי הקשר\n' +
-      '• כל התזכורות\n' +
-      '• כל ההגדרות\n\n' +
-      'לא ניתן לבטל פעולה זו!'
-    )
+    const confirmed = confirm(t('settings.deleteAccountConfirm1'))
     
     if (!confirmed) return
     
-    const doubleConfirmed = confirm('האם אתה בטוח לחלוטין? המידע יימחק לצמיתות ולא ניתן לשחזור.')
+    const doubleConfirmed = confirm(t('settings.deleteAccountConfirm2'))
     
     if (!doubleConfirmed) return
     
@@ -47,12 +40,12 @@ export default function SettingsPage() {
       localStorage.removeItem('user')
       localStorage.removeItem('app_settings')
       
-      alert('החשבון נמחק בהצלחה. להתראות!')
+      alert(t('settings.deleteAccountSuccess'))
       
       // Redirect to login
       window.location.replace('/login')
     } catch (error: any) {
-      alert('שגיאה במחיקת החשבון: ' + (error.message || 'אנא נסה שוב'))
+      alert(t('common.error') + ': ' + (error.message || 'Error'))
     } finally {
       setIsDeleting(false)
     }
@@ -109,7 +102,7 @@ export default function SettingsPage() {
   }
 
   const handleLogout = () => {
-    if (confirm('האם אתה בטוח שברצונך להתנתק?')) {
+    if (confirm(t('settings.logoutConfirm'))) {
       logout()
     }
   }
@@ -118,7 +111,7 @@ export default function SettingsPage() {
     <main className={styles.main}>
       <div className={styles.container}>
         <h1 className={styles.title}>
-          <MdSettings style={{ fontSize: '2.5rem', color: '#a8d5e2', marginLeft: '12px', display: 'inline-block' }} />
+          <MdSettings style={{ fontSize: '2.5rem', color: '#a8d5e2', marginInlineEnd: '12px', display: 'inline-block' }} />
           {t('settings.title')}
         </h1>
         
@@ -134,9 +127,25 @@ export default function SettingsPage() {
               onChange={(e) => updateSettings({ theme: e.target.value })}
               className={styles.select}
             >
-              <option value="light">בהיר</option>
-              <option value="dark">כהה</option>
-              <option value="auto">אוטומטי</option>
+              <option value="light">{language === 'he' ? 'בהיר' : 'Light'}</option>
+              <option value="dark">{language === 'he' ? 'כהה' : 'Dark'}</option>
+              <option value="auto">{language === 'he' ? 'אוטומטי' : 'Auto'}</option>
+            </select>
+          </div>
+
+          <div className={styles.settingItem}>
+            <label htmlFor="language">
+              <MdLanguage style={{ fontSize: '24px', color: '#a8d5e2' }} />
+              {t('settings.language')}
+            </label>
+            <select
+              id="language"
+              value={settings.language || 'he'}
+              onChange={(e) => updateSettings({ language: e.target.value })}
+              className={styles.select}
+            >
+              <option value="he">עברית (Hebrew)</option>
+              <option value="en">English</option>
             </select>
           </div>
 
@@ -159,7 +168,7 @@ export default function SettingsPage() {
             <div className={styles.settingItem}>
               <label htmlFor="notificationPlatform">
                 <MdDevices style={{ fontSize: '24px', color: '#a8d5e2' }} />
-                קבל התראות ב:
+                {t('settings.receiveNotificationsAt')}
               </label>
               <div className={styles.platformOptions}>
                 <button
@@ -168,7 +177,7 @@ export default function SettingsPage() {
                   onClick={() => updateSettings({ notificationPlatform: 'phone' })}
                 >
                   <MdPhoneAndroid style={{ fontSize: '20px' }} />
-                  <span>טלפון בלבד</span>
+                  <span>{t('settings.phoneOnly')}</span>
                 </button>
                 <button
                   type="button"
@@ -176,7 +185,7 @@ export default function SettingsPage() {
                   onClick={() => updateSettings({ notificationPlatform: 'browser' })}
                 >
                   <MdComputer style={{ fontSize: '20px' }} />
-                  <span>דפדפן בלבד</span>
+                  <span>{t('settings.browserOnly')}</span>
                 </button>
                 <button
                   type="button"
@@ -184,14 +193,14 @@ export default function SettingsPage() {
                   onClick={() => updateSettings({ notificationPlatform: 'both' })}
                 >
                   <MdDevices style={{ fontSize: '20px' }} />
-                  <span>שניהם</span>
+                  <span>{t('settings.bothPlatforms')}</span>
                 </button>
               </div>
             </div>
           )}
 
           <button onClick={handleSave} className={styles.saveButton} disabled={isSaving}>
-            {isSaving ? 'שומר...' : t('settings.save')}
+            {isSaving ? t('settings.saveLoading') : t('settings.save')}
           </button>
 
           {showSuccess && (
@@ -204,7 +213,7 @@ export default function SettingsPage() {
             <div className={styles.userInfo}>
               <MdPerson style={{ fontSize: '24px', color: '#a8d5e2' }} />
               <div>
-                <p className={styles.userName}>{user?.username || 'משתמש'}</p>
+                <p className={styles.userName}>{user?.username || (language === 'he' ? 'משתמש' : 'User')}</p>
                 <p className={styles.userEmail}>{user?.email || ''}</p>
               </div>
             </div>
@@ -212,14 +221,14 @@ export default function SettingsPage() {
 
           <button onClick={handleLogout} className={styles.logoutButton}>
             <MdLogout style={{ fontSize: '24px' }} />
-            <span>התנתק</span>
+            <span>{t('settings.logout')}</span>
           </button>
 
           {/* Delete Account */}
           <div className={styles.dangerZone}>
-            <h3 className={styles.dangerTitle}>אזור מסוכן</h3>
+            <h3 className={styles.dangerTitle}>{t('settings.dangerZone')}</h3>
             <p className={styles.dangerText}>
-              מחיקת החשבון תסיר את כל המידע שלך לצמיתות ולא ניתן לשחזור.
+              {t('settings.deleteAccountWarning')}
             </p>
             <button 
               onClick={handleDeleteAccount} 
@@ -227,12 +236,12 @@ export default function SettingsPage() {
               disabled={isDeleting}
             >
               <MdDeleteForever style={{ fontSize: '24px' }} />
-              <span>{isDeleting ? 'מוחק...' : 'מחק את החשבון שלי'}</span>
+              <span>{isDeleting ? (language === 'he' ? 'מוחק...' : 'Deleting...') : t('settings.deleteAccount')}</span>
             </button>
           </div>
 
           <div className={styles.versionFooter}>
-            <p>Stay Close גרסה {APP_VERSION}</p>
+            <p>Stay Close {t('settings.version')} {APP_VERSION}</p>
           </div>
         </div>
       </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslation } from '@/i18n/useTranslation'
 import { MdClose, MdNotifications } from 'react-icons/md'
 import { Reminder, ReminderCreate, ReminderType, createReminder, updateReminder } from '@/services/reminders'
 import { requestNotificationPermission } from '@/services/notifications'
@@ -15,17 +16,13 @@ interface ReminderModalProps {
   onSuccess: () => void
 }
 
-const WEEKDAYS = [
-  { value: 0, label: 'ראשון' },
-  { value: 1, label: 'שני' },
-  { value: 2, label: 'שלישי' },
-  { value: 3, label: 'רביעי' },
-  { value: 4, label: 'חמישי' },
-  { value: 5, label: 'שישי' },
-  { value: 6, label: 'שבת' },
-]
-
 export function ReminderModal({ contactId, contactName, existingReminder, onClose, onSuccess }: ReminderModalProps) {
+  const { t } = useTranslation()
+  const WEEKDAYS = (t('contacts.weekdays') as unknown as string[]).map((label, value) => ({
+    value,
+    label
+  }))
+
   // סוג התראה
   const [reminderType, setReminderType] = useState<ReminderType>(
     existingReminder?.reminder_type || 'recurring'
@@ -84,31 +81,31 @@ export function ReminderModal({ contactId, contactName, existingReminder, onClos
     try {
       // וולידציה
       if (reminderType === 'one_time' && (!scheduledDate || !scheduledTime)) {
-        setError('נא לבחור תאריך ושעה')
+        setError(t('reminders.errorDateTime'))
         setLoading(false)
         return
       }
       
       if (reminderType === 'recurring' && (!intervalValue || intervalValue < 1)) {
-        setError('נא להזין תדירות תקינה')
+        setError(t('reminders.errorFrequency'))
         setLoading(false)
         return
       }
       
       if (reminderType === 'weekly' && selectedWeekdays.length === 0) {
-        setError('נא לבחור לפחות יום אחד בשבוע')
+        setError(t('reminders.errorWeekdays'))
         setLoading(false)
         return
       }
       
       if (reminderType === 'weekly' && !weeklyTime) {
-        setError('נא לבחור שעה')
+        setError(t('reminders.errorTime'))
         setLoading(false)
         return
       }
       
       if (reminderType === 'daily' && !dailyTime) {
-        setError('נא לבחור שעה')
+        setError(t('reminders.errorTime'))
         setLoading(false)
         return
       }
@@ -190,7 +187,7 @@ export function ReminderModal({ contactId, contactName, existingReminder, onClos
       onSuccess()
       onClose()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'שגיאה בשמירת התראה')
+      setError(err instanceof Error ? err.message : t('reminders.errorSaving'))
     } finally {
       setLoading(false)
     }
@@ -201,8 +198,8 @@ export function ReminderModal({ contactId, contactName, existingReminder, onClos
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.header}>
           <h2 className={styles.title}>
-            <MdNotifications style={{ fontSize: '24px', marginLeft: '8px' }} />
-            {existingReminder ? 'ערוך התראה' : 'הגדר התראה'}
+            <MdNotifications style={{ fontSize: '24px', marginInlineEnd: '8px' }} />
+            {existingReminder ? t('reminders.editTitle') : t('reminders.title')}
           </h2>
           <button onClick={onClose} className={styles.closeButton}>
             <MdClose style={{ fontSize: '24px' }} />
@@ -210,7 +207,7 @@ export function ReminderModal({ contactId, contactName, existingReminder, onClos
         </div>
 
         <div className={styles.content}>
-          <p className={styles.contactName}>לשלח הודעה ל-{contactName}</p>
+          <p className={styles.contactName}>{t('reminders.sendTo').replace('{{name}}', contactName)}</p>
 
           {error && (
             <div className={styles.error}>
@@ -221,7 +218,7 @@ export function ReminderModal({ contactId, contactName, existingReminder, onClos
           <form onSubmit={handleSubmit} className={styles.form}>
             {/* בחירת סוג התראה */}
             <div className={styles.formGroup}>
-              <label className={styles.label}>סוג התראה</label>
+              <label className={styles.label}>{t('reminders.type')}</label>
               <div className={styles.radioGroup}>
                 <label className={styles.radioLabel}>
                   <input
@@ -232,7 +229,7 @@ export function ReminderModal({ contactId, contactName, existingReminder, onClos
                     onChange={(e) => setReminderType(e.target.value as ReminderType)}
                     className={styles.radio}
                   />
-                  <span>חד-פעמית (תאריך ושעה ספציפיים)</span>
+                  <span>{t('reminders.oneTime')}</span>
                 </label>
                 <label className={styles.radioLabel}>
                   <input
@@ -243,7 +240,7 @@ export function ReminderModal({ contactId, contactName, existingReminder, onClos
                     onChange={(e) => setReminderType(e.target.value as ReminderType)}
                     className={styles.radio}
                   />
-                  <span>חזרתית (כל X שעות/ימים)</span>
+                  <span>{t('reminders.recurring')}</span>
                 </label>
                 <label className={styles.radioLabel}>
                   <input
@@ -254,7 +251,7 @@ export function ReminderModal({ contactId, contactName, existingReminder, onClos
                     onChange={(e) => setReminderType(e.target.value as ReminderType)}
                     className={styles.radio}
                   />
-                  <span>שבועית (יום/ימים קבועים)</span>
+                  <span>{t('reminders.weekly')}</span>
                 </label>
                 <label className={styles.radioLabel}>
                   <input
@@ -265,7 +262,7 @@ export function ReminderModal({ contactId, contactName, existingReminder, onClos
                     onChange={(e) => setReminderType(e.target.value as ReminderType)}
                     className={styles.radio}
                   />
-                  <span>יומית (כל יום בשעה מסוימת)</span>
+                  <span>{t('reminders.daily')}</span>
                 </label>
               </div>
             </div>
@@ -273,7 +270,7 @@ export function ReminderModal({ contactId, contactName, existingReminder, onClos
             {/* טופס לפי סוג התראה */}
             {reminderType === 'one_time' && (
               <div className={styles.formGroup}>
-                <label className={styles.label}>תאריך</label>
+                <label className={styles.label}>{t('reminders.date')}</label>
                 <input
                   type="date"
                   value={scheduledDate}
@@ -282,7 +279,7 @@ export function ReminderModal({ contactId, contactName, existingReminder, onClos
                   required
                   min={new Date().toISOString().split('T')[0]}
                 />
-                <label className={styles.label} style={{ marginTop: '12px' }}>שעה</label>
+                <label className={styles.label} style={{ marginTop: '12px' }}>{t('reminders.time')}</label>
                 <input
                   type="time"
                   value={scheduledTime}
@@ -295,7 +292,7 @@ export function ReminderModal({ contactId, contactName, existingReminder, onClos
 
             {reminderType === 'recurring' && (
               <div className={styles.formGroup}>
-                <label className={styles.label}>תדירות</label>
+                <label className={styles.label}>{t('reminders.frequency')}</label>
                 <div className={styles.intervalInputs}>
                   <input
                     type="number"
@@ -310,8 +307,8 @@ export function ReminderModal({ contactId, contactName, existingReminder, onClos
                     onChange={(e) => setIntervalType(e.target.value as 'hours' | 'days')}
                     className={styles.select}
                   >
-                    <option value="hours">שעות</option>
-                    <option value="days">ימים</option>
+                    <option value="hours">{t('contacts.intervals.hours')}</option>
+                    <option value="days">{t('contacts.intervals.days')}</option>
                   </select>
                 </div>
               </div>
@@ -320,7 +317,7 @@ export function ReminderModal({ contactId, contactName, existingReminder, onClos
             {reminderType === 'weekly' && (
               <>
                 <div className={styles.formGroup}>
-                  <label className={styles.label}>ימים בשבוע</label>
+                  <label className={styles.label}>{t('reminders.weekdays')}</label>
                   <div className={styles.weekdaysGrid}>
                     {WEEKDAYS.map(day => (
                       <label key={day.value} className={styles.weekdayLabel}>
@@ -336,7 +333,7 @@ export function ReminderModal({ contactId, contactName, existingReminder, onClos
                   </div>
                 </div>
                 <div className={styles.formGroup}>
-                  <label className={styles.label}>שעה</label>
+                  <label className={styles.label}>{t('reminders.time')}</label>
                   <input
                     type="time"
                     value={weeklyTime}
@@ -350,7 +347,7 @@ export function ReminderModal({ contactId, contactName, existingReminder, onClos
 
             {reminderType === 'daily' && (
               <div className={styles.formGroup}>
-                <label className={styles.label}>שעה</label>
+                <label className={styles.label}>{t('reminders.time')}</label>
                 <input
                   type="time"
                   value={dailyTime}
@@ -369,16 +366,16 @@ export function ReminderModal({ contactId, contactName, existingReminder, onClos
                   onChange={(e) => setEnabled(e.target.checked)}
                   className={styles.checkbox}
                 />
-                <span>התראה פעילה</span>
+                <span>{t('reminders.active')}</span>
               </label>
             </div>
 
             <div className={styles.actions}>
               <button type="button" onClick={onClose} className={styles.cancelButton}>
-                ביטול
+                {t('settings.cancel')}
               </button>
               <button type="submit" className={styles.submitButton} disabled={loading}>
-                {loading ? 'שומר...' : existingReminder ? 'עדכן' : 'שמור'}
+                {loading ? t('reminders.saving') : existingReminder ? t('reminders.update') : t('reminders.save')}
               </button>
             </div>
           </form>
