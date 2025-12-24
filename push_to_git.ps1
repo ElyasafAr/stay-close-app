@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "i18n Fix v1.6.4: Resolve Contact Page Crash - Fix missing 'language' variable in contact page - Correct arrow rotation logic for RTL/LTR - Bump version to 1.6.4"
+$commitMessage = "i18n Fix v1.6.5: Complete Missing language Definitions - Add 'language' to useTranslation in Contacts and Paywall pages - Fixes remaining deployment type errors - Bump version to 1.6.5"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files

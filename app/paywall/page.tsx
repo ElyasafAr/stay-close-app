@@ -25,7 +25,7 @@ interface SubscriptionStatus {
 }
 
 export default function PaywallPage() {
-  const { t } = useTranslation()
+  const { t, language } = useTranslation()
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [subscriptionData, setSubscriptionData] = useState<SubscriptionStatus | null>(null)

@@ -12,7 +12,7 @@ import { MdAdd, MdDelete, MdNotifications, MdNotificationsOff, MdTune, MdSend } 
 import styles from './page.module.css'
 
 export default function ContactsPage() {
-  const { t } = useTranslation()
+  const { t, language } = useTranslation()
   const router = useRouter()
   const [contacts, setContacts] = useState<Contact[]>([])
   const [reminders, setReminders] = useState<Reminder[]>([])
