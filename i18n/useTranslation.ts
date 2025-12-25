@@ -6,13 +6,16 @@ import en from './en.json'
 
 const translations: Record<string, any> = { he, en }
 
+/**
+ * useTranslation - Simplified hook for i18n
+ * Just loads the language once on mount and provides the 't' function.
+ */
 export function useTranslation() {
   const [language, setLanguage] = useState<string>('he')
 
   useEffect(() => {
     if (typeof window === 'undefined') return
     const saved = localStorage.getItem('app_language') || 'he'
-    console.log(`🌐 [useTranslation] Initial language check: ${saved}`)
     setLanguage(saved)
   }, [])
 
@@ -30,5 +33,5 @@ export function useTranslation() {
     return value
   }
 
-  return { t, language, setLanguage }
+  return { t, language }
 }

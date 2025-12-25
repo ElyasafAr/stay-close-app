@@ -2,9 +2,13 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import { isAuthenticated, onAuthStateChange } from '@/services/auth'
+import { onAuthStateChange } from '@/services/auth'
 import { Loading } from './Loading'
 
+/**
+ * AuthGuard - Protects routes and handles initial authentication check.
+ * Simplified to prevent hydration errors and navigation loops.
+ */
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
@@ -12,63 +16,54 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const [authenticated, setAuthenticated] = useState(false)
   const [mounted, setMounted] = useState(false)
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  console.log(`🛡️ [AuthGuard] Render: pathname=${pathname}, loading=${loading}, authenticated=${authenticated}, mounted=${mounted}`)
-
-  // דפים שפתוחים לכולם
+  // public paths that don't require auth
   const publicPaths = ['/login', '/register']
 
   useEffect(() => {
+    setMounted(true)
+    
     const checkAuth = () => {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
-      const user = typeof window !== 'undefined' ? localStorage.getItem('user') : null
+      const token = localStorage.getItem('auth_token')
+      const user = localStorage.getItem('user')
       const isAuth = !!(token && user)
       
       setAuthenticated(isAuth)
 
-      if (!isAuth && !publicPaths.includes(window.location.pathname)) {
+      // Redirect logic based on current path
+      // We use window.location.pathname here to get the real current path during this execution
+      const currentPath = window.location.pathname
+      
+      if (!isAuth && !publicPaths.includes(currentPath)) {
         router.replace('/login')
+      } else if (isAuth && currentPath === '/login') {
+        router.replace('/')
       }
       
-      // Only set loading to false once on initial mount
       setLoading(false)
     }
 
-    setMounted(true)
+    // Run initial check
     checkAuth()
 
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'auth_token' || e.key === 'user') {
-        checkAuth()
-      }
-    }
+    // Listen for auth changes
+    const unsubscribe = onAuthStateChange(() => {
+      checkAuth()
+    })
 
-    window.addEventListener('storage', handleStorageChange)
-    const unsubscribe = onAuthStateChange(() => checkAuth())
+    return () => unsubscribe()
+  }, [router]) // pathname dependency removed to prevent re-runs during navigation
 
-    return () => {
-      window.removeEventListener('storage', handleStorageChange)
-      unsubscribe()
-    }
-  }, [router]) // pathname removed from dependencies
-
-  if (loading || !mounted) {
+  // Prevent hydration mismatch by returning null or Loading until mounted
+  if (!mounted || loading) {
     return <Loading />
   }
 
-  // אם המשתמש לא מחובר ובדף ציבורי - תן לו להיכנס
-  if (!authenticated && publicPaths.includes(pathname)) {
+  // Allow access if authenticated OR on a public path
+  const isPublicPath = publicPaths.includes(pathname)
+  if (authenticated || isPublicPath) {
     return <>{children}</>
   }
 
-  // אם המשתמש מחובר - תן לו גישה
-  if (authenticated) {
-    return <>{children}</>
-  }
-
-  // אחרת - טעינה
+  // Fallback to loading while redirecting
   return <Loading />
 }

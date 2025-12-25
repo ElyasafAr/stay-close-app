@@ -20,14 +20,17 @@ export const metadata: Metadata = {
   }
 }
 
+/**
+ * RootLayout - Minimal server rendering to prevent hydration mismatches.
+ * The html tag starts with default values and is updated by ThemeProvider on the client.
+ */
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  console.log('🏗️ [RootLayout] Rendering...')
   return (
-    <html lang="he" suppressHydrationWarning>
+    <html suppressHydrationWarning>
       <body>
         <ThemeProvider />
         <Header />
@@ -42,4 +45,3 @@ export default function RootLayout({
     </html>
   )
 }
-
