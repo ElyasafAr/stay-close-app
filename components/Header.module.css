@@ -1,20 +1,20 @@
 .header {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  padding: 16px 24px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  padding: var(--spacing-md) var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
   position: sticky;
   top: 0;
   z-index: 100;
   transition: background var(--transition-normal), box-shadow var(--transition-normal);
+  border-bottom: 1px solid var(--border-color);
 }
 
-/* Dark theme header */
+/* Dark theme header overrides */
 html.dark .header {
   background: rgba(22, 27, 34, 0.95);
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
-  border-bottom: 1px solid rgba(79, 195, 247, 0.2);
 }
 
 .nav {
@@ -23,13 +23,13 @@ html.dark .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
+  gap: var(--spacing-lg);
 }
 
 .logo {
   font-size: 1.5rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #7fb8c9 0%, #a8d5e2 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -40,14 +40,14 @@ html.dark .header {
 
 /* Dark theme logo */
 html.dark .logo {
-  background: linear-gradient(135deg, #4fc3f7 0%, #81d4fa 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
   filter: brightness(1.2);
 }
 
 .navRight {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: var(--spacing-lg);
   flex: 1;
   justify-content: flex-end;
 }
@@ -55,43 +55,35 @@ html.dark .logo {
 .navLinks {
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex-wrap: nowrap; /* Prevent wrapping */
+  gap: var(--spacing-xs);
+  flex-wrap: nowrap;
 }
 
 .navLink {
-  color: #2d3748;
+  color: var(--text-primary);
   text-decoration: none;
   font-weight: 600;
   font-size: 0.95rem;
-  padding: 8px 16px;
-  border-radius: 20px;
-  transition: all 300ms ease;
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--radius-full);
+  transition: all var(--transition-normal);
 }
 
 .navLink:hover {
-  background: rgba(168, 213, 226, 0.1);
-  color: #7fb8c9;
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
 }
 
 .navLink.active {
-  background: rgba(168, 213, 226, 0.15);
-  color: #7fb8c9;
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
   font-weight: 700;
 }
 
 /* Dark theme nav links */
-html.dark .navLink {
-  color: var(--text-primary);
-}
-
-html.dark .navLink:hover {
-  background: rgba(79, 195, 247, 0.2);
-  color: var(--color-primary);
-}
-
+html.dark .navLink:hover,
 html.dark .navLink.active {
-  background: rgba(79, 195, 247, 0.25);
+  background: rgba(96, 165, 250, 0.2);
   color: var(--color-primary);
 }
 
@@ -102,28 +94,27 @@ html.dark .navLink.active {
 .userButton {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  background: linear-gradient(135deg, rgba(168, 213, 226, 0.1) 0%, rgba(127, 184, 201, 0.1) 100%);
-  border: 2px solid rgba(168, 213, 226, 0.3);
-  border-radius: 9999px;
+  gap: var(--spacing-xs);
+  padding: 10px var(--spacing-md);
+  background: var(--bg-card);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-full);
   cursor: pointer;
-  transition: all 300ms ease;
+  transition: all var(--transition-normal);
   font-weight: 600;
-  color: #2d3748;
+  color: var(--text-primary);
 }
 
 .userButton:hover {
-  background: linear-gradient(135deg, rgba(168, 213, 226, 0.2) 0%, rgba(127, 184, 201, 0.2) 100%);
-  border-color: #a8d5e2;
+  border-color: var(--color-primary);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(168, 213, 226, 0.2);
+  box-shadow: var(--shadow-md);
 }
 
 .userIcon {
   width: 20px;
   height: 20px;
-  color: #a8d5e2;
+  color: var(--color-primary);
 }
 
 .userName {
@@ -137,25 +128,19 @@ html.dark .navLink.active {
 .dropdown {
   position: absolute;
   top: calc(100% + 8px);
-  inset-inline-end: 0; /* Logical property for right in LTR, left in RTL */
-  background: rgba(255, 255, 255, 0.98);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-  padding: 20px;
+  inset-inline-end: 0;
+  background: var(--bg-card);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: var(--spacing-lg);
   min-width: 220px;
-  max-width: calc(100vw - 32px); /* Prevent overflow on mobile */
+  max-width: calc(100vw - 32px);
   z-index: 1000;
   animation: slideDown 0.3s ease;
-  /* Ensure dropdown stays within viewport */
   transform-origin: top inline-end;
-}
-
-html.dark .dropdown {
-  background: var(--bg-card);
-  border: 1px solid rgba(96, 165, 250, 0.15);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  border: 1px solid var(--border-color);
 }
 
 @keyframes slideDown {
@@ -170,57 +155,52 @@ html.dark .dropdown {
 }
 
 .userInfo {
-  padding-bottom: 16px;
-  margin-bottom: 16px;
-  border-bottom: 1px solid rgba(168, 213, 226, 0.2);
+  padding-bottom: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .userNameFull {
   font-size: 1.1rem;
   font-weight: 700;
-  color: #2d3748;
+  color: var(--text-primary);
   margin: 0 0 4px 0;
 }
 
 .userEmail {
   font-size: 0.85rem;
-  color: #718096;
+  color: var(--text-secondary);
   margin: 0;
 }
 
 .versionInfo {
   padding: 4px 0;
   text-align: center;
-  color: var(--text-secondary);
-  opacity: 0.7;
+  color: var(--text-light);
+  font-size: 0.8rem;
 }
 
 .logoutButton {
   width: 100%;
-  padding: 12px 20px;
-  background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+  padding: 12px var(--spacing-lg);
+  background: linear-gradient(135deg, var(--color-error) 0%, var(--color-secondary) 100%);
   color: white;
   border: none;
-  border-radius: 20px;
+  border-radius: var(--radius-full);
   font-size: 0.95rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 300ms ease;
+  transition: all var(--transition-normal);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: var(--spacing-xs);
   box-shadow: 0 4px 12px rgba(255, 154, 158, 0.3);
 }
 
 .logoutButton:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(255, 154, 158, 0.4);
-}
-
-.logoutIcon {
-  width: 20px;
-  height: 20px;
 }
 
 /* Mobile navigation - Hamburger menu */
@@ -231,131 +211,84 @@ html.dark .dropdown {
   color: var(--text-primary);
   font-size: 1.5rem;
   cursor: pointer;
-  padding: 8px;
-  border-radius: 8px;
+  padding: var(--spacing-xs);
+  border-radius: var(--radius-sm);
   transition: all var(--transition-normal);
 }
 
 .mobileMenuButton:hover {
-  background: rgba(168, 213, 226, 0.1);
+  background: var(--color-primary-light);
 }
 
-/* Dark mode hamburger - bright color for visibility */
 html.dark .mobileMenuButton {
   color: #ffffff !important;
   background: rgba(79, 195, 247, 0.15);
   border: 1px solid rgba(79, 195, 247, 0.3);
 }
 
-html.dark .mobileMenuButton svg {
-  stroke: #ffffff !important;
-  fill: #ffffff !important;
-  color: #ffffff !important;
-}
-
-html.dark .mobileMenuButton:hover {
-  background: rgba(79, 195, 247, 0.3);
-  border-color: rgba(79, 195, 247, 0.5);
-}
-
 .mobileMenu {
   display: none;
   position: fixed;
   top: 0;
-  right: 0; /* Always start from right in CSS, we'll handle RTL/LTR in logic */
+  inset-inline-end: 0;
   width: 280px;
   max-width: 85vw;
   height: 100vh;
   height: 100dvh;
   background: var(--bg-primary);
-  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-xl);
   z-index: 10000;
-  padding: 24px;
+  padding: var(--spacing-lg);
   overflow-y: auto;
-  transform: translateX(100%); /* Off-screen to the right */
   transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
   will-change: transform;
+  border-inline-start: 1px solid var(--border-color);
 }
 
-/* Special case for LTR - menu should come from the left */
+/* Direction-aware transform for mobile menu */
+:global([dir="rtl"]) .mobileMenu {
+  transform: translateX(100%);
+}
+
 :global([dir="ltr"]) .mobileMenu {
-  right: auto;
-  left: 0;
-  transform: translateX(-100%); /* Off-screen to the left */
-  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.2);
+  transform: translateX(-100%);
 }
 
 .mobileMenu.open {
   transform: translateX(0) !important;
 }
 
-html.dark .mobileMenu {
-  background: var(--bg-primary);
-  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.8);
-  border-left: 1px solid rgba(96, 165, 250, 0.2);
-}
-
-:global([dir="ltr"]) html.dark .mobileMenu {
-  border-left: none;
-  border-right: 1px solid rgba(96, 165, 250, 0.2);
-}
-
-.mobileMenuHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 32px;
-  padding-bottom: 16px;
-  border-bottom: 2px solid var(--color-primary-light);
-}
-
-.mobileMenuClose {
-  background: none;
-  border: none;
-  color: var(--text-primary);
-  font-size: 1.5rem;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 8px;
-  transition: all var(--transition-normal);
-}
-
-.mobileMenuClose:hover {
-  background: rgba(168, 213, 226, 0.1);
-}
-
 .mobileNavLinks {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--spacing-sm);
 }
 
 .mobileNavLink {
-  display: block;
-  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-lg);
   color: var(--text-primary);
   text-decoration: none;
   font-weight: 600;
   font-size: 1.1rem;
-  border-radius: 16px;
+  border-radius: var(--radius-md);
   transition: all var(--transition-normal);
   border: 2px solid transparent;
 }
 
 .mobileNavLink:hover,
 .mobileNavLink.active {
-  background: rgba(168, 213, 226, 0.15);
+  background: var(--color-primary-light);
   color: var(--color-primary-dark);
-  border-color: var(--color-primary-light);
+  border-color: var(--color-primary);
 }
 
 html.dark .mobileNavLink:hover,
 html.dark .mobileNavLink.active {
-  background: rgba(79, 195, 247, 0.2);
+  background: rgba(96, 165, 250, 0.2);
   color: var(--color-primary);
-  border-color: var(--color-primary);
 }
 
 .mobileMenuOverlay {
@@ -365,7 +298,7 @@ html.dark .mobileNavLink.active {
   left: 0;
   width: 100%;
   height: 100%;
-  height: 100dvh; /* Dynamic viewport height for mobile */
+  height: 100dvh;
   background: rgba(0, 0, 0, 0.5);
   z-index: 9999;
   opacity: 0;
@@ -377,37 +310,7 @@ html.dark .mobileNavLink.active {
 
 .mobileMenuOverlay.open {
   pointer-events: all;
-}
-
-html.dark .mobileMenuOverlay {
-  background: rgba(0, 0, 0, 0.7);
-}
-
-.mobileMenuOverlay.open {
   opacity: 1;
-}
-
-.dropdownItem {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  color: var(--text-primary);
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 0.95rem;
-  border-radius: 12px;
-  transition: all 200ms ease;
-}
-
-.dropdownItem:hover {
-  background: rgba(168, 213, 226, 0.15);
-  color: var(--color-primary-dark);
-}
-
-html.dark .dropdownItem:hover {
-  background: rgba(79, 195, 247, 0.2);
-  color: var(--color-primary);
 }
 
 .desktopUserMenu {
@@ -425,8 +328,8 @@ html.dark .dropdownItem:hover {
     justify-content: center;
     z-index: 1001;
     position: relative;
-    margin-left: auto; /* Push button to the right side (LTR) */
-    order: 99; /* Ensure it's at the end (right side in LTR) */
+    margin-inline-start: auto;
+    order: 99;
   }
   
   .mobileMenu {
@@ -439,7 +342,7 @@ html.dark .dropdownItem:hover {
   
   .nav {
     flex-direction: row;
-    gap: 16px;
+    gap: var(--spacing-md);
     width: 100%;
   }
   
@@ -449,44 +352,34 @@ html.dark .dropdownItem:hover {
     flex: 1;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: var(--spacing-sm);
   }
   
   .navLinks {
-    display: none !important; /* נסתר ב-mobile - יש hamburger menu */
+    display: none !important;
   }
   
   .userName {
-    display: none !important; /* נסתר ב-mobile */
+    display: none !important;
   }
   
   .userButton {
-    padding: 8px 12px !important;
+    padding: var(--spacing-xs) var(--spacing-sm) !important;
     min-width: auto;
   }
   
   .dropdown {
-    right: 0;
-    left: auto;
+    inset-inline-end: 0;
     max-width: calc(100vw - 24px);
-    /* Ensure dropdown doesn't overflow on mobile - align to right edge */
     transform: translateX(0);
-    /* Prevent overflow - ensure it stays within viewport */
     position: absolute;
     min-width: auto;
     width: max-content;
     max-width: min(280px, calc(100vw - 24px));
   }
   
-  .userMenu {
-    position: relative;
-  }
-  
   .header {
-    padding: 12px 16px;
-    position: sticky;
-    top: 0;
-    z-index: 100;
+    padding: var(--spacing-sm) var(--spacing-md);
   }
   
   .logo {
@@ -494,16 +387,6 @@ html.dark .dropdownItem:hover {
     flex-shrink: 0;
   }
   
-  /* Ensure mobile menu is always on top */
-  .mobileMenu {
-    z-index: 10000 !important;
-  }
-  
-  .mobileMenuOverlay {
-    z-index: 9999 !important;
-  }
-  
-  /* Prevent body scroll when menu is open */
   body:has(.mobileMenu.open) {
     overflow: hidden;
   }
@@ -511,21 +394,21 @@ html.dark .dropdownItem:hover {
 
 .mobileLogoutButton {
   width: 100%;
-  padding: 16px;
-  margin-top: 24px;
-  background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+  padding: var(--spacing-md);
+  margin-top: var(--spacing-lg);
+  background: linear-gradient(135deg, var(--color-error) 0%, var(--color-secondary) 100%);
   color: white;
   border: none;
-  border-radius: 16px;
+  border-radius: var(--radius-md);
   font-size: 1.1rem;
   font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: var(--spacing-md);
   box-shadow: 0 4px 12px rgba(255, 154, 158, 0.3);
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast);
 }
 
 .mobileLogoutButton:active {
@@ -537,4 +420,13 @@ html.dark .dropdownItem:hover {
   align-items: center;
   justify-content: center;
   font-size: 1.2rem;
+}
+
+@media (max-width: 1024px) {
+  .navLinkLabel {
+    display: none;
+  }
+  .navLink {
+    padding: var(--spacing-sm);
+  }
 }

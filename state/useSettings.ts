@@ -13,24 +13,21 @@ const defaultSettings: Settings = {
   language: 'he',
   theme: 'light',
   notifications: true,
-  notificationPlatform: 'both', // ברירת מחדל - שני המקומות
+  notificationPlatform: 'both',
 }
 
-// Apply theme to document immediately
+// Apply theme to document
 function applyTheme(theme: string) {
   if (typeof window === 'undefined') return
   
   const html = document.documentElement
-  
-  // Remove all theme classes
-  html.classList.remove('dark', 'light', 'auto')
+  html.classList.remove('dark', 'light')
   
   if (theme === 'dark') {
     html.classList.add('dark')
   } else if (theme === 'light') {
     html.classList.add('light')
   } else if (theme === 'auto') {
-    // Auto theme: use system preference
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
     html.classList.add(prefersDark ? 'dark' : 'light')
   }
@@ -44,7 +41,7 @@ function applyLanguage(language: string) {
   html.setAttribute('lang', language)
   html.setAttribute('dir', language === 'he' ? 'rtl' : 'ltr')
   
-  // Also update localStorage for useTranslation hook
+  // Sync app_language for simple hooks
   localStorage.setItem('app_language', language)
 }
 
@@ -56,57 +53,49 @@ export function useSettings() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedSettings = localStorage.getItem('app_settings')
+      const activeLanguage = localStorage.getItem('app_language') || 'he'
+      
+      let loadedSettings = { ...defaultSettings, language: activeLanguage }
+      
       if (savedSettings) {
         try {
           const parsed = JSON.parse(savedSettings)
-          const loadedSettings = { ...defaultSettings, ...parsed }
-          setSettings(loadedSettings)
-          
-          // Apply settings immediately
-          applyTheme(loadedSettings.theme)
-          applyLanguage(loadedSettings.language)
+          loadedSettings = { ...loadedSettings, ...parsed }
         } catch (error) {
-          console.error('Error loading settings:', error)
-          // Apply defaults if loading fails
-          applyTheme(defaultSettings.theme)
-          applyLanguage(defaultSettings.language)
+          console.error('Error parsing settings:', error)
         }
-      } else {
-        // Apply defaults if no settings found
-        applyTheme(defaultSettings.theme)
-        applyLanguage(defaultSettings.language)
       }
+      
+      setSettings(loadedSettings)
+      
+      // Apply existing settings immediately on load
+      applyTheme(loadedSettings.theme)
+      applyLanguage(loadedSettings.language)
+      
       setIsLoaded(true)
     }
   }, [])
 
-  // Update settings
+  // Update state ONLY (no side effects until save)
   const updateSettings = (newSettings: Partial<Settings>) => {
-    const updated = { ...settings, ...newSettings }
-    setSettings(updated)
-    
-    // Apply changes immediately (without saving)
-    if (newSettings.theme !== undefined) {
-      applyTheme(newSettings.theme)
-    }
-    if (newSettings.language !== undefined) {
-      applyLanguage(newSettings.language)
-    }
+    setSettings(prev => ({ ...prev, ...newSettings }))
   }
 
-  // Save settings to localStorage
+  // Save settings to localStorage and APPLY side effects
   const saveSettings = () => {
     if (typeof window !== 'undefined') {
       try {
         localStorage.setItem('app_settings', JSON.stringify(settings))
-        // Ensure theme and language are applied
+        
+        // Ensure theme and language are applied now that they are saved
         applyTheme(settings.theme)
         applyLanguage(settings.language)
         
-        // Dispatch custom event to notify other components
+        // Dispatch custom event to notify other components (like ThemeProvider if it exists)
         window.dispatchEvent(new Event('settingsUpdated'))
+        window.dispatchEvent(new Event('storage')) // Also trigger storage event for cross-tab sync
         
-        console.log('Settings saved:', settings)
+        console.log('Settings saved and applied:', settings)
       } catch (error) {
         console.error('Error saving settings:', error)
       }
@@ -120,4 +109,3 @@ export function useSettings() {
     isLoaded,
   }
 }
-

@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useTranslation } from '@/i18n/useTranslation'
 import { logout, getStoredUser, isAuthenticated } from '@/services/auth'
@@ -69,6 +68,7 @@ export function Header() {
       console.log(`[Header] Router.push calling for ${href}...`);
       router.push(href);
       
+      // Fallback: If after 500ms the pathname hasn't changed, try window.location
       setTimeout(() => {
         if (window.location.pathname !== href && href !== '/') {
           console.warn(`[Header] Router.push seems stuck for ${href}, trying window.location...`);
@@ -83,7 +83,7 @@ export function Header() {
     }
   }
 
-  // Hydration safety
+  // Hydration safety: render a consistent empty skeleton on server
   if (!mounted) {
     return (
       <header className={styles.header}>
@@ -94,6 +94,7 @@ export function Header() {
     )
   }
 
+  // If user is not authenticated, don't show the header navigation
   if (!isAuthenticated()) return null
 
   const navLinks = [
@@ -125,8 +126,12 @@ export function Header() {
                   href={link.href}
                   className={`${styles.navLink} ${pathname === link.href ? styles.active : ''}`}
                   onClick={(e) => handleNavigation(e, link.href)}
+                  title={link.label}
                 >
-                  {link.label}
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span className={styles.navLinkIcon}>{link.icon}</span>
+                    <span className={styles.navLinkLabel}>{link.label}</span>
+                  </span>
                 </a>
               ))}
             </div>
@@ -168,11 +173,13 @@ export function Header() {
         </nav>
       </header>
 
+      {/* Mobile Menu Overlay */}
       <div 
         className={`${styles.mobileMenuOverlay} ${showMobileMenu ? styles.open : ''}`}
         onClick={() => setShowMobileMenu(false)}
       />
 
+      {/* Mobile Menu - Controlled by CSS for stability */}
       <div className={`${styles.mobileMenu} ${showMobileMenu ? styles.open : ''}`}>
         <div className={styles.mobileNavLinks}>
           {navLinks.map((link) => (
@@ -181,7 +188,6 @@ export function Header() {
               href={link.href}
               className={`${styles.mobileNavLink} ${pathname === link.href ? styles.active : ''}`}
               onClick={(e) => handleNavigation(e, link.href)}
-              style={{ display: 'flex', alignItems: 'center', gap: '12px' }}
             >
               <span className={styles.navLinkIcon}>{link.icon}</span>
               {link.label}
