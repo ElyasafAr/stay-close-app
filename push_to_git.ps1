@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Fix LTR/RTL v1.8.7: Comprehensive cleanup of hardcoded directions in CSS - Replace direction: rtl and text-align: right with logical properties - Use padding-inline-start and inset-inline-start - Ensure all screens inherit direction from <html> - Bump version to 1.8.7"
+$commitMessage = "Fix UI v1.8.8: Improve contact card buttons for English - Allow action buttons to wrap instead of cutting off - Reduce font size and padding for action buttons - Bump version to 1.8.8"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files

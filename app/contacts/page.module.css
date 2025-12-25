@@ -348,84 +348,55 @@ html.dark .contactCard:hover {
 
 .contactActions {
   display: flex;
-  gap: 12px;
+  gap: 8px;
   margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.sendMessageButton,
+.reminderButton,
+.deleteButton {
+  flex: 1;
+  min-width: calc(33.333% - 8px);
+  padding: 10px 8px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 300ms ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  white-space: nowrap;
 }
 
 .sendMessageButton {
-  flex: 1;
-  padding: 12px 20px;
   background: linear-gradient(135deg, #a8e6cf 0%, #7fd4a8 100%);
   color: white;
   border: none;
-  border-radius: 20px;
-  font-size: 0.9rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 300ms ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
   box-shadow: 0 2px 8px rgba(127, 212, 168, 0.3);
 }
 
-.sendMessageButton:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(127, 212, 168, 0.4);
-  filter: brightness(1.05);
-}
-
-html.dark .sendMessageButton {
-  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
-  box-shadow: 0 2px 8px rgba(52, 211, 153, 0.3);
-}
-
 .reminderButton {
-  flex: 1;
-  padding: 12px 20px;
   background: linear-gradient(135deg, rgba(168, 213, 226, 0.1) 0%, rgba(127, 184, 201, 0.1) 100%);
   color: #7fb8c9;
   border: 2px solid rgba(168, 213, 226, 0.3);
-  border-radius: 20px;
-  font-size: 0.9rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 300ms ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.reminderButton:hover {
-  background: linear-gradient(135deg, rgba(168, 213, 226, 0.2) 0%, rgba(127, 184, 201, 0.2) 100%);
-  border-color: #a8d5e2;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(168, 213, 226, 0.3);
 }
 
 .deleteButton {
-  flex: 1;
-  padding: 12px 20px;
   background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
   color: white;
   border: none;
-  border-radius: 20px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 700;
-  transition: all 300ms ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
   box-shadow: 0 2px 8px rgba(255, 154, 158, 0.3);
 }
 
-.deleteButton:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 154, 158, 0.4);
+@media (max-width: 480px) {
+  .sendMessageButton,
+  .reminderButton,
+  .deleteButton {
+    min-width: calc(50% - 8px);
+  }
 }
 
 .empty {
