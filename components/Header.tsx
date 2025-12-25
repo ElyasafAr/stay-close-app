@@ -6,7 +6,18 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useTranslation } from '@/i18n/useTranslation'
 import { logout, getStoredUser, isAuthenticated } from '@/services/auth'
 import { getData } from '@/services/api'
-import { MdLogout, MdMenu, MdClose, MdPerson } from 'react-icons/md'
+import { 
+  MdLogout, 
+  MdMenu, 
+  MdClose, 
+  MdPerson, 
+  MdChat, 
+  MdPeople, 
+  MdSettings, 
+  MdEmail, 
+  MdInfo,
+  MdAdminPanelSettings
+} from 'react-icons/md'
 import { APP_VERSION } from '@/lib/constants'
 import styles from './Header.module.css'
 
@@ -58,11 +69,9 @@ export function Header() {
       console.log(`[Header] Router.push calling for ${href}...`);
       router.push(href);
       
-      // Fallback: If after 500ms the pathname hasn't changed, try window.location
       setTimeout(() => {
         if (window.location.pathname !== href && href !== '/') {
           console.warn(`[Header] Router.push seems stuck for ${href}, trying window.location...`);
-          // Only use location.href if it's really stuck to avoid double loads
           if (window.location.pathname !== href) {
             window.location.href = href;
           }
@@ -88,12 +97,12 @@ export function Header() {
   if (!isAuthenticated()) return null
 
   const navLinks = [
-    { href: '/messages', label: t('navigation.messages') },
-    { href: '/contacts', label: t('navigation.contacts') },
-    { href: '/settings', label: t('navigation.settings') },
-    { href: '/contact', label: t('navigation.contact') },
-    { href: '/about', label: t('navigation.about') },
-    ...(isAdmin ? [{ href: '/admin', label: `🛠️ ${t('navigation.admin')}` }] : []),
+    { href: '/messages', label: t('navigation.messages'), icon: <MdChat /> },
+    { href: '/contacts', label: t('navigation.contacts'), icon: <MdPeople /> },
+    { href: '/settings', label: t('navigation.settings'), icon: <MdSettings /> },
+    { href: '/contact', label: t('navigation.contact'), icon: <MdEmail /> },
+    { href: '/about', label: t('navigation.about'), icon: <MdInfo /> },
+    ...(isAdmin ? [{ href: '/admin', label: t('navigation.admin'), icon: <MdAdminPanelSettings /> }] : []),
   ]
 
   return (
@@ -172,12 +181,14 @@ export function Header() {
               href={link.href}
               className={`${styles.mobileNavLink} ${pathname === link.href ? styles.active : ''}`}
               onClick={(e) => handleNavigation(e, link.href)}
+              style={{ display: 'flex', alignItems: 'center', gap: '12px' }}
             >
+              <span className={styles.navLinkIcon}>{link.icon}</span>
               {link.label}
             </a>
           ))}
           <button onClick={handleLogout} className={styles.mobileLogoutButton}>
-            <MdLogout /> {t('settings.logout')}
+            <MdLogout size={24} /> {t('settings.logout')}
           </button>
         </div>
       </div>

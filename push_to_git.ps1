@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Fix Navigation v1.8.5: Force navigation with router.push and window.location fallback - Switch from Link to <a> with manual onClick to bypass router blockage - Add timeout fallback for navigation - Bump version to 1.8.5"
+$commitMessage = "Fix UI v1.8.6: Restore mobile menu icons and logout button design - Add icons to all navigation links - Implement styled mobile logout button - Bump version to 1.8.6"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files
