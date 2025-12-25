@@ -19,7 +19,7 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  text-align: right;
+  text-align: start;
   transition: all var(--transition-normal);
 }
 
@@ -142,7 +142,7 @@ html.dark .contactForm {
   margin: 0 0 16px 0;
   font-size: 1.1rem;
   color: var(--text-primary);
-  text-align: right;
+  text-align: start;
 }
 
 .contactInput,

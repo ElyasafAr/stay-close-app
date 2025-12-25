@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Fix UI v1.8.6: Restore mobile menu icons and logout button design - Add icons to all navigation links - Implement styled mobile logout button - Bump version to 1.8.6"
+$commitMessage = "Fix LTR/RTL v1.8.7: Comprehensive cleanup of hardcoded directions in CSS - Replace direction: rtl and text-align: right with logical properties - Use padding-inline-start and inset-inline-start - Ensure all screens inherit direction from <html> - Bump version to 1.8.7"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files

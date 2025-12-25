@@ -69,7 +69,7 @@
 
 .inputIcon {
   position: absolute;
-  right: 20px;
+  inset-inline-end: 20px;
   width: 24px;
   height: 24px;
   color: #a8d5e2;
@@ -84,7 +84,8 @@
 
 .input {
   width: 100%;
-  padding: 18px 56px 18px 20px; /* RTL default */
+  padding: 18px 20px;
+  padding-inline-end: 56px;
   border: 2px solid #d4e9f0;
   border-radius: 20px;
   font-size: 16px;
@@ -95,16 +96,6 @@
   position: relative;
   z-index: 1;
   box-sizing: border-box;
-}
-
-:global([dir="ltr"]) .input {
-  padding: 18px 20px 18px 56px; /* Swap padding for LTR icon */
-  text-align: left;
-}
-
-:global([dir="ltr"]) .inputIcon {
-  right: auto;
-  left: 20px;
 }
 
 .input:focus {

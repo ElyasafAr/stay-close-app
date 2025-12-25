@@ -2,7 +2,6 @@
   min-height: 100vh;
   padding: 24px 16px;
   background: var(--bg-gradient);
-  direction: rtl;
 }
 
 .container {
@@ -43,8 +42,16 @@
 }
 
 .iconButton:hover {
-  transform: translateX(4px);
+  transform: translateX(var(--icon-translate, 4px));
   box-shadow: var(--shadow-md);
+}
+
+:global([dir="rtl"]) .iconButton:hover {
+  --icon-translate: 4px;
+}
+
+:global([dir="ltr"]) .iconButton:hover {
+  --icon-translate: -4px;
 }
 
 .card {
