@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Fix UI & Settings v1.8.9: Refactor settings logic and improve header alignment - Apply settings only on Save - Fix language combo box initialization - Use logical properties in Header and Mobile Menu - Add icons to desktop navigation - Bump version to 1.8.9"
+$commitMessage = "Release v1.9.0: Finalize UI & Settings improvements - Add Hebrew Testing Checklist - Update TODO with Ads System plan - Bump version to 1.9.0"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files
