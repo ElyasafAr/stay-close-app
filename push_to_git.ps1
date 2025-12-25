@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Ads System v1.9.1: Implement Ads Infrastructure - Add global ads_enabled toggle in Admin - Create AdBanner component for free users - Update usage API to include ads status - Bump version to 1.9.1"
+$commitMessage = "Ads System v1.9.2: Enable ads for Trial users - Allow easier testing of AdBanner - Bump version to 1.9.2"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files

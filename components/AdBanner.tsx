@@ -20,9 +20,9 @@ export const AdBanner = () => {
         const response = await getData<UsageStatus>('/api/usage/status')
         if (response.success && response.data) {
           const { subscription_status, ads_enabled } = response.data
-          // Show ads ONLY if they are enabled globally AND the user is a free user
-          // Trial and Premium users don't see ads
-          setIsVisible(ads_enabled && subscription_status === 'free')
+          // Show ads ONLY if they are enabled globally AND the user is NOT a premium user
+          // Free and Trial users see ads if enabled. Premium users never see ads.
+          setIsVisible(ads_enabled && subscription_status !== 'premium')
         }
       } catch (error) {
         console.error('Error checking ads status:', error)
