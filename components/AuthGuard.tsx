@@ -20,59 +20,60 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const publicPaths = ['/login', '/register']
 
   useEffect(() => {
-    // This only runs on the client after the first render
+    console.log(`[AuthGuard] Mounted. Pathname: ${pathname}`);
     setMounted(true)
     
     const checkAuth = () => {
       if (typeof window === 'undefined') return
 
       const token = localStorage.getItem('auth_token')
-      const user = localStorage.getItem('user')
-      const isAuth = !!(token && user)
+      const userStr = localStorage.getItem('user')
+      const isAuth = !!(token && userStr)
       
+      console.log(`[AuthGuard] checkAuth - isAuth: ${isAuth}, path: ${window.location.pathname}`);
       setAuthenticated(isAuth)
 
-      // Get real current path from window to avoid pathname stale closure issues
       const currentPath = window.location.pathname
       
       if (!isAuth && !publicPaths.includes(currentPath)) {
+        console.log('[AuthGuard] Redirecting to /login');
         router.replace('/login')
       } else if (isAuth && currentPath === '/login') {
+        console.log('[AuthGuard] Redirecting to /');
         router.replace('/')
       }
       
       setLoading(false)
     }
 
-    // Run check on mount
     checkAuth()
 
-    // Listen for auth changes from Firebase
-    const unsubscribe = onAuthStateChange(() => {
+    const unsubscribe = onAuthStateChange((user) => {
+      console.log('[AuthGuard] onAuthStateChange event', user ? 'User exists' : 'No user');
       checkAuth()
     })
 
     return () => unsubscribe()
-  }, [router]) // Dependencies minimized
+  }, [router])
 
-  // HYDRATION SAFETY: 
-  // Always render the same thing on server and first client pass.
-  // We choose to render nothing or a generic skeleton until mounted.
+  console.log(`[AuthGuard] Render - mounted: ${mounted}, loading: ${loading}, auth: ${authenticated}, path: ${pathname}`);
+
   if (!mounted) {
-    return <Loading />
+    console.log('[AuthGuard] Rendering nothing (not mounted)');
+    return null;
   }
 
-  // Once mounted, if we are still loading the auth state, show loading
   if (loading) {
+    console.log('[AuthGuard] Rendering Loading screen');
     return <Loading />
   }
 
-  // Allow access if authenticated OR on a public path
   const isPublicPath = publicPaths.includes(pathname)
   if (authenticated || isPublicPath) {
+    console.log(`[AuthGuard] Rendering children for: ${pathname}`);
     return <>{children}</>
   }
 
-  // Fallback while redirecting
+  console.log('[AuthGuard] Not authorized and not public - rendering Loading');
   return <Loading />
 }

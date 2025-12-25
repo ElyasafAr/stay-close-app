@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Fix Architecture v1.8.3: Restore missing features and solve hydration issues - Restore Admin button and check logic - Fix Mobile Menu using CSS classes - Eliminate hydration mismatches in Layout and Header - Bump version to 1.8.3"
+$commitMessage = "Debug v1.8.4: Add extensive logs to diagnose navigation issues - Logs in Header for clicks and rendering - Logs in AuthGuard for lifecycle and auth state - Bump version to 1.8.4"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files

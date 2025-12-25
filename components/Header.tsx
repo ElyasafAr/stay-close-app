@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useTranslation } from '@/i18n/useTranslation'
 import { logout, getStoredUser, isAuthenticated } from '@/services/auth'
 import { getData } from '@/services/api'
@@ -11,8 +11,10 @@ import { APP_VERSION } from '@/lib/constants'
 import styles from './Header.module.css'
 
 export function Header() {
+  console.log('[Header] Render start');
   const { t } = useTranslation()
   const pathname = usePathname()
+  const router = useRouter()
   const [user, setUser] = useState<any>(null)
   const [showMobileMenu, setShowMobileMenu] = useState(false)
   const [showUserDropdown, setShowUserDropdown] = useState(false)
@@ -20,25 +22,36 @@ export function Header() {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    console.log('[Header] Mounted');
     setMounted(true)
     if (isAuthenticated()) {
-      setUser(getStoredUser())
+      const storedUser = getStoredUser()
+      console.log('[Header] User is authenticated:', storedUser?.username);
+      setUser(storedUser)
       checkAdminStatus()
+    } else {
+      console.log('[Header] User NOT authenticated');
     }
   }, [])
 
   const checkAdminStatus = async () => {
     try {
+      console.log('[Header] Checking admin status...');
       const response = await getData('/api/admin/stats')
       if (response.success) {
+        console.log('[Header] Admin status: YES');
         setIsAdmin(true)
+      } else {
+        console.log('[Header] Admin status: NO');
       }
     } catch (err) {
+      console.log('[Header] Admin status check failed:', err);
       setIsAdmin(false)
     }
   }
 
   const handleLogout = async () => {
+    console.log('[Header] Logout initiated');
     localStorage.removeItem('auth_token')
     localStorage.removeItem('firebase_token')
     localStorage.removeItem('user')
@@ -46,13 +59,22 @@ export function Header() {
     window.location.href = '/login'
   }
 
-  const handleLinkClick = () => {
+  const handleLinkClick = (e: React.MouseEvent, href: string) => {
+    console.log(`[Header] Link clicked: ${href}`);
     setShowMobileMenu(false)
     setShowUserDropdown(false)
+    
+    // Explicitly check if the router works
+    // if (href.startsWith('/')) {
+    //   e.preventDefault();
+    //   console.log(`[Header] Manual router push to: ${href}`);
+    //   router.push(href);
+    // }
   }
 
   // Hydration safety: render a consistent empty skeleton on server
   if (!mounted) {
+    console.log('[Header] Rendering skeleton (not mounted)');
     return (
       <header className={styles.header}>
         <nav className={styles.nav}>
@@ -63,7 +85,10 @@ export function Header() {
   }
 
   // If user is not authenticated, don't show the header navigation
-  if (!isAuthenticated()) return null
+  if (!isAuthenticated()) {
+    console.log('[Header] Not authenticated, rendering null');
+    return null;
+  }
 
   const navLinks = [
     { href: '/messages', label: t('navigation.messages') },
@@ -74,11 +99,17 @@ export function Header() {
     ...(isAdmin ? [{ href: '/admin', label: `🛠️ ${t('navigation.admin')}` }] : []),
   ]
 
+  console.log('[Header] Rendering full navigation, links:', navLinks.length);
+
   return (
     <>
       <header className={styles.header}>
         <nav className={styles.nav}>
-          <Link href="/" className={styles.logo} onClick={handleLinkClick}>
+          <Link 
+            href="/" 
+            className={styles.logo} 
+            onClick={(e) => handleLinkClick(e, '/')}
+          >
             {t('app.name')}
           </Link>
 
@@ -89,7 +120,7 @@ export function Header() {
                   key={link.href}
                   href={link.href}
                   className={`${styles.navLink} ${pathname === link.href ? styles.active : ''}`}
-                  onClick={handleLinkClick}
+                  onClick={(e) => handleLinkClick(e, link.href)}
                 >
                   {link.label}
                 </Link>
@@ -100,7 +131,10 @@ export function Header() {
               <div className={styles.userMenu}>
                 <button 
                   className={styles.userButton}
-                  onClick={() => setShowUserDropdown(!showUserDropdown)}
+                  onClick={() => {
+                    console.log('[Header] User dropdown toggled');
+                    setShowUserDropdown(!showUserDropdown);
+                  }}
                 >
                   <MdPerson className={styles.userIcon} />
                   <span className={styles.userName}>{user?.username || t('messages.greetings.guest')}</span>
@@ -125,7 +159,10 @@ export function Header() {
 
             <button
               className={styles.mobileMenuButton}
-              onClick={() => setShowMobileMenu(!showMobileMenu)}
+              onClick={() => {
+                console.log(`[Header] Mobile menu button clicked, current state: ${showMobileMenu}`);
+                setShowMobileMenu(!showMobileMenu);
+              }}
             >
               {showMobileMenu ? <MdClose size={28} /> : <MdMenu size={28} />}
             </button>
@@ -136,7 +173,10 @@ export function Header() {
       {/* Mobile Menu Overlay */}
       <div 
         className={`${styles.mobileMenuOverlay} ${showMobileMenu ? styles.open : ''}`}
-        onClick={() => setShowMobileMenu(false)}
+        onClick={() => {
+          console.log('[Header] Mobile menu overlay clicked - closing');
+          setShowMobileMenu(false);
+        }}
       />
 
       {/* Mobile Menu - Controlled by CSS for stability */}
@@ -147,7 +187,7 @@ export function Header() {
               key={link.href}
               href={link.href}
               className={`${styles.mobileNavLink} ${pathname === link.href ? styles.active : ''}`}
-              onClick={handleLinkClick}
+              onClick={(e) => handleLinkClick(e, link.href)}
             >
               {link.label}
             </Link>
