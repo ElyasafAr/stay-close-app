@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Debug v1.8.4: Add extensive logs to diagnose navigation issues - Logs in Header for clicks and rendering - Logs in AuthGuard for lifecycle and auth state - Bump version to 1.8.4"
+$commitMessage = "Fix Navigation v1.8.5: Force navigation with router.push and window.location fallback - Switch from Link to <a> with manual onClick to bypass router blockage - Add timeout fallback for navigation - Bump version to 1.8.5"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files

@@ -11,7 +11,6 @@ import { APP_VERSION } from '@/lib/constants'
 import styles from './Header.module.css'
 
 export function Header() {
-  console.log('[Header] Render start');
   const { t } = useTranslation()
   const pathname = usePathname()
   const router = useRouter()
@@ -22,36 +21,25 @@ export function Header() {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    console.log('[Header] Mounted');
     setMounted(true)
     if (isAuthenticated()) {
-      const storedUser = getStoredUser()
-      console.log('[Header] User is authenticated:', storedUser?.username);
-      setUser(storedUser)
+      setUser(getStoredUser())
       checkAdminStatus()
-    } else {
-      console.log('[Header] User NOT authenticated');
     }
   }, [])
 
   const checkAdminStatus = async () => {
     try {
-      console.log('[Header] Checking admin status...');
       const response = await getData('/api/admin/stats')
       if (response.success) {
-        console.log('[Header] Admin status: YES');
         setIsAdmin(true)
-      } else {
-        console.log('[Header] Admin status: NO');
       }
     } catch (err) {
-      console.log('[Header] Admin status check failed:', err);
       setIsAdmin(false)
     }
   }
 
   const handleLogout = async () => {
-    console.log('[Header] Logout initiated');
     localStorage.removeItem('auth_token')
     localStorage.removeItem('firebase_token')
     localStorage.removeItem('user')
@@ -59,22 +47,35 @@ export function Header() {
     window.location.href = '/login'
   }
 
-  const handleLinkClick = (e: React.MouseEvent, href: string) => {
-    console.log(`[Header] Link clicked: ${href}`);
-    setShowMobileMenu(false)
-    setShowUserDropdown(false)
+  const handleNavigation = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault();
+    console.log(`[Header] NAVIGATION START -> ${href}`);
     
-    // Explicitly check if the router works
-    // if (href.startsWith('/')) {
-    //   e.preventDefault();
-    //   console.log(`[Header] Manual router push to: ${href}`);
-    //   router.push(href);
-    // }
+    setShowMobileMenu(false);
+    setShowUserDropdown(false);
+
+    try {
+      console.log(`[Header] Router.push calling for ${href}...`);
+      router.push(href);
+      
+      // Fallback: If after 500ms the pathname hasn't changed, try window.location
+      setTimeout(() => {
+        if (window.location.pathname !== href && href !== '/') {
+          console.warn(`[Header] Router.push seems stuck for ${href}, trying window.location...`);
+          // Only use location.href if it's really stuck to avoid double loads
+          if (window.location.pathname !== href) {
+            window.location.href = href;
+          }
+        }
+      }, 500);
+    } catch (error) {
+      console.error(`[Header] Router.push FAILED for ${href}:`, error);
+      window.location.href = href;
+    }
   }
 
-  // Hydration safety: render a consistent empty skeleton on server
+  // Hydration safety
   if (!mounted) {
-    console.log('[Header] Rendering skeleton (not mounted)');
     return (
       <header className={styles.header}>
         <nav className={styles.nav}>
@@ -84,11 +85,7 @@ export function Header() {
     )
   }
 
-  // If user is not authenticated, don't show the header navigation
-  if (!isAuthenticated()) {
-    console.log('[Header] Not authenticated, rendering null');
-    return null;
-  }
+  if (!isAuthenticated()) return null
 
   const navLinks = [
     { href: '/messages', label: t('navigation.messages') },
@@ -99,31 +96,29 @@ export function Header() {
     ...(isAdmin ? [{ href: '/admin', label: `🛠️ ${t('navigation.admin')}` }] : []),
   ]
 
-  console.log('[Header] Rendering full navigation, links:', navLinks.length);
-
   return (
     <>
       <header className={styles.header}>
         <nav className={styles.nav}>
-          <Link 
+          <a 
             href="/" 
             className={styles.logo} 
-            onClick={(e) => handleLinkClick(e, '/')}
+            onClick={(e) => handleNavigation(e, '/')}
           >
             {t('app.name')}
-          </Link>
+          </a>
 
           <div className={styles.navRight}>
             <div className={styles.navLinks}>
               {navLinks.map((link) => (
-                <Link
+                <a
                   key={link.href}
                   href={link.href}
                   className={`${styles.navLink} ${pathname === link.href ? styles.active : ''}`}
-                  onClick={(e) => handleLinkClick(e, link.href)}
+                  onClick={(e) => handleNavigation(e, link.href)}
                 >
                   {link.label}
-                </Link>
+                </a>
               ))}
             </div>
 
@@ -131,10 +126,7 @@ export function Header() {
               <div className={styles.userMenu}>
                 <button 
                   className={styles.userButton}
-                  onClick={() => {
-                    console.log('[Header] User dropdown toggled');
-                    setShowUserDropdown(!showUserDropdown);
-                  }}
+                  onClick={() => setShowUserDropdown(!showUserDropdown)}
                 >
                   <MdPerson className={styles.userIcon} />
                   <span className={styles.userName}>{user?.username || t('messages.greetings.guest')}</span>
@@ -159,10 +151,7 @@ export function Header() {
 
             <button
               className={styles.mobileMenuButton}
-              onClick={() => {
-                console.log(`[Header] Mobile menu button clicked, current state: ${showMobileMenu}`);
-                setShowMobileMenu(!showMobileMenu);
-              }}
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
             >
               {showMobileMenu ? <MdClose size={28} /> : <MdMenu size={28} />}
             </button>
@@ -170,27 +159,22 @@ export function Header() {
         </nav>
       </header>
 
-      {/* Mobile Menu Overlay */}
       <div 
         className={`${styles.mobileMenuOverlay} ${showMobileMenu ? styles.open : ''}`}
-        onClick={() => {
-          console.log('[Header] Mobile menu overlay clicked - closing');
-          setShowMobileMenu(false);
-        }}
+        onClick={() => setShowMobileMenu(false)}
       />
 
-      {/* Mobile Menu - Controlled by CSS for stability */}
       <div className={`${styles.mobileMenu} ${showMobileMenu ? styles.open : ''}`}>
         <div className={styles.mobileNavLinks}>
           {navLinks.map((link) => (
-            <Link
+            <a
               key={link.href}
               href={link.href}
               className={`${styles.mobileNavLink} ${pathname === link.href ? styles.active : ''}`}
-              onClick={(e) => handleLinkClick(e, link.href)}
+              onClick={(e) => handleNavigation(e, link.href)}
             >
               {link.label}
-            </Link>
+            </a>
           ))}
           <button onClick={handleLogout} className={styles.mobileLogoutButton}>
             <MdLogout /> {t('settings.logout')}
