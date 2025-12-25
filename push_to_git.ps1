@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "i18n Debug v1.6.8: Add Comprehensive Logging - Add logs to useTranslation, ThemeProvider, and Header - Track language changes and navigation clicks - Resolve redundant navigation issues - Bump version to 1.6.8"
+$commitMessage = "Fix Architecture v1.8.3: Restore missing features and solve hydration issues - Restore Admin button and check logic - Fix Mobile Menu using CSS classes - Eliminate hydration mismatches in Layout and Header - Bump version to 1.8.3"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files

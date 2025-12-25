@@ -7,30 +7,32 @@ import { Loading } from './Loading'
 
 /**
  * AuthGuard - Protects routes and handles initial authentication check.
- * Simplified to prevent hydration errors and navigation loops.
+ * Refined for maximum hydration safety and router stability.
  */
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
+  const [mounted, setMounted] = useState(false)
   const [loading, setLoading] = useState(true)
   const [authenticated, setAuthenticated] = useState(false)
-  const [mounted, setMounted] = useState(false)
 
   // public paths that don't require auth
   const publicPaths = ['/login', '/register']
 
   useEffect(() => {
+    // This only runs on the client after the first render
     setMounted(true)
     
     const checkAuth = () => {
+      if (typeof window === 'undefined') return
+
       const token = localStorage.getItem('auth_token')
       const user = localStorage.getItem('user')
       const isAuth = !!(token && user)
       
       setAuthenticated(isAuth)
 
-      // Redirect logic based on current path
-      // We use window.location.pathname here to get the real current path during this execution
+      // Get real current path from window to avoid pathname stale closure issues
       const currentPath = window.location.pathname
       
       if (!isAuth && !publicPaths.includes(currentPath)) {
@@ -42,19 +44,26 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       setLoading(false)
     }
 
-    // Run initial check
+    // Run check on mount
     checkAuth()
 
-    // Listen for auth changes
+    // Listen for auth changes from Firebase
     const unsubscribe = onAuthStateChange(() => {
       checkAuth()
     })
 
     return () => unsubscribe()
-  }, [router]) // pathname dependency removed to prevent re-runs during navigation
+  }, [router]) // Dependencies minimized
 
-  // Prevent hydration mismatch by returning null or Loading until mounted
-  if (!mounted || loading) {
+  // HYDRATION SAFETY: 
+  // Always render the same thing on server and first client pass.
+  // We choose to render nothing or a generic skeleton until mounted.
+  if (!mounted) {
+    return <Loading />
+  }
+
+  // Once mounted, if we are still loading the auth state, show loading
+  if (loading) {
     return <Loading />
   }
 
@@ -64,6 +73,6 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     return <>{children}</>
   }
 
-  // Fallback to loading while redirecting
+  // Fallback while redirecting
   return <Loading />
 }
