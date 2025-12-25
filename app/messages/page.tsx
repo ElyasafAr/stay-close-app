@@ -8,6 +8,7 @@ import { generateMessage, MessageRequest } from '@/services/messages'
 import { getStoredUser } from '@/services/auth'
 import { Loading } from '@/components/Loading'
 import { UsageBanner } from '@/components/UsageBanner'
+import { AdBanner } from '@/components/AdBanner'
 import { MdAutoAwesome, MdContentCopy, MdPerson, MdMessage, MdTune, MdEditNote, MdShare, MdAdd, MdLanguage, MdWavingHand } from 'react-icons/md'
 import { AiFillHeart, AiFillStar } from 'react-icons/ai'
 import styles from './page.module.css'
@@ -425,6 +426,9 @@ export default function MessagesPage() {
             )}
           </div>
         </div>
+
+        {/* באנר פרסומות למשתמשים חינמיים */}
+        <AdBanner />
       </div>
     </main>
   )

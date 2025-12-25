@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Release v1.9.0: Finalize UI & Settings improvements - Add Hebrew Testing Checklist - Update TODO with Ads System plan - Bump version to 1.9.0"
+$commitMessage = "Ads System v1.9.1: Implement Ads Infrastructure - Add global ads_enabled toggle in Admin - Create AdBanner component for free users - Update usage API to include ads status - Bump version to 1.9.1"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files

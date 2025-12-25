@@ -508,6 +508,26 @@ def _run_migrations():
             db.execute(create_support_tickets)
             db.commit()
             print("✅ [DATABASE] Migration completed: support_tickets table created")
+
+        # Migration 14: Add ads_enabled setting
+        check_ads_setting = text("""
+            SELECT key 
+            FROM app_settings 
+            WHERE key='ads_enabled';
+        """)
+        
+        result_ads = db.execute(check_ads_setting).fetchone()
+        
+        if not result_ads:
+            print("🔵 [DATABASE] Running migration: Adding ads_enabled setting...")
+            insert_ads = text("""
+                INSERT INTO app_settings (key, value, description) VALUES
+                ('ads_enabled', 'false', 'האם להציג פרסומות למשתמשים בגרסה החינמית')
+                ON CONFLICT (key) DO NOTHING;
+            """)
+            db.execute(insert_ads)
+            db.commit()
+            print("✅ [DATABASE] Migration completed: ads_enabled setting added")
         
         print("✅ [DATABASE] All migrations completed successfully")
     except Exception as e:

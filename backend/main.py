@@ -1941,8 +1941,13 @@ async def get_usage_status(
     _, message_info = check_can_generate_message(db, user_id)
     _, contact_info = check_can_add_contact(db, user_id)
     
+    # Get ads setting
+    from usage_limiter import get_setting_bool
+    ads_enabled = get_setting_bool(db, 'ads_enabled', False)
+    
     return {
         "subscription_status": status,
+        "ads_enabled": ads_enabled,
         "trial_days_remaining": get_trial_days_remaining(db, user_id) if status == 'trial' else 0,
         "messages": {
             "daily_used": message_info.get('daily_used', 0),

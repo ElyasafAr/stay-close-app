@@ -1,0 +1,79 @@
+.adContainer {
+  width: 100%;
+  margin: 16px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.adBox {
+  width: 100%;
+  max-width: 728px; /* Standard leaderboard width */
+  height: 90px;
+  background: var(--bg-card);
+  border: 1px dashed var(--border-color);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.adLabel {
+  position: absolute;
+  top: 4px;
+  inset-inline-start: 8px;
+  font-size: 0.65rem;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+}
+
+.adContent {
+  text-align: center;
+  padding: 0 16px;
+}
+
+.adTitle {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 2px;
+}
+
+.adText {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.removeAds {
+  font-size: 0.75rem;
+  color: var(--color-primary);
+  text-decoration: underline;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.removeAds:hover {
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .adBox {
+    height: 60px;
+    max-width: 320px; /* Standard mobile banner width */
+  }
+  
+  .adTitle {
+    font-size: 0.8rem;
+  }
+  
+  .adText {
+    font-size: 0.7rem;
+  }
+}

@@ -169,6 +169,23 @@ export default function AdminPage() {
     }
   }
 
+  const handleSaveSettingDirect = async (key: string, value: string) => {
+    setSaving(true)
+    try {
+      await putData('/api/admin/settings', { key, value })
+      // Refresh settings
+      const settingsRes = await getData<AppSettings>('/api/admin/settings')
+      if (settingsRes.success && settingsRes.data) {
+        setSettings(settingsRes.data)
+        setEditedSettings(prev => ({ ...prev, [key]: value }))
+      }
+    } catch (err) {
+      alert('שגיאה בשמירת הגדרה')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const handleUpdateTicketStatus = async (ticketId: number, status: string) => {
     try {
       await putData(`/api/admin/support/tickets/${ticketId}/status?status=${status}`, {})
@@ -332,15 +349,14 @@ export default function AdminPage() {
             <div className={styles.emergencySection}>
               <h2 className={styles.sectionTitle} style={{ color: '#ef4444' }}>
                 <MdWarning size={24} />
-                כפתורי חירום
+                ניהול מערכת וחירום
               </h2>
               <div className={styles.emergencyButtons}>
                 <button 
                   className={styles.emergencyButton}
                   onClick={() => {
                     if (confirm('האם להשבית Freemium? משתמשים חינמיים לא יוכלו ליצור הודעות.')) {
-                      setEditedSettings({...editedSettings, freemium_enabled: 'false'})
-                      handleSaveSetting('freemium_enabled')
+                      handleSaveSettingDirect('freemium_enabled', 'false')
                     }
                   }}
                 >
@@ -350,13 +366,26 @@ export default function AdminPage() {
                   className={styles.emergencyButton}
                   onClick={() => {
                     if (confirm('האם להפעיל Freemium מחדש?')) {
-                      setEditedSettings({...editedSettings, freemium_enabled: 'true'})
-                      handleSaveSetting('freemium_enabled')
+                      handleSaveSettingDirect('freemium_enabled', 'true')
                     }
                   }}
                   style={{ background: '#10b981' }}
                 >
                   הפעל Freemium
+                </button>
+                <button 
+                  className={styles.emergencyButton}
+                  onClick={() => {
+                    const isAdsEnabled = settings?.ads_enabled?.value === 'true'
+                    const newValue = isAdsEnabled ? 'false' : 'true'
+                    const action = isAdsEnabled ? 'להשבית' : 'להפעיל'
+                    if (confirm(`האם ${action} פרסומות למשתמשים חינמיים?`)) {
+                      handleSaveSettingDirect('ads_enabled', newValue)
+                    }
+                  }}
+                  style={{ background: settings?.ads_enabled?.value === 'true' ? '#f59e0b' : '#6b7280' }}
+                >
+                  {settings?.ads_enabled?.value === 'true' ? 'השבת פרסומות' : 'הפעל פרסומות'}
                 </button>
               </div>
             </div>

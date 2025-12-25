@@ -8,6 +8,7 @@ import { getReminders, deleteReminder, Reminder } from '@/services/reminders'
 import { cancelLocalNotification, isAndroid } from '@/services/localNotifications'
 import { Loading } from '@/components/Loading'
 import { ReminderModal } from '@/components/ReminderModal'
+import { AdBanner } from '@/components/AdBanner'
 import { MdAdd, MdDelete, MdNotifications, MdNotificationsOff, MdTune, MdSend } from 'react-icons/md'
 import styles from './page.module.css'
 
@@ -272,6 +273,9 @@ export default function ContactsPage() {
             ))
           )}
         </div>
+
+        {/* באנר פרסומות למשתמשים חינמיים */}
+        <AdBanner />
       </div>
 
       {reminderModal && (
