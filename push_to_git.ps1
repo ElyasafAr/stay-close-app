@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Ads System v1.9.2: Enable ads for Trial users - Allow easier testing of AdBanner - Bump version to 1.9.2"
+$commitMessage = "Fix UI v1.9.3: Fix Mobile Menu positioning and orientation - Use explicit right/left based on direction - Fix overlay and z-index issues - Bump version to 1.9.3"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files
