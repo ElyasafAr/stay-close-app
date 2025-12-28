@@ -85,15 +85,11 @@ export default function SettingsPage() {
       }
       
       setShowSuccess(true)
-      setTimeout(() => setShowSuccess(false), 3000)
       
-      // Note: Theme changes apply immediately, but language changes may require a refresh
-      const currentLanguage = settings.language
-      if (currentLanguage !== (localStorage.getItem('app_language') || 'he')) {
-        setTimeout(() => {
-          window.location.reload()
-        }, 500)
-      }
+      // Refresh the entire site after a short delay to ensure all changes (language, theme, etc.) apply correctly
+      setTimeout(() => {
+        window.location.reload()
+      }, 800)
     } catch (error) {
       console.error('Failed to save settings:', error)
     } finally {
