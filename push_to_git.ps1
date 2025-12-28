@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Fix Navigation v1.9.5: Fix Paywall links in UsageBanner and AdBanner - Use robust navigation with fallback - Bump version to 1.9.5"
+$commitMessage = "Fix Navigation v1.9.6: Apply robust navigation fallback to AdBanner links - Bump version to 1.9.6"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files

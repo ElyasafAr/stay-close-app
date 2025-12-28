@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { getData } from '@/services/api'
 import styles from './AdBanner.module.css'
 
@@ -11,6 +11,7 @@ interface UsageStatus {
 }
 
 export const AdBanner = () => {
+  const router = useRouter()
   const [isVisible, setIsVisible] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
 
@@ -34,6 +35,23 @@ export const AdBanner = () => {
     checkAdsStatus()
   }, [])
 
+  const handleNavigation = (e: React.MouseEvent, href: string) => {
+    e.preventDefault();
+    console.log(`[AdBanner] Navigating to ${href}`);
+    try {
+      router.push(href);
+      // Fallback if router gets stuck
+      setTimeout(() => {
+        if (window.location.pathname !== href) {
+          console.warn(`[AdBanner] Router stuck, using window.location`);
+          window.location.href = href;
+        }
+      }, 500);
+    } catch (error) {
+      window.location.href = href;
+    }
+  }
+
   if (!isLoaded || !isVisible) return null
 
   return (
@@ -45,9 +63,13 @@ export const AdBanner = () => {
           <div className={styles.adText}>תמוך באפליקציה ותהנה מחוויה ללא פרסומות</div>
         </div>
       </div>
-      <Link href="/paywall" className={styles.removeAds}>
+      <a 
+        href="/paywall" 
+        className={styles.removeAds}
+        onClick={(e) => handleNavigation(e, '/paywall')}
+      >
         הסר פרסומות ושדרג לפרימיום
-      </Link>
+      </a>
     </div>
   )
 }
