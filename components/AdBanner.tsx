@@ -45,7 +45,7 @@ export const AdBanner = () => {
           <div className={styles.adText}>תמוך באפליקציה ותהנה מחוויה ללא פרסומות</div>
         </div>
       </div>
-      <Link href="/settings" className={styles.removeAds}>
+      <Link href="/paywall" className={styles.removeAds}>
         הסר פרסומות ושדרג לפרימיום
       </Link>
     </div>

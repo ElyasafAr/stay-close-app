@@ -55,6 +55,22 @@ export function UsageBanner() {
 
   const { subscription_status, trial_days_remaining, messages } = usageData
 
+  const handleNavigation = (href: string) => {
+    console.log(`[UsageBanner] Navigating to ${href}`);
+    try {
+      router.push(href);
+      // Fallback if router gets stuck
+      setTimeout(() => {
+        if (window.location.pathname !== href) {
+          console.warn(`[UsageBanner] Router stuck, using window.location`);
+          window.location.href = href;
+        }
+      }, 500);
+    } catch (error) {
+      window.location.href = href;
+    }
+  }
+
   // Trial banner
   if (subscription_status === 'trial' && trial_days_remaining > 0) {
     return (
@@ -62,7 +78,7 @@ export function UsageBanner() {
         <span>{t('usage.trialRemaining').replace('{{days}}', trial_days_remaining.toString())}</span>
         <button 
           className={styles.upgradeButton}
-          onClick={() => router.push('/paywall')}
+          onClick={() => handleNavigation('/paywall')}
         >
           {t('usage.donateNow')}
         </button>
@@ -85,7 +101,7 @@ export function UsageBanner() {
         </span>
         <button 
           className={styles.upgradeButton}
-          onClick={() => router.push('/paywall')}
+          onClick={() => handleNavigation('/paywall')}
         >
           {t('usage.donateUnlimited')}
         </button>

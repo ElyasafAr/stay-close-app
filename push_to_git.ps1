@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Fix UI v1.9.4: Center Logo in mobile header and position hamburger at start - Support RTL/LTR orientation for menu button - Bump version to 1.9.4"
+$commitMessage = "Fix Navigation v1.9.5: Fix Paywall links in UsageBanner and AdBanner - Use robust navigation with fallback - Bump version to 1.9.5"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files
