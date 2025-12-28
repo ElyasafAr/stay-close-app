@@ -32,3 +32,4 @@ convert logo.svg -resize 192x192 public/icon-192x192.png
 
 
 
+

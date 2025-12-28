@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Monetization v1.9.8: Implement real Google AdMob ads for Android - Configure Capacitor plugin and AndroidManifest - Update AdBanner to use native ads - Bump version to 1.9.8"
+$commitMessage = "Maintenance v1.9.9: Global version bump to 1.9.9 - Update .gitignore for PRIVATE_KEYS.txt - Update docs and status files"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files

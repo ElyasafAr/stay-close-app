@@ -60,6 +60,9 @@ backend/contacts.json
 backend/users.json
 backend/reminders.json
 
+# Private Keys (קובץ לוקלי בלבד - לא עולה לגיט!)
+PRIVATE_KEYS.txt
+
 # Firebase Service Account Keys (חשוב מאוד - לא להעלות!)
 *serviceAccountKey.json
 *firebase-adminsdk*.json
