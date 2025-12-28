@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Fix UI v1.9.3: Fix Mobile Menu positioning and orientation - Use explicit right/left based on direction - Fix overlay and z-index issues - Bump version to 1.9.3"
+$commitMessage = "Fix UI v1.9.4: Center Logo in mobile header and position hamburger at start - Support RTL/LTR orientation for menu button - Bump version to 1.9.4"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files

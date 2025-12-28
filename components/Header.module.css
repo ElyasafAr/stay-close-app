@@ -216,6 +216,10 @@ html.dark .navLink.active {
   transition: all var(--transition-normal);
 }
 
+.mobileSpacer {
+  display: none;
+}
+
 .mobileMenuButton:hover {
   background: var(--color-primary-light);
 }
@@ -329,50 +333,34 @@ html.dark .mobileNavLink.active {
   .desktopUserMenu {
     display: none;
   }
+  
+  .mobileSpacer {
+    display: block;
+    width: 44px; /* Matches hamburger button width + padding */
+  }
+
   .mobileMenuButton {
     display: flex !important;
     align-items: center;
     justify-content: center;
     z-index: 10001;
     position: relative;
+    width: 44px;
+    height: 44px;
+    margin: 0;
   }
   
   .nav {
+    display: flex;
     flex-direction: row;
-    gap: var(--spacing-md);
+    align-items: center;
+    justify-content: space-between;
     width: 100%;
+    gap: 0;
   }
   
   .navRight {
-    width: auto;
-    justify-content: flex-end;
-    flex: 1;
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-  }
-  
-  .navLinks {
     display: none !important;
-  }
-  
-  .userName {
-    display: none !important;
-  }
-  
-  .userButton {
-    padding: var(--spacing-xs) var(--spacing-sm) !important;
-    min-width: auto;
-  }
-  
-  .dropdown {
-    inset-inline-end: 0;
-    max-width: calc(100vw - 24px);
-    transform: translateX(0);
-    position: absolute;
-    min-width: auto;
-    width: max-content;
-    max-width: min(280px, calc(100vw - 24px));
   }
   
   .header {
@@ -381,7 +369,9 @@ html.dark .mobileNavLink.active {
   
   .logo {
     font-size: 1.3rem;
-    flex-shrink: 0;
+    flex: 1;
+    text-align: center;
+    margin: 0;
   }
   
   body:has(.mobileMenu.open) {

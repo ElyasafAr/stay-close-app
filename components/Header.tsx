@@ -108,8 +108,15 @@ export function Header() {
 
   return (
     <>
-      <header className={styles.header}>
+    <header className={styles.header}>
         <nav className={styles.nav}>
+          <button
+            className={styles.mobileMenuButton}
+            onClick={() => setShowMobileMenu(!showMobileMenu)}
+          >
+            {showMobileMenu ? <MdClose size={28} /> : <MdMenu size={28} />}
+          </button>
+
           <a 
             href="/" 
             className={styles.logo} 
@@ -162,14 +169,10 @@ export function Header() {
                 )}
               </div>
             </div>
-
-            <button
-              className={styles.mobileMenuButton}
-              onClick={() => setShowMobileMenu(!showMobileMenu)}
-            >
-              {showMobileMenu ? <MdClose size={28} /> : <MdMenu size={28} />}
-            </button>
           </div>
+          
+          {/* Spacer for mobile centering balance */}
+          <div className={styles.mobileSpacer}></div>
         </nav>
       </header>
 
