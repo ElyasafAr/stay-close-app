@@ -56,9 +56,7 @@ export const AdBanner = () => {
     const initializeAndShowBanner = async () => {
       try {
         await AdMob.initialize({
-          requestTrackingAuthorization: true,
           testingDevices: [], // הוסף כאן מזהי מכשירים לבדיקה אם צריך
-          initializeOnStartup: true,
         });
 
         // הצגת הבאנר

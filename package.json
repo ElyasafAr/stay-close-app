@@ -17,7 +17,7 @@
     "android": "npm run build:android && npx cap open android"
   },
   "dependencies": {
-    "@capacitor-community/admob": "^8.0.0",
+    "@capacitor-community/admob": "^6.0.0",
     "@capacitor-firebase/authentication": "^6.3.1",
     "@capacitor/android": "^6.2.1",
     "@capacitor/cli": "^6.2.1",
