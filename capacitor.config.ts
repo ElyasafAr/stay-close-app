@@ -18,6 +18,9 @@ const config: CapacitorConfig = {
       skipNativeAuth: false,
       providers: ['google.com'],
     },
+    AdMob: {
+      initializeOnStartup: true,
+    },
   },
   android: {
     allowMixedContent: true,

@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Fix Settings v1.9.7: Automatically refresh page after saving settings to ensure all changes apply - Bump version to 1.9.7"
+$commitMessage = "Monetization v1.9.8: Implement real Google AdMob ads for Android - Configure Capacitor plugin and AndroidManifest - Update AdBanner to use native ads - Bump version to 1.9.8"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files
