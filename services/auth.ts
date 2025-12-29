@@ -1,21 +1,21 @@
 'use client'
 
-import { postData, getData } from './api'
+import { postData } from './api'
 import { 
   signInWithPopup, 
   GoogleAuthProvider, 
   onAuthStateChanged,
   signOut as firebaseSignOut,
-  User as FirebaseUser,
-  Auth
+  User as FirebaseUser
 } from 'firebase/auth'
-import { auth, getAuthInstance } from '@/lib/firebase'
+import { auth } from '@/lib/firebase'
+import { Capacitor } from '@capacitor/core'
 
 export interface User {
-  user_id: string
+  id: number
   username: string
   email: string
-  auth_provider?: 'local' | 'google' | 'firebase'
+  full_name?: string
 }
 
 export interface AuthResponse {
@@ -24,127 +24,46 @@ export interface AuthResponse {
   user: User
 }
 
-export interface LoginData {
-  username: string
-  password: string
+export const isNativePlatform = () => {
+  return Capacitor.isNativePlatform()
 }
 
-export interface RegisterData {
-  username: string
-  email: string
-  password: string
-}
-
-/**
- * רישום משתמש חדש
- */
-export async function register(data: RegisterData): Promise<AuthResponse> {
-  console.log('🔵 [AUTH] Starting registration...', { username: data.username, email: data.email })
+export async function login(credentials: { username: string; password: string }): Promise<AuthResponse> {
+  const response = await postData<AuthResponse>('/api/auth/login', credentials)
   
-  try {
-    const response = await postData<AuthResponse>('/api/auth/register', data)
-    console.log('🔵 [AUTH] Registration response:', { 
-      success: response.success, 
-      hasData: !!response.data,
-      error: response.error 
-    })
-    
-    if (!response.success || !response.data) {
-      console.error('❌ [AUTH] Registration failed:', response.error)
-      throw new Error(response.error || 'שגיאה ברישום')
-    }
-    
-    console.log('✅ [AUTH] Registration successful:', { 
-      user_id: response.data.user.user_id,
-      username: response.data.user.username,
-      email: response.data.user.email,
-      hasToken: !!response.data.access_token
-    })
-    
-    // שמירה ב-localStorage
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('auth_token', response.data.access_token)
-      localStorage.setItem('user', JSON.stringify(response.data.user))
-      console.log('💾 [AUTH] Saved to localStorage')
-    }
-    
-    return response.data
-  } catch (error) {
-    console.error('❌ [AUTH] Registration error:', error)
-    throw error
+  if (!response.success || !response.data) {
+    throw new Error(response.error || 'שגיאה בהתחברות')
   }
-}
-
-/**
- * התחברות עם שם משתמש וסיסמה
- */
-export async function login(data: LoginData): Promise<AuthResponse> {
-  console.log('🔵 [AUTH] Starting login...', { username: data.username })
   
-  try {
-    const response = await postData<AuthResponse>('/api/auth/login', data)
-    console.log('🔵 [AUTH] Login response:', { 
-      success: response.success, 
-      hasData: !!response.data,
-      error: response.error 
-    })
-    
-    if (!response.success || !response.data) {
-      console.error('❌ [AUTH] Login failed:', response.error)
-      throw new Error(response.error || 'שגיאה בהתחברות')
-    }
-    
-    console.log('✅ [AUTH] Login successful:', { 
-      user_id: response.data.user.user_id,
-      username: response.data.user.username,
-      email: response.data.user.email,
-      hasToken: !!response.data.access_token
-    })
-    
-    // שמירה ב-localStorage
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('auth_token', response.data.access_token)
-      localStorage.setItem('user', JSON.stringify(response.data.user))
-      console.log('💾 [AUTH] Saved to localStorage')
-    }
-    
-    return response.data
-  } catch (error) {
-    console.error('❌ [AUTH] Login error:', error)
-    throw error
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('auth_token', response.data.access_token)
+    localStorage.setItem('user', JSON.stringify(response.data.user))
+    window.dispatchEvent(new CustomEvent('authChanged', { detail: { user: response.data.user } }))
   }
+  
+  return response.data
 }
 
-/**
- * בדיקה אם רצים על פלטפורמה Native (Android/iOS)
- */
-export function isNativePlatform(): boolean {
-  if (typeof window === 'undefined') return false
-  // Capacitor מוסיף את האובייקט הזה כשרצים על Native
-  return !!(window as any).Capacitor?.isNativePlatform?.()
+export async function register(userData: { username: string; email: string; password: string }): Promise<AuthResponse> {
+  const response = await postData<AuthResponse>('/api/auth/register', userData)
+  
+  if (!response.success || !response.data) {
+    throw new Error(response.error || 'שגיאה בהרשמה')
+  }
+  
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('auth_token', response.data.access_token)
+    localStorage.setItem('user', JSON.stringify(response.data.user))
+    window.dispatchEvent(new CustomEvent('authChanged', { detail: { user: response.data.user } }))
+  }
+  
+  return response.data
 }
 
-/**
- * התחברות עם Google - Native (Capacitor)
- */
 async function loginWithGoogleNative(): Promise<AuthResponse> {
-  console.log('🔵 [AUTH] Starting Native Google login...')
-  
   try {
-    // Import dynamically to avoid issues on web
     const { FirebaseAuthentication } = await import('@capacitor-firebase/authentication')
-    
-    // Sign in with Google
-    console.log('🔵 [AUTH] Calling FirebaseAuthentication.signInWithGoogle...')
     const result = await FirebaseAuthentication.signInWithGoogle()
-    
-    console.log('✅ [AUTH] Native Google sign-in successful:', {
-      uid: result.user?.uid,
-      email: result.user?.email,
-      displayName: result.user?.displayName
-    })
-    
-    // Get the ID token
     const tokenResult = await FirebaseAuthentication.getIdToken()
     const firebaseToken = tokenResult.token
     
@@ -152,211 +71,146 @@ async function loginWithGoogleNative(): Promise<AuthResponse> {
       throw new Error('לא ניתן לקבל token מ-Firebase')
     }
     
-    console.log('✅ [AUTH] Firebase token received:', { 
-      tokenLength: firebaseToken.length,
-      tokenPreview: firebaseToken.substring(0, 20) + '...'
-    })
-    
-    // Send to backend for verification and JWT creation
-    console.log('🔵 [AUTH] Sending token to backend...')
     const response = await postData<AuthResponse>('/api/auth/firebase', {
       token: firebaseToken
     })
     
     if (!response.success || !response.data) {
-      console.error('❌ [AUTH] Firebase login failed:', response.error)
       throw new Error(response.error || 'שגיאה בהתחברות עם Firebase')
     }
     
-    console.log('✅ [AUTH] Firebase login successful:', { 
-      user_id: response.data.user.user_id,
-      username: response.data.user.username,
-      email: response.data.user.email
-    })
-    
-    // Save to localStorage
     if (typeof window !== 'undefined') {
       localStorage.setItem('auth_token', response.data.access_token)
       localStorage.setItem('firebase_token', firebaseToken)
       localStorage.setItem('user', JSON.stringify(response.data.user))
-      console.log('💾 [AUTH] Saved to localStorage')
+      window.dispatchEvent(new CustomEvent('authChanged', { detail: { user: response.data.user } }))
     }
     
     return response.data
   } catch (error: any) {
     console.error('❌ [AUTH] Native Google login error:', error)
-    
-    if (error.message?.includes('canceled') || error.message?.includes('cancelled')) {
-      throw new Error('ההתחברות בוטלה. אנא נסה שוב.')
-    }
-    
     throw new Error(error.message || 'שגיאה בהתחברות עם Google')
   }
 }
 
-/**
- * התחברות עם Google דרך Firebase
- */
 export async function loginWithGoogle(): Promise<AuthResponse> {
-  console.log('🔵 [AUTH] Starting Google login...')
-  
-  // בדיקה אם רצים על Native - שימוש ב-Capacitor Firebase Auth
   if (isNativePlatform()) {
-    console.log('🔵 [AUTH] Native platform detected, using Capacitor Firebase Auth')
     return loginWithGoogleNative()
   }
   
-  // Web - שימוש ב-Firebase Web SDK
   try {
-    console.log('🔵 [AUTH] Creating Google provider...')
     const provider = new GoogleAuthProvider()
-    provider.setCustomParameters({
-      prompt: 'select_account'
-    })
+    provider.setCustomParameters({ prompt: 'select_account' })
     
-    console.log('🔵 [AUTH] Calling signInWithPopup...')
     const firebaseAuth = auth
     if (!firebaseAuth) {
       throw new Error('שגיאה בהתחברות. נא לנסות שוב.')
     }
     const result = await signInWithPopup(firebaseAuth, provider)
-    console.log('✅ [AUTH] Firebase sign-in successful:', {
-      uid: result.user.uid,
-      email: result.user.email,
-      displayName: result.user.displayName
-    })
-    
-    console.log('🔵 [AUTH] Getting Firebase token...')
     const firebaseToken = await result.user.getIdToken()
-    console.log('✅ [AUTH] Firebase token received:', { 
-      tokenLength: firebaseToken.length,
-      tokenPreview: firebaseToken.substring(0, 20) + '...'
-    })
     
-    // שליחה לשרת לאימות ויצירת משתמש/קבלת JWT
-    console.log('🔵 [AUTH] Sending token to backend...')
     const response = await postData<AuthResponse>('/api/auth/firebase', {
       token: firebaseToken
     })
     
-    console.log('🔵 [AUTH] Backend response:', { 
-      success: response.success, 
-      hasData: !!response.data,
-      error: response.error 
-    })
-    
     if (!response.success || !response.data) {
-      console.error('❌ [AUTH] Firebase login failed:', response.error)
       throw new Error(response.error || 'שגיאה בהתחברות עם Firebase')
     }
     
-    console.log('✅ [AUTH] Firebase login successful:', { 
-      user_id: response.data.user.user_id,
-      username: response.data.user.username,
-      email: response.data.user.email,
-      hasToken: !!response.data.access_token
-    })
-    
-    // שמירה ב-localStorage
     if (typeof window !== 'undefined') {
       localStorage.setItem('auth_token', response.data.access_token)
       localStorage.setItem('firebase_token', firebaseToken)
       localStorage.setItem('user', JSON.stringify(response.data.user))
-      console.log('💾 [AUTH] Saved to localStorage')
+      window.dispatchEvent(new CustomEvent('authChanged', { detail: { user: response.data.user } }))
     }
     
     return response.data
   } catch (error: any) {
-    console.error('❌ [AUTH] Google login error:', {
-      code: error.code,
-      message: error.message,
-      error: error
-    })
-    
-    // טיפול בשגיאות Firebase
-    if (error.code === 'auth/popup-closed-by-user') {
-      throw new Error('החלון נסגר. אנא נסה שוב.')
-    } else if (error.code === 'auth/popup-blocked') {
-      throw new Error('החלון נחסם. אנא אפשר חלונות קופצים ונסה שוב.')
-    } else if (error.code === 'auth/cancelled-popup-request') {
-      throw new Error('הבקשה בוטלה. אנא נסה שוב.')
-    }
+    console.error('❌ [AUTH] Web Google login error:', error)
     throw new Error(error.message || 'שגיאה בהתחברות עם Google')
   }
 }
 
 /**
- * התנתקות
+ * בדיקה האם אנחנו בתהליך התנתקות
+ * משתמש רק ב-sessionStorage כדי שהדגל יתאפס כשהאפליקציה נסגרת
+ */
+export function isLoggingOut(): boolean {
+  if (typeof window === 'undefined') return false;
+  return sessionStorage.getItem('is_logging_out') === 'true';
+}
+
+/**
+ * התנתקות - גרסה מפושטת וחזקה
+ * הפונקציה מחזירה Promise שמסתיימת לאחר ביצוע הניקוי
+ * ומשאירה את הניתוב לרכיב שקרא לה (Header)
  */
 export async function logout(): Promise<void> {
-  console.log('🔵 [AUTH] Starting logout...')
+  console.log('🔵 [AUTH] Starting robust logout flow');
   
-  try {
-    // התנתקות מ-Firebase Native (Capacitor)
-    if (isNativePlatform()) {
-      try {
-        const { FirebaseAuthentication } = await import('@capacitor-firebase/authentication')
-        await FirebaseAuthentication.signOut()
-        console.log('✅ [AUTH] Native Firebase sign out successful')
-      } catch (e) {
-        console.warn('⚠️ [AUTH] Native Firebase sign out error:', e)
-      }
-    }
-    
-    // התנתקות מ-Firebase Web
-    const firebaseAuth = auth
-    if (firebaseAuth) {
-      await firebaseSignOut(firebaseAuth)
-      console.log('✅ [AUTH] Web Firebase sign out successful')
-    }
-  } catch (error) {
-    console.error('❌ [AUTH] שגיאה בהתנתקות מ-Firebase:', error)
-  }
-  
-  // מחיקת נתונים מ-localStorage
   if (typeof window !== 'undefined') {
-    console.log('🔵 [AUTH] Clearing localStorage...')
-    localStorage.removeItem('auth_token')
-    localStorage.removeItem('firebase_token')
-    localStorage.removeItem('user')
+    // 1. הגדרת דגל התנתקות רק ב-sessionStorage (לא ב-localStorage!)
+    sessionStorage.setItem('is_logging_out', 'true');
     
-    console.log('🔵 [AUTH] Redirecting to login...')
-    // שימוש ב-replace כדי למנוע חזרה אחורה למסך הקודם
-    window.location.replace('/login')
+    // 2. ניקוי ה-Storage (למעט הגדרות בסיסיות)
+    const lang = localStorage.getItem('app_language');
+    const theme = localStorage.getItem('app_theme');
+    const settings = localStorage.getItem('app_settings');
+    
+    localStorage.clear();
+    
+    if (lang) localStorage.setItem('app_language', lang);
+    if (theme) localStorage.setItem('app_theme', theme);
+    if (settings) localStorage.setItem('app_settings', settings);
+    
+    // 3. הודעה לרכיבים על התנתקות
+    window.dispatchEvent(new CustomEvent('authChanged', { detail: { user: null, isLogout: true } }));
+
+    try {
+      // 4. ניקוי עוגיות Native של Capacitor
+      const { CapacitorCookies } = await import('@capacitor/core');
+      await CapacitorCookies.clearAllCookies();
+      console.log('✅ [AUTH] Native cookies cleared');
+
+      // 5. התנתקות מ-Firebase
+      if (isNativePlatform()) {
+        const { FirebaseAuthentication } = await import('@capacitor-firebase/authentication');
+        await FirebaseAuthentication.signOut();
+      }
+      if (auth) {
+        await firebaseSignOut(auth);
+      }
+      console.log('✅ [AUTH] Firebase sign-out complete');
+    } catch (e) {
+      console.warn('⚠️ [AUTH] Non-critical error during logout cleanup:', e);
+    }
+
+    // 6. הניתוב יתבצע ע"י הרכיב שקרא לפונקציה
+    console.log('✅ [AUTH] Logout cleanup complete, ready for redirect');
   }
 }
 
-/**
- * בדיקה אם המשתמש מחובר
- */
+export function clearLogoutFlag() {
+  if (typeof window !== 'undefined') {
+    sessionStorage.removeItem('is_logging_out');
+    console.log('🧹 [AUTH] Logout flag cleared');
+  }
+}
+
 export function isAuthenticated(): boolean {
-  if (typeof window === 'undefined') {
-    return false
-  }
-  return !!localStorage.getItem('auth_token')
+  if (typeof window === 'undefined') return false
+  return !!localStorage.getItem('auth_token');
 }
 
-/**
- * קבלת token נוכחי
- */
 export function getToken(): string | null {
-  if (typeof window === 'undefined') {
-    return null
-  }
+  if (typeof window === 'undefined') return null
   return localStorage.getItem('auth_token')
 }
 
-/**
- * קבלת משתמש שמור
- */
 export function getStoredUser(): User | null {
-  if (typeof window === 'undefined') {
-    return null
-  }
+  if (typeof window === 'undefined') return null
   const userStr = localStorage.getItem('user')
-  if (!userStr) {
-    return null
-  }
+  if (!userStr) return null
   try {
     return JSON.parse(userStr)
   } catch {
@@ -364,27 +218,10 @@ export function getStoredUser(): User | null {
   }
 }
 
-/**
- * קבלת פרטי משתמש נוכחי מהשרת
- */
-export async function getCurrentUser(): Promise<User> {
-  const response = await getData<User>('/api/auth/me')
-  if (!response.success || !response.data) {
-    throw new Error(response.error || 'שגיאה בטעינת פרטי משתמש')
-  }
-  return response.data
-}
-
-/**
- * Listener למצב ההתחברות של Firebase
- * מעדכן את ה-token ב-localStorage כשמתעדכן
- */
 export function onAuthStateChange(callback: (user: User | null) => void) {
   const firebaseAuth = auth
   
-  // אם Firebase לא זמין, נחזיר unsubscribe ריק ונבדוק localStorage
   if (!firebaseAuth) {
-    // במצב SSR או כשאין Firebase, נבדוק localStorage
     if (typeof window !== 'undefined') {
       const storedUser = getStoredUser()
       if (storedUser && localStorage.getItem('auth_token')) {
@@ -393,84 +230,45 @@ export function onAuthStateChange(callback: (user: User | null) => void) {
         callback(null)
       }
     }
-    return () => {} // unsubscribe ריק
+    return () => {}
   }
   
   return onAuthStateChanged(firebaseAuth, async (firebaseUser: FirebaseUser | null) => {
+    // אם אנחנו בתהליך התנתקות, נתעלם מהאירוע לחלוטין
+    if (typeof window !== 'undefined' && sessionStorage.getItem('is_logging_out') === 'true') {
+      console.log('🟡 [AUTH] Auth state change ignored because is_logging_out = true');
+      return;
+    }
+
     if (firebaseUser) {
       try {
-        // קבלת token מעודכן
         const firebaseToken = await firebaseUser.getIdToken()
+        const response = await postData<AuthResponse>('/api/auth/firebase', {
+          token: firebaseToken
+        })
         
-        // עדכון ב-localStorage
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('firebase_token', firebaseToken)
-          
-          // אם יש JWT token, נשאיר אותו. אם לא, ננסה לקבל אחד חדש
-          const currentToken = localStorage.getItem('auth_token')
-          if (!currentToken) {
-            // קבלת JWT מהשרת
-            try {
-              const response = await postData<AuthResponse>('/api/auth/firebase', {
-                token: firebaseToken
-              })
-              if (response.success && response.data) {
-                localStorage.setItem('auth_token', response.data.access_token)
-                localStorage.setItem('user', JSON.stringify(response.data.user))
-                callback(response.data.user)
-                return
-              } else {
-                // If backend is not available, use stored user if available
-                console.warn('⚠️ [AUTH] Backend unavailable, using stored user if available')
-                const storedUser = getStoredUser()
-                if (storedUser) {
-                  callback(storedUser)
-                  return
-                }
-              }
-            } catch (error) {
-              // Silently handle errors - backend might not be ready yet
-              console.warn('⚠️ [AUTH] Could not get JWT token from backend (this is OK if backend is not ready):', error instanceof Error ? error.message : 'Unknown error')
-              // Use stored user if available
-              const storedUser = getStoredUser()
-              if (storedUser) {
-                callback(storedUser)
-                return
-              }
-            }
+        if (response.success && response.data) {
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('auth_token', response.data.access_token)
+            localStorage.setItem('firebase_token', firebaseToken)
+            localStorage.setItem('user', JSON.stringify(response.data.user))
           }
-          
-          // אם יש user שמור, נשתמש בו
-          const storedUser = getStoredUser()
-          if (storedUser) {
-            callback(storedUser)
-            return
-          }
+          callback(response.data.user)
+        } else {
+          callback(null)
         }
       } catch (error) {
-        console.error('שגיאה בעדכון Firebase token:', error)
+        callback(null)
       }
     } else {
-      // אין Firebase user - זה יכול להיות התנתקות מ-Firebase או התחברות רגילה
-      // נבדוק אם יש JWT token ב-localStorage (התחברות רגילה)
       if (typeof window !== 'undefined') {
-        const jwtToken = localStorage.getItem('auth_token')
-        if (jwtToken) {
-          // יש JWT token - זה התחברות רגילה, לא התנתקות
-          // נשאיר את ה-localStorage ונחזיר את המשתמש השמור
-          const storedUser = getStoredUser()
-          if (storedUser) {
-            callback(storedUser)
-            return
-          }
-        } else {
-          // אין JWT token - באמת התנתק
-          localStorage.removeItem('firebase_token')
-          localStorage.removeItem('auth_token')
-          localStorage.removeItem('user')
+        const hasJwt = !!localStorage.getItem('auth_token')
+        if (!hasJwt) {
+          callback(null)
         }
+      } else {
+        callback(null)
       }
-      callback(null)
     }
   })
 }

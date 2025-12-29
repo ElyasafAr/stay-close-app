@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 
 export interface Settings {
   language: string
+  messageLanguage: string
   theme: string
   notifications: boolean
   notificationPlatform: 'phone' | 'browser' | 'both'
@@ -11,6 +12,7 @@ export interface Settings {
 
 const defaultSettings: Settings = {
   language: 'he',
+  messageLanguage: 'he',
   theme: 'light',
   notifications: true,
   notificationPlatform: 'both',

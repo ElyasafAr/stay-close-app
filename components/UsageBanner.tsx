@@ -57,18 +57,7 @@ export function UsageBanner() {
 
   const handleNavigation = (href: string) => {
     console.log(`[UsageBanner] Navigating to ${href}`);
-    try {
-      router.push(href);
-      // Fallback if router gets stuck
-      setTimeout(() => {
-        if (window.location.pathname !== href) {
-          console.warn(`[UsageBanner] Router stuck, using window.location`);
-          window.location.href = href;
-        }
-      }, 500);
-    } catch (error) {
-      window.location.href = href;
-    }
+    router.replace(href);
   }
 
   // Trial banner

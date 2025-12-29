@@ -1,79 +1,95 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
-import { onAuthStateChange } from '@/services/auth'
+import { useEffect, useState, useRef } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
+import { isAuthenticated, onAuthStateChange, isLoggingOut } from '@/services/auth'
 import { Loading } from './Loading'
 
-/**
- * AuthGuard - Protects routes and handles initial authentication check.
- * Refined for maximum hydration safety and router stability.
- */
-export function AuthGuard({ children }: { children: React.ReactNode }) {
-  const router = useRouter()
-  const pathname = usePathname()
-  const [mounted, setMounted] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const [authenticated, setAuthenticated] = useState(false)
+const publicPaths = ['/login', '/register', '/about', '/privacy', '/terms', '/contact', '/test', '/debug']
 
-  // public paths that don't require auth
-  const publicPaths = ['/login', '/register']
+export function AuthGuard({ children }: { children: React.ReactNode }) {
+  const [authenticated, setAuthenticated] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [mounted, setMounted] = useState(false)
+  const pathname = usePathname()
+  const router = useRouter()
+  const isInitialCheckDone = useRef(false)
 
   useEffect(() => {
-    console.log(`[AuthGuard] Mounted. Pathname: ${pathname}`);
     setMounted(true)
+    console.log(`🛡️ [AuthGuard] Path changed: ${pathname}`);
+    
+    // אם אנחנו בתהליך התנתקות, לא בודקים auth
+    if (isLoggingOut()) {
+      console.log('🛡️ [AuthGuard] Logout in progress, skipping auth check');
+      setLoading(false);
+      return;
+    }
     
     const checkAuth = () => {
-      if (typeof window === 'undefined') return
-
-      const token = localStorage.getItem('auth_token')
-      const userStr = localStorage.getItem('user')
-      const isAuth = !!(token && userStr)
+      const isPublic = publicPaths.includes(pathname || '')
+      const auth = isAuthenticated()
       
-      console.log(`[AuthGuard] checkAuth - isAuth: ${isAuth}, path: ${window.location.pathname}`);
-      setAuthenticated(isAuth)
-
-      const currentPath = window.location.pathname
+      console.log(`🛡️ [AuthGuard] checkAuth: path=${pathname}, isPublic=${isPublic}, authenticated=${auth}`);
       
-      if (!isAuth && !publicPaths.includes(currentPath)) {
-        console.log('[AuthGuard] Redirecting to /login');
-        router.replace('/login')
-      } else if (isAuth && currentPath === '/login') {
-        console.log('[AuthGuard] Redirecting to /');
-        router.replace('/')
+      setAuthenticated(auth)
+      isInitialCheckDone.current = true
+
+      if (!auth && !isPublic) {
+        console.log(`🛡️ [AuthGuard] Protected path detected! Redirecting to /login`);
+        router.replace('/login');
+      } else if (auth && pathname === '/login') {
+        console.log(`🛡️ [AuthGuard] Authenticated user on login page! Redirecting to /messages`);
+        router.replace('/messages')
+      } else {
+        console.log(`🛡️ [AuthGuard] Stay on current path: ${pathname}`);
       }
-      
       setLoading(false)
     }
 
+    // בדיקה ראשונית
     checkAuth()
 
+    // האזנה לשינויי התחברות
+    console.log('🛡️ [AuthGuard] Registering onAuthStateChange listener');
     const unsubscribe = onAuthStateChange((user) => {
-      console.log('[AuthGuard] onAuthStateChange event', user ? 'User exists' : 'No user');
-      checkAuth()
+      // לא מגיבים לשינויים אם אנחנו בתהליך התנתקות
+      if (isLoggingOut()) {
+        console.log('🛡️ [AuthGuard] onAuthStateChange ignored (logout in progress)');
+        return;
+      }
+      
+      console.log('🛡️ [AuthGuard] onAuthStateChange:', user ? `User ${user.username}` : 'No user');
+      const auth = !!user
+      setAuthenticated(auth)
+      
+      const isPublic = publicPaths.includes(pathname || '')
+      if (!auth && !isPublic) {
+        console.log(`🛡️ [AuthGuard] Auth lost on protected path! Redirecting to /login`);
+        router.replace('/login');
+      } else if (auth && pathname === '/login') {
+        console.log(`🛡️ [AuthGuard] Auth gained on login page! Redirecting to /messages`);
+        router.replace('/messages')
+      }
     })
 
-    return () => unsubscribe()
-  }, [router])
+    return () => {
+      console.log('🛡️ [AuthGuard] Unsubscribing from onAuthStateChange');
+      unsubscribe();
+    }
+  }, [pathname, router])
 
-  console.log(`[AuthGuard] Render - mounted: ${mounted}, loading: ${loading}, auth: ${authenticated}, path: ${pathname}`);
-
+  // בזמן הבדיקה הראשונית, נאפשר לדפים ציבוריים להופיע מיד כדי למנוע hydration errors
+  const isPublic = publicPaths.includes(pathname || '')
+  
   if (!mounted) {
-    console.log('[AuthGuard] Rendering nothing (not mounted)');
-    return null;
-  }
-
-  if (loading) {
-    console.log('[AuthGuard] Rendering Loading screen');
-    return <Loading />
-  }
-
-  const isPublicPath = publicPaths.includes(pathname)
-  if (authenticated || isPublicPath) {
-    console.log(`[AuthGuard] Rendering children for: ${pathname}`);
     return <>{children}</>
   }
 
-  console.log('[AuthGuard] Not authorized and not public - rendering Loading');
-  return <Loading />
+  if (loading && !isPublic) {
+    return <Loading />
+  }
+
+  console.log(`🛡️ [AuthGuard] Rendering children for path: ${pathname}`);
+  return <>{children}</>
 }

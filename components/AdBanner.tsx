@@ -8,9 +8,6 @@ import {
   AdMob, 
   BannerAdPosition, 
   BannerAdSize, 
-  AdmobConsentStatus,
-  BannerAdPluginEvents,
-  AdMobBannerSize
 } from '@capacitor-community/admob'
 import styles from './AdBanner.module.css'
 
@@ -19,8 +16,10 @@ interface UsageStatus {
   ads_enabled: boolean
 }
 
-// מזהה יחידת הפרסום (Ad Unit ID) שקיבלת עבור אנדרואיד
 const ADMOB_BANNER_ID = 'ca-app-pub-1245288761068546/5996451103';
+
+let isAdMobInitialized = false;
+let isBannerVisible = false;
 
 export const AdBanner = () => {
   const router = useRouter()
@@ -29,87 +28,81 @@ export const AdBanner = () => {
   const [isNative, setIsNative] = useState(false)
 
   useEffect(() => {
-    const checkAdsStatus = async () => {
-      try {
-        const isAndroid = Capacitor.getPlatform() === 'android';
-        setIsNative(Capacitor.isNativePlatform());
+    const isAndroid = Capacitor.getPlatform() === 'android';
+    setIsNative(isAndroid);
 
-        const response = await getData<UsageStatus>('/api/usage/status')
-        if (response.success && response.data) {
-          const { subscription_status, ads_enabled } = response.data
-          // הצגת פרסומות רק אם הן מופעלות גלובלית והמשתמש אינו פרימיום
-          const shouldShow = ads_enabled && subscription_status !== 'premium';
-          setIsVisible(shouldShow)
-
-          // אם אנחנו באנדרואיד וצריך להציג פרסומת
-          if (shouldShow && isAndroid) {
-            initializeAndShowBanner();
-          }
-        }
-      } catch (error) {
-        console.error('Error checking ads status:', error)
-      } finally {
-        setIsLoaded(true)
-      }
+    // באנדרואיד אנחנו רוצים להראות את ה-Placeholder מיד כדי למנוע קפיצות במסך ההודעות
+    if (isAndroid) {
+      setIsVisible(true);
+      setIsLoaded(true);
     }
 
     const initializeAndShowBanner = async () => {
       try {
-        await AdMob.initialize({
-          testingDevices: [], // הוסף כאן מזהי מכשירים לבדיקה אם צריך
-        });
+        if (!isAdMobInitialized) {
+          const myDeviceId = 'DE492EA88D9B9D65E5B0D047D4A5500C';
+          console.log(`[AdMob] Initializing AdMob with device: ${myDeviceId}`);
+          await AdMob.initialize({ testingDevices: [myDeviceId] });
+          isAdMobInitialized = true;
+        }
 
-        // הצגת הבאנר
+        if (isBannerVisible) {
+          console.log('[AdMob] Banner already exists, ensuring it is visible');
+          await AdMob.resumeBanner();
+          return;
+        }
+
+        console.log('[AdMob] Calling showBanner...');
         await AdMob.showBanner({
           adId: ADMOB_BANNER_ID,
           adSize: BannerAdSize.ADAPTIVE_BANNER,
           position: BannerAdPosition.BOTTOM_CENTER,
           margin: 0,
-          isTesting: false // שנה ל-true בזמן פיתוח אם גוגל חוסמים אותך
+          isTesting: true 
         });
-
-        console.log('✅ [AdMob] Banner shown successfully');
+        isBannerVisible = true;
+        console.log('✅ [AdMob] Banner is now visible');
       } catch (error) {
-        console.error('❌ [AdMob] Error showing banner:', error);
+        console.error('❌ [AdMob] Error in initializeAndShowBanner:', error);
       }
     };
 
-    checkAdsStatus()
+    const checkAdsStatus = async () => {
+      try {
+        if (isAndroid) {
+          // טעינה עם השהיה קלה כדי לוודא שה-WebView סיים להתרנדר
+          setTimeout(() => initializeAndShowBanner(), 500);
+          return;
+        }
 
-    // ניקוי ביציאה מהקומפוננטה
-    return () => {
-      if (Capacitor.getPlatform() === 'android') {
-        AdMob.hideBanner().catch(err => console.error('Error hiding banner:', err));
+        const response = await getData<UsageStatus>('/api/usage/status')
+        if (response.success && response.data) {
+          const { subscription_status, ads_enabled } = response.data
+          const shouldShow = ads_enabled && subscription_status !== 'premium';
+          setIsVisible(shouldShow);
+        }
+      } catch (error) {
+        console.error('Error checking ads status:', error)
+      } finally {
+        if (!isAndroid) setIsLoaded(true)
       }
     }
+
+    checkAdsStatus()
   }, [])
 
   const handleNavigation = (e: React.MouseEvent, href: string) => {
     e.preventDefault();
-    console.log(`[AdBanner] Navigating to ${href}`);
-    try {
-      router.push(href);
-      // Fallback if router gets stuck
-      setTimeout(() => {
-        if (window.location.pathname !== href) {
-          console.warn(`[AdBanner] Router stuck, using window.location`);
-          window.location.href = href;
-        }
-      }, 500);
-    } catch (error) {
-      window.location.href = href;
-    }
+    router.replace(href);
+  }
+
+  // באנדרואיד אנחנו תמיד מחזירים את הדיב כדי לשמור על מקום למודעה
+  if (isNative) {
+    return <div id="admob-placeholder" style={{ height: '65px', width: '100%', background: 'transparent' }} />;
   }
 
   if (!isLoaded || !isVisible) return null
 
-  // אם אנחנו באנדרואיד, הבאנר מוצג בצורה נייטיבית מעל ה-WebView
-  // לכן נחזיר אלמנט ריק כדי לא "להפריע" ויזואלית ב-DOM, או נחזיר רווח תחתון
-  if (isNative) {
-    return <div style={{ height: '60px', width: '100%' }} />;
-  }
-
-  // תצוגת Web (באנר דמה/עיצובי)
   return (
     <div className={styles.adContainer}>
       <div className={styles.adBox}>
@@ -119,11 +112,7 @@ export const AdBanner = () => {
           <div className={styles.adText}>תמוך באפליקציה ותהנה מחוויה ללא פרסומות</div>
         </div>
       </div>
-      <a 
-        href="/paywall" 
-        className={styles.removeAds}
-        onClick={(e) => handleNavigation(e, '/paywall')}
-      >
+      <a href="/paywall" className={styles.removeAds} onClick={(e) => handleNavigation(e, '/paywall')}>
         הסר פרסומות ושדרג לפרימיום
       </a>
     </div>

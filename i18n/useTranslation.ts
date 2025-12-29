@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import he from './he.json'
 import en from './en.json'
 
@@ -8,7 +8,7 @@ const translations: Record<string, any> = { he, en }
 
 /**
  * useTranslation - Simplified hook for i18n
- * Just loads the language once on mount and provides the 't' function.
+ * Stabilized 't' function to prevent infinite render loops.
  */
 export function useTranslation() {
   const [language, setLanguage] = useState<string>('he')
@@ -19,7 +19,7 @@ export function useTranslation() {
     setLanguage(saved)
   }, [])
 
-  const t = (key: string): any => {
+  const t = useCallback((key: string): any => {
     const keys = key.split('.')
     let value = translations[language] || translations['he']
     
@@ -31,7 +31,7 @@ export function useTranslation() {
       }
     }
     return value
-  }
+  }, [language]) // 't' will only change when 'language' changes
 
   return { t, language }
 }

@@ -29,13 +29,20 @@ export function getAuthInstance(): Auth {
   return auth
 }
 
-// Initialize messaging (only in browser)
+// Initialize messaging (only in browser and NOT in native apps)
 let messaging: Messaging | null = null
 if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-  try {
-    messaging = getMessaging(app)
-  } catch (error) {
-    console.warn('Firebase Messaging initialization failed:', error)
+  // Check if we are in a native platform (Capacitor)
+  const isNative = (window as any).Capacitor?.isNativePlatform();
+  
+  if (!isNative) {
+    try {
+      messaging = getMessaging(app)
+    } catch (error) {
+      console.warn('Firebase Messaging initialization failed:', error)
+    }
+  } else {
+    console.log('🔍 [FCM] Native platform detected, skipping Web Messaging initialization');
   }
 }
 

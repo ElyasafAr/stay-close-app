@@ -146,6 +146,23 @@ export default function SettingsPage() {
           </div>
 
           <div className={styles.settingItem}>
+            <label htmlFor="messageLanguage">
+              <MdLanguage style={{ fontSize: '24px', color: '#6ab6ff' }} />
+              {language === 'he' ? 'שפת הודעות ברירת מחדל' : 'Default Message Language'}
+            </label>
+            <select
+              id="messageLanguage"
+              value={settings.messageLanguage || 'he'}
+              onChange={(e) => updateSettings({ messageLanguage: e.target.value })}
+              className={styles.select}
+            >
+              {Object.entries(t('messages.languages') as any).map(([key, label]) => (
+                <option key={key} value={key}>{label as string}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className={styles.settingItem}>
             <label htmlFor="notifications">
               <MdNotifications style={{ fontSize: '24px', color: '#a8d5e2' }} />
               <input

@@ -157,9 +157,9 @@ export function ServiceWorkerRegistration() {
       }
     }
 
-  // גם רישום Service Worker לפונקציונליות נוספת
+  // גם רישום Service Worker לפונקציונליות נוספת (רק ב-Web)
   useEffect(() => {
-    if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator) || isNativePlatform()) {
       return
     }
 

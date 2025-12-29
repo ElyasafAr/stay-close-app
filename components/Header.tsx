@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useTranslation } from '@/i18n/useTranslation'
-import { logout, getStoredUser, isAuthenticated } from '@/services/auth'
+import { logout, getStoredUser, isAuthenticated, onAuthStateChange, isLoggingOut } from '@/services/auth'
 import { getData } from '@/services/api'
 import { 
   MdLogout, 
@@ -30,60 +30,147 @@ export function Header() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [mounted, setMounted] = useState(false)
 
-  useEffect(() => {
-    setMounted(true)
-    if (isAuthenticated()) {
-      setUser(getStoredUser())
-      checkAdminStatus()
-    }
-  }, [])
-
+  // פונקציה לבדיקת סטטוס אדמין
   const checkAdminStatus = async () => {
     try {
+      console.log('🔍 [Header] checkAdminStatus: Starting check...');
       const response = await getData('/api/admin/stats')
+      console.log('🔍 [Header] checkAdminStatus: API Response:', response);
+      
       if (response.success) {
+        console.log('✅ [Header] checkAdminStatus: Admin confirmed! Setting isAdmin=true');
         setIsAdmin(true)
+      } else {
+        console.log('❌ [Header] checkAdminStatus: Admin denied (success=false). Setting isAdmin=false');
+        setIsAdmin(false)
       }
     } catch (err) {
+      console.error('❌ [Header] checkAdminStatus: API Error:', err);
       setIsAdmin(false)
     }
   }
 
+  useEffect(() => {
+    console.log('🔵 [Header] useEffect: Component mounted');
+    setMounted(true)
+    
+    // האזנה לשינויי התחברות של Firebase
+    const unsubscribe = onAuthStateChange((updatedUser) => {
+      // לא מגיבים אם אנחנו בתהליך התנתקות
+      if (isLoggingOut()) {
+        console.log('👤 [Header] onAuthStateChange ignored (logout in progress)');
+        return;
+      }
+      console.log('👤 [Header] onAuthStateChange:', updatedUser ? `User found: ${updatedUser.username}` : 'No user');
+      setUser(updatedUser);
+      if (updatedUser) {
+        console.log('👤 [Header] Triggering admin check from onAuthStateChange');
+        checkAdminStatus();
+      } else {
+        setIsAdmin(false);
+      }
+    });
+
+    // האזנה לאירוע התחברות/התנתקות ידני (CustomEvent)
+    const handleAuthChange = (e: any) => {
+      const newUser = e.detail?.user;
+      const isLogoutEvent = e.detail?.isLogout === true;
+      
+      // אם זה אירוע התנתקות, ננקה את ה-state ולא נעשה יותר כלום
+      if (isLogoutEvent || isLoggingOut()) {
+        console.log('👤 [Header] Logout event detected, clearing state');
+        setUser(null);
+        setIsAdmin(false);
+        return;
+      }
+      
+      console.log('👤 [Header] Custom authChanged event:', newUser ? `Login: ${newUser.username}` : 'No user');
+      setUser(newUser || null);
+      if (newUser) {
+        console.log('👤 [Header] Triggering admin check from authChanged event');
+        checkAdminStatus();
+      } else {
+        setIsAdmin(false);
+      }
+    };
+
+    // האזנה לשינויים ב-Storage (בשביל סנכרון בין טאבים)
+    const handleStorageChange = (e: StorageEvent) => {
+      // לא מגיבים אם אנחנו בתהליך התנתקות
+      if (isLoggingOut()) {
+        console.log('👤 [Header] Storage change ignored (logout in progress)');
+        return;
+      }
+      
+      if (e.key === 'auth_token' || e.key === 'user') {
+        console.log(`👤 [Header] Storage changed (key: ${e.key}), refreshing auth state`);
+        const storedUser = getStoredUser();
+        setUser(storedUser);
+        if (storedUser) {
+          console.log('👤 [Header] Triggering admin check from StorageChange');
+          checkAdminStatus();
+        } else {
+          setIsAdmin(false);
+        }
+      }
+    };
+
+    window.addEventListener('authChanged', handleAuthChange);
+    window.addEventListener('storage', handleStorageChange);
+
+    // בדיקה ראשונית
+    const authStatus = isAuthenticated();
+    console.log('👤 [Header] Initial check: authenticated =', authStatus);
+    if (authStatus) {
+      const stored = getStoredUser();
+      console.log('👤 [Header] Initial check: stored user =', stored?.username);
+      setUser(stored);
+      checkAdminStatus();
+    }
+
+    return () => {
+      console.log('🔵 [Header] useEffect: Cleanup');
+      unsubscribe();
+      window.removeEventListener('authChanged', handleAuthChange);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [])
+
   const handleLogout = async () => {
-    localStorage.removeItem('auth_token')
-    localStorage.removeItem('firebase_token')
-    localStorage.removeItem('user')
-    await logout()
-    window.location.href = '/login'
+    console.log('🔵 [Header] handleLogout: Initiating logout...');
+    setShowMobileMenu(false);
+    setShowUserDropdown(false);
+    // ניקוי מיידי של ה-State המקומי כדי שה-UI יגיב מהר
+    setUser(null);
+    setIsAdmin(false);
+    await logout();
+    console.log('🔵 [Header] handleLogout: Logout complete, redirecting to /login');
+    router.replace('/login');
   }
 
   const handleNavigation = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    console.log(`🧭 [Header] handleNavigation: To ${href}`);
+    if (pathname === href || (pathname === '/' && href === '/messages')) {
+      e.preventDefault();
+      console.log('🧭 [Header] handleNavigation: Same path, ignoring');
+      setShowMobileMenu(false);
+      return;
+    }
+
     e.preventDefault();
-    console.log(`[Header] NAVIGATION START -> ${href}`);
-    
     setShowMobileMenu(false);
     setShowUserDropdown(false);
 
     try {
-      console.log(`[Header] Router.push calling for ${href}...`);
-      router.push(href);
-      
-      // Fallback: If after 500ms the pathname hasn't changed, try window.location
-      setTimeout(() => {
-        if (window.location.pathname !== href && href !== '/') {
-          console.warn(`[Header] Router.push seems stuck for ${href}, trying window.location...`);
-          if (window.location.pathname !== href) {
-            window.location.href = href;
-          }
-        }
-      }, 500);
+      console.log(`🧭 [Header] handleNavigation: router.replace(${href})`);
+      router.replace(href);
     } catch (error) {
-      console.error(`[Header] Router.push FAILED for ${href}:`, error);
+      console.warn('🧭 [Header] handleNavigation: router.replace failed, using window.location', error);
       window.location.href = href;
     }
   }
 
-  // Hydration safety: render a consistent empty skeleton on server
+  // אם המערכת עוד לא נטענה בצד לקוח, נציג מבנה בסיסי שזהה ל-guest
   if (!mounted) {
     return (
       <header className={styles.header}>
@@ -94,8 +181,16 @@ export function Header() {
     )
   }
 
-  // If user is not authenticated, don't show the header navigation
-  if (!isAuthenticated()) return null
+  // מצב Guest - משתמש לא מחובר
+  if (!user && !isAuthenticated()) {
+    return (
+      <header className={styles.header}>
+        <nav className={styles.nav}>
+          <div className={styles.logo}>Stay Close</div>
+        </nav>
+      </header>
+    )
+  }
 
   const navLinks = [
     { href: '/messages', label: t('navigation.messages'), icon: <MdChat /> },
@@ -110,18 +205,11 @@ export function Header() {
     <>
     <header className={styles.header}>
         <nav className={styles.nav}>
-          <button
-            className={styles.mobileMenuButton}
-            onClick={() => setShowMobileMenu(!showMobileMenu)}
-          >
+          <button className={styles.mobileMenuButton} onClick={() => setShowMobileMenu(!showMobileMenu)}>
             {showMobileMenu ? <MdClose size={28} /> : <MdMenu size={28} />}
           </button>
 
-          <a 
-            href="/" 
-            className={styles.logo} 
-            onClick={(e) => handleNavigation(e, '/')}
-          >
+          <a href="/" className={styles.logo} onClick={(e) => handleNavigation(e, '/')}>
             {t('app.name')}
           </a>
 
@@ -133,7 +221,6 @@ export function Header() {
                   href={link.href}
                   className={`${styles.navLink} ${pathname === link.href ? styles.active : ''}`}
                   onClick={(e) => handleNavigation(e, link.href)}
-                  title={link.label}
                 >
                   <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span className={styles.navLinkIcon}>{link.icon}</span>
@@ -145,10 +232,7 @@ export function Header() {
 
             <div className={styles.desktopUserMenu}>
               <div className={styles.userMenu}>
-                <button 
-                  className={styles.userButton}
-                  onClick={() => setShowUserDropdown(!showUserDropdown)}
-                >
+                <button className={styles.userButton} onClick={() => setShowUserDropdown(!showUserDropdown)}>
                   <MdPerson className={styles.userIcon} />
                   <span className={styles.userName}>{user?.username || t('messages.greetings.guest')}</span>
                 </button>
@@ -170,19 +254,12 @@ export function Header() {
               </div>
             </div>
           </div>
-          
-          {/* Spacer for mobile centering balance */}
           <div className={styles.mobileSpacer}></div>
         </nav>
       </header>
 
-      {/* Mobile Menu Overlay */}
-      <div 
-        className={`${styles.mobileMenuOverlay} ${showMobileMenu ? styles.open : ''}`}
-        onClick={() => setShowMobileMenu(false)}
-      />
+      <div className={`${styles.mobileMenuOverlay} ${showMobileMenu ? styles.open : ''}`} onClick={() => setShowMobileMenu(false)} />
 
-      {/* Mobile Menu - Controlled by CSS for stability */}
       <div className={`${styles.mobileMenu} ${showMobileMenu ? styles.open : ''}`}>
         <div className={styles.mobileNavLinks}>
           {navLinks.map((link) => (

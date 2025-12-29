@@ -31,6 +31,21 @@ export interface ApiResponse<T> {
   error?: string
 }
 
+export interface MessageResponse {
+  content: string  // Mapped from 'message' in the API response
+  contact_name: string
+  message_type: string
+  tone: string
+  usage?: {
+    daily_used: number
+    daily_limit: number
+    monthly_used: number
+    monthly_limit: number
+    can_generate: boolean
+    reason?: string
+  }
+}
+
 /**
  * General function for making API calls
  */
