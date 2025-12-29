@@ -86,10 +86,10 @@ export default function SettingsPage() {
       
       setShowSuccess(true)
       
-      // Refresh the entire site after a short delay to ensure all changes (language, theme, etc.) apply correctly
+      // Navigate to messages after a short delay to show success message
       setTimeout(() => {
-        window.location.reload()
-      }, 800)
+        router.push('/messages')
+      }, 1000)
     } catch (error) {
       console.error('Failed to save settings:', error)
     } finally {
