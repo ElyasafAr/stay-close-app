@@ -186,6 +186,17 @@ function MessagesContent() {
               ))}
             </select>
 
+            <h2 className={styles.sectionTitle}><MdChat /> {t('messages.messageType')}</h2>
+            <select
+              value={messageConfig.message_type}
+              onChange={(e) => setMessageConfig({...messageConfig, message_type: e.target.value})}
+              className={styles.select}
+            >
+              {Object.entries(t('messages.types') as any).map(([key, label]) => (
+                <option key={key} value={key}>{label as string}</option>
+              ))}
+            </select>
+
             <h2 className={styles.sectionTitle}><MdTune /> {t('messages.tone')}</h2>
             <select
               value={messageConfig.tone}
