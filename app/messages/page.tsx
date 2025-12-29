@@ -192,7 +192,7 @@ function MessagesContent() {
               onChange={(e) => setMessageConfig({...messageConfig, message_type: e.target.value})}
               className={styles.select}
             >
-              {Object.entries(t('messages.types') || {}).map(([key, label]) => (
+              {Object.entries(t('messages.types') && typeof t('messages.types') === 'object' ? t('messages.types') : {}).map(([key, label]) => (
                 <option key={key} value={key}>{label as string}</option>
               ))}
             </select>

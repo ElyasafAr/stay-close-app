@@ -174,7 +174,7 @@ a {
 
 /* תמיכה בעברית ו-RTL */
 body {
-  font-family: 'Nunito', 'Segoe UI', 'Arial Hebrew', 'David', 'Noto Sans Hebrew', sans-serif;
+  font-family: 'Assistant', 'Heebo', 'Segoe UI', system-ui, -apple-system, sans-serif;
   font-weight: 400;
   line-height: 1.6;
 }
