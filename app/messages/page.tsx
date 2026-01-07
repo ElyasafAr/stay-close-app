@@ -102,21 +102,29 @@ function MessagesContent() {
       const contactsRes = await getData<any[]>('/api/contacts')
       console.log('🔵 [MessagesPage] Contacts response:', contactsRes.success ? 'success' : 'failed');
       if (contactsRes.success) setContacts(contactsRes.data || [])
-      
+
+      // Load usage status for ads and limits
+      console.log('🔵 [MessagesPage] Fetching usage status...');
+      const usageRes = await getData<any>('/api/usage/status')
+      console.log('🔵 [MessagesPage] Usage status response:', JSON.stringify(usageRes.data, null, 2));
+      if (usageRes.success && usageRes.data) {
+        setUsageStatus(usageRes.data)
+      }
+
       const contactId = searchParams?.get('contactId') || searchParams?.get('contact')
       if (contactId) {
         console.log('🔵 [MessagesPage] Setting contact from URL:', contactId);
         const id = parseInt(contactId);
         setMessageConfig((prev: any) => {
           const newConfig = { ...prev, contact_id: id };
-          
+
           // If we found the contact in the list, use its default tone
           const selectedContact = contactsRes.data?.find((c: any) => c.id === id);
           if (selectedContact?.default_tone) {
             console.log('🔵 [MessagesPage] Setting default tone from contact:', selectedContact.default_tone);
             newConfig.tone = selectedContact.default_tone;
           }
-          
+
           return newConfig;
         })
       }
@@ -160,10 +168,25 @@ function MessagesContent() {
     setGenerationStage('preparing')
 
     try {
-      // Show interstitial ad for free users (during "preparing" stage)
-      if (usageStatus?.subscription_status === 'free' && isAdsSupported()) {
+      // Show interstitial ad for free users every 3rd message (less aggressive)
+      console.log('🔵 [Messages] Usage status:', JSON.stringify(usageStatus, null, 2))
+      const dailyUsed = usageStatus?.messages?.daily_used || 0
+      const shouldShowAd = dailyUsed > 0 && dailyUsed % 3 === 0 // Every 3rd message
+
+      console.log('🎯 [Messages] Ad check:', {
+        dailyUsed,
+        modulo: dailyUsed % 3,
+        shouldShowAd,
+        isFree: usageStatus?.subscription_status === 'free',
+        adsSupported: isAdsSupported()
+      })
+
+      if (usageStatus?.subscription_status === 'free' && isAdsSupported() && shouldShowAd) {
+        console.log('📺 [Messages] Showing interstitial ad (every 3rd message)')
         setGenerationStage('ad')
         await showInterstitialAd()
+      } else {
+        console.log('✅ [Messages] Skipping ad - not 3rd message or premium user')
       }
 
       // Generate the message
@@ -171,6 +194,7 @@ function MessagesContent() {
       const response = await postData<{message: string, contact_name: string, message_type: string, tone: string, usage?: any}>('/api/messages/generate', messageConfig)
 
       if (response.success && response.data) {
+        console.log('✅ [Messages] Message generated successfully')
         // Map API response (uses 'message') to our interface (uses 'content')
         setGeneratedMessage({
           content: response.data.message,
@@ -188,15 +212,49 @@ function MessagesContent() {
           }))
         }
       } else {
-        // Check if error is due to limit reached
-        if (response.error && response.error.includes('daily_limit_reached')) {
+        console.error('❌ [Messages] Generation failed:', response.error)
+        // Check if error is due to limit reached - parse JSON error
+        let shouldShowRewardedModal = false
+        if (response.error) {
+          try {
+            // Try to parse error as JSON (backend sends 402 with detail object)
+            const errorObj = JSON.parse(response.error)
+            if (errorObj.reason === 'daily_limit_reached' || errorObj.reason === 'monthly_limit_reached') {
+              console.log('🎯 [Messages] Daily limit reached - showing rewarded video modal')
+              shouldShowRewardedModal = true
+            }
+          } catch (e) {
+            // Not JSON, check string
+            if (response.error.includes('הגעת למגבלת')) {
+              console.log('🎯 [Messages] Limit reached (string match) - showing rewarded video modal')
+              shouldShowRewardedModal = true
+            }
+          }
+        }
+        if (shouldShowRewardedModal) {
           setShowRewardedVideoModal(true)
         }
         setError(response.error || t('messages.generateError'))
       }
     } catch (err: any) {
+      console.error('❌ [Messages] Generation error:', err)
       // Check if error is due to limit reached
-      if (err.message && err.message.includes('daily_limit_reached')) {
+      let shouldShowRewardedModal = false
+      if (err.message) {
+        try {
+          const errorObj = JSON.parse(err.message)
+          if (errorObj.reason === 'daily_limit_reached' || errorObj.reason === 'monthly_limit_reached') {
+            console.log('🎯 [Messages] Daily limit reached (catch) - showing rewarded video modal')
+            shouldShowRewardedModal = true
+          }
+        } catch (e) {
+          if (err.message.includes('הגעת למגבלת') || err.message.includes('402')) {
+            console.log('🎯 [Messages] Limit reached (catch string) - showing rewarded video modal')
+            shouldShowRewardedModal = true
+          }
+        }
+      }
+      if (shouldShowRewardedModal) {
         setShowRewardedVideoModal(true)
       }
       setError(err.message || t('messages.generateError'))
@@ -374,20 +432,20 @@ function MessagesContent() {
                 <MdRefresh className={styles.generatingIcon} />
                 {generationStage === 'preparing' && (
                   <>
-                    <p className={styles.generatingText}>⏳ מכין הודעה...</p>
-                    <small style={{opacity: 0.7, marginTop: '8px'}}>רגע קטן...</small>
+                    <p className={styles.generatingText}>⏳ {t('messages.preparingMessage')}</p>
+                    <small style={{opacity: 0.7, marginTop: '8px'}}>{t('messages.preparingWait')}</small>
                   </>
                 )}
                 {generationStage === 'ad' && (
                   <>
-                    <p className={styles.generatingText}>⏳ יוצר הודעה אישית עבורך...</p>
-                    <small style={{opacity: 0.7, marginTop: '8px'}}>💡 בזמן ההמתנה - פרסומת קצרה</small>
+                    <p className={styles.generatingText}>⏳ {t('messages.generatingPersonal')}</p>
+                    <small style={{opacity: 0.7, marginTop: '8px'}}>💡 {t('messages.generatingAdWait')}</small>
                   </>
                 )}
                 {generationStage === 'generating' && (
                   <>
-                    <p className={styles.generatingText}>🤖 ה-AI כותב הודעה מושלמת...</p>
-                    <small style={{opacity: 0.7, marginTop: '8px'}}>עוד רגע!</small>
+                    <p className={styles.generatingText}>🤖 {t('messages.generatingAI')}</p>
+                    <small style={{opacity: 0.7, marginTop: '8px'}}>{t('messages.generatingAlmost')}</small>
                   </>
                 )}
                 {!generationStage && (
