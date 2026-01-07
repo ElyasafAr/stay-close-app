@@ -163,6 +163,14 @@
     "shareTitle": "Personalized Message",
     "shareDialog": "Share Message",
     "shareDialogTitle": "Share Message",
+    "rewardedModal": {
+      "title": "Daily Message Limit Reached",
+      "description": "Watch a short video (30 seconds) and get <strong>25 more messages</strong>! 🎉",
+      "bonusEarned": "You've earned {{count}} bonus messages today! 🎁",
+      "watchButton": "Watch Video & Get 25 Messages",
+      "upgradeButton": "Upgrade to Premium (Unlimited)",
+      "closeButton": "Close"
+    },
     "generateError": "Error generating message",
     "noMessageYet": "Message will appear here after you generate it",
     "selectContactPlaceholder": "-- Select Contact --",

@@ -487,20 +487,23 @@ function MessagesContent() {
               <h2 className={styles.modalTitle}>
                 <MdVideoLibrary size={32} style={{marginBottom: '8px'}} />
                 <br />
-                הגעת למגבלת ההודעות היומית
+                {t('messages.rewardedModal.title')}
               </h2>
-              <p className={styles.modalText}>
-                צפה בסרטון קצר (30 שניות) וקבל <strong>25 הודעות נוספות</strong>! 🎉
-              </p>
+              <p className={styles.modalText} dangerouslySetInnerHTML={{ __html: t('messages.rewardedModal.description') }} />
+              {usageStatus?.messages?.rewarded_bonus > 0 && (
+                <p className={styles.modalText} style={{fontSize: '0.9rem', opacity: 0.85, marginTop: '8px'}}>
+                  {t('messages.rewardedModal.bonusEarned', { count: usageStatus.messages.rewarded_bonus })}
+                </p>
+              )}
               <div className={styles.modalButtons}>
                 <button onClick={handleWatchRewardedVideo} className={styles.watchButton}>
-                  <MdVideoLibrary /> צפה בסרטון וקבל 25 הודעות
+                  <MdVideoLibrary /> {t('messages.rewardedModal.watchButton')}
                 </button>
                 <button onClick={() => router.push('/paywall')} className={styles.upgradeButton}>
-                  <MdStar /> שדרג לפרימיום (ללא מגבלות)
+                  <MdStar /> {t('messages.rewardedModal.upgradeButton')}
                 </button>
                 <button onClick={() => setShowRewardedVideoModal(false)} className={styles.cancelButton}>
-                  סגור
+                  {t('messages.rewardedModal.closeButton')}
                 </button>
               </div>
             </div>
