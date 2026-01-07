@@ -4,17 +4,17 @@ import { useState, useEffect, useCallback, useRef, useMemo, Suspense } from 'rea
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useTranslation } from '@/i18n/useTranslation'
 import { useSettings } from '@/state/useSettings'
-import { 
-  getData, 
+import {
+  getData,
   postData,
   MessageResponse
 } from '@/services/api'
 import { isAuthenticated } from '@/services/auth'
-import { 
-  MdSend, 
-  MdRefresh, 
-  MdContentCopy, 
-  MdPerson, 
+import {
+  MdSend,
+  MdRefresh,
+  MdContentCopy,
+  MdPerson,
   MdHistory,
   MdTune,
   MdLanguage,
@@ -22,10 +22,13 @@ import {
   MdError,
   MdChat,
   MdShare,
-  MdWavingHand
+  MdWavingHand,
+  MdVideoLibrary,
+  MdStar
 } from 'react-icons/md'
 import { AdBanner } from '@/components/AdBanner'
 import { UsageBanner } from '@/components/UsageBanner'
+import { showInterstitialAd, showRewardedVideoAd, isAdsSupported } from '@/services/admob'
 import styles from './page.module.css'
 
 function MessagesContent() {
@@ -40,13 +43,29 @@ function MessagesContent() {
   const [generating, setGenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [copySuccess, setCopySuccess] = useState(false)
+  const [usageStatus, setUsageStatus] = useState<any>(null)
+  const [showRewardedVideoModal, setShowRewardedVideoModal] = useState(false)
+  const [generationStage, setGenerationStage] = useState<string>('')
   
-  const [messageConfig, setMessageConfig] = useState<any>({
-    contact_id: 0,
-    message_type: 'custom',
-    tone: 'friendly',
-    additional_context: '',
-    language: 'he',
+  // Initial config with language from settings/localStorage if available
+  const [messageConfig, setMessageConfig] = useState<any>(() => {
+    let initialLang = 'he';
+    if (typeof window !== 'undefined') {
+      const savedSettings = localStorage.getItem('app_settings');
+      if (savedSettings) {
+        try {
+          const settings = JSON.parse(savedSettings);
+          if (settings.language) initialLang = settings.language;
+        } catch (e) {}
+      }
+    }
+    return {
+      contact_id: 0,
+      message_type: 'custom',
+      tone: 'friendly',
+      additional_context: '',
+      language: initialLang,
+    };
   })
 
   const [generatedMessage, setGeneratedMessage] = useState<MessageResponse | null>(null)
@@ -62,29 +81,69 @@ function MessagesContent() {
 
   // Data loader
   const loadInitialData = useCallback(async () => {
-    if (!isAuthenticated()) return;
+    console.log('🔵 [MessagesPage] loadInitialData starting...');
+    if (!isAuthenticated()) {
+      console.warn('⚠️ [MessagesPage] Not authenticated in loadInitialData');
+      setLoading(false);
+      return;
+    }
     
+    // Safety timeout to prevent stuck loading screen
+    let isTimedOut = false;
+    const timeoutId = setTimeout(() => {
+      console.warn('⚠️ [MessagesPage] initial data load timed out');
+      isTimedOut = true;
+      setLoading(false);
+    }, 5000);
+
     try {
       setLoading(true)
+      console.log('🔵 [MessagesPage] Fetching contacts...');
       const contactsRes = await getData<any[]>('/api/contacts')
+      console.log('🔵 [MessagesPage] Contacts response:', contactsRes.success ? 'success' : 'failed');
       if (contactsRes.success) setContacts(contactsRes.data || [])
       
-      const contactId = searchParams?.get('contactId')
+      const contactId = searchParams?.get('contactId') || searchParams?.get('contact')
       if (contactId) {
-        setMessageConfig((prev: any) => ({ ...prev, contact_id: parseInt(contactId) }))
+        console.log('🔵 [MessagesPage] Setting contact from URL:', contactId);
+        const id = parseInt(contactId);
+        setMessageConfig((prev: any) => {
+          const newConfig = { ...prev, contact_id: id };
+          
+          // If we found the contact in the list, use its default tone
+          const selectedContact = contactsRes.data?.find((c: any) => c.id === id);
+          if (selectedContact?.default_tone) {
+            console.log('🔵 [MessagesPage] Setting default tone from contact:', selectedContact.default_tone);
+            newConfig.tone = selectedContact.default_tone;
+          }
+          
+          return newConfig;
+        })
       }
     } catch (err) {
-      console.error('Failed to load initial data:', err)
+      console.error('❌ [MessagesPage] Failed to load initial data:', err)
     } finally {
-      setLoading(false)
+      clearTimeout(timeoutId);
+      if (!isTimedOut) {
+        console.log('🔵 [MessagesPage] loadInitialData finished, setting loading to false');
+        setLoading(false)
+      }
     }
   }, [searchParams])
 
+  // Sync language with settings changes if it hasn't been manually changed yet
+  const isLanguageManuallyChanged = useRef(false);
   useEffect(() => {
-    if (settings.messageLanguage && messageConfig.language !== settings.messageLanguage) {
-      setMessageConfig((prev: any) => ({ ...prev, language: settings.messageLanguage }));
+    if (settings.language && !isLanguageManuallyChanged.current) {
+      console.log('🔵 [MessagesPage] Updating language from settings change:', settings.language);
+      setMessageConfig((prev: any) => ({ ...prev, language: settings.language }));
     }
-  }, [settings.messageLanguage, messageConfig.language]);
+  }, [settings.language]);
+
+  // Debug log for config changes
+  useEffect(() => {
+    console.log('🔵 [MessagesPage] messageConfig updated:', messageConfig);
+  }, [messageConfig]);
 
   useEffect(() => {
     loadInitialData()
@@ -98,8 +157,19 @@ function MessagesContent() {
 
     setGenerating(true)
     setError(null)
+    setGenerationStage('preparing')
+
     try {
+      // Show interstitial ad for free users (during "preparing" stage)
+      if (usageStatus?.subscription_status === 'free' && isAdsSupported()) {
+        setGenerationStage('ad')
+        await showInterstitialAd()
+      }
+
+      // Generate the message
+      setGenerationStage('generating')
       const response = await postData<{message: string, contact_name: string, message_type: string, tone: string, usage?: any}>('/api/messages/generate', messageConfig)
+
       if (response.success && response.data) {
         // Map API response (uses 'message') to our interface (uses 'content')
         setGeneratedMessage({
@@ -109,13 +179,30 @@ function MessagesContent() {
           tone: response.data.tone,
           usage: response.data.usage
         })
+
+        // Update usage status
+        if (response.data?.usage) {
+          setUsageStatus((prev: any) => ({
+            ...prev,
+            messages: response.data?.usage
+          }))
+        }
       } else {
+        // Check if error is due to limit reached
+        if (response.error && response.error.includes('daily_limit_reached')) {
+          setShowRewardedVideoModal(true)
+        }
         setError(response.error || t('messages.generateError'))
       }
-    } catch (err) {
-      setError(t('messages.generateError'))
+    } catch (err: any) {
+      // Check if error is due to limit reached
+      if (err.message && err.message.includes('daily_limit_reached')) {
+        setShowRewardedVideoModal(true)
+      }
+      setError(err.message || t('messages.generateError'))
     } finally {
       setGenerating(false)
+      setGenerationStage('')
     }
   }
 
@@ -137,6 +224,34 @@ function MessagesContent() {
       })
     } catch (err) {
       console.error('Share failed:', err)
+    }
+  }
+
+  const handleWatchRewardedVideo = async () => {
+    setShowRewardedVideoModal(false)
+
+    try {
+      const result = await showRewardedVideoAd()
+
+      if (result.rewarded) {
+        // Call backend to redeem the bonus
+        const response = await postData<{success: boolean; bonus_added: number; message: string}>('/api/usage/rewarded-video', {})
+
+        if (response.success && response.data) {
+          alert(`✅ ${response.data.message}`)
+
+          // Reload usage status
+          const usageRes = await getData<any>('/api/usage/status')
+          if (usageRes.success && usageRes.data) {
+            setUsageStatus(usageRes.data)
+          }
+        }
+      } else {
+        alert('⚠️ צפה בסרטון עד הסוף כדי לקבל 25 הודעות נוספות')
+      }
+    } catch (error) {
+      console.error('Rewarded video error:', error)
+      alert('⚠️ שגיאה בהצגת הפרסומת. נסה שוב מאוחר יותר.')
     }
   }
 
@@ -177,7 +292,15 @@ function MessagesContent() {
             <h2 className={styles.sectionTitle}><MdPerson /> {t('messages.chooseContact')}</h2>
             <select
               value={messageConfig.contact_id}
-              onChange={(e) => setMessageConfig({...messageConfig, contact_id: parseInt(e.target.value)})}
+              onChange={(e) => {
+                const id = parseInt(e.target.value);
+                const selectedContact = contacts.find(c => c.id === id);
+                setMessageConfig((prev: any) => ({
+                  ...prev,
+                  contact_id: id,
+                  tone: selectedContact?.default_tone || prev.tone
+                }));
+              }}
               className={styles.select}
             >
               <option value={0}>{t('messages.selectContact')}</option>
@@ -203,7 +326,7 @@ function MessagesContent() {
               onChange={(e) => setMessageConfig({...messageConfig, tone: e.target.value as any})}
               className={styles.select}
             >
-              {Object.entries(t('messages.tones') as any).map(([key, label]) => (
+              {Object.entries(t('messages.tones') && typeof t('messages.tones') === 'object' ? t('messages.tones') : {}).map(([key, label]) => (
                 <option key={key} value={key}>{label as string}</option>
               ))}
             </select>
@@ -211,10 +334,14 @@ function MessagesContent() {
             <h2 className={styles.sectionTitle}><MdLanguage /> {t('messages.language')}</h2>
             <select
               value={messageConfig.language}
-              onChange={(e) => setMessageConfig({...messageConfig, language: e.target.value})}
+              onChange={(e) => {
+                console.log('🔵 [MessagesPage] Language changed manualy to:', e.target.value);
+                isLanguageManuallyChanged.current = true;
+                setMessageConfig({...messageConfig, language: e.target.value});
+              }}
               className={styles.select}
             >
-              {Object.entries(t('messages.languages') as any).map(([key, label]) => (
+              {Object.entries(t('messages.languages') && typeof t('messages.languages') === 'object' ? t('messages.languages') : {}).map(([key, label]) => (
                 <option key={key} value={key}>{label as string}</option>
               ))}
             </select>
@@ -245,7 +372,27 @@ function MessagesContent() {
             {generating ? (
               <div className={styles.generatingBox}>
                 <MdRefresh className={styles.generatingIcon} />
-                <p className={styles.generatingText}>{t('messages.generating')}</p>
+                {generationStage === 'preparing' && (
+                  <>
+                    <p className={styles.generatingText}>⏳ מכין הודעה...</p>
+                    <small style={{opacity: 0.7, marginTop: '8px'}}>רגע קטן...</small>
+                  </>
+                )}
+                {generationStage === 'ad' && (
+                  <>
+                    <p className={styles.generatingText}>⏳ יוצר הודעה אישית עבורך...</p>
+                    <small style={{opacity: 0.7, marginTop: '8px'}}>💡 בזמן ההמתנה - פרסומת קצרה</small>
+                  </>
+                )}
+                {generationStage === 'generating' && (
+                  <>
+                    <p className={styles.generatingText}>🤖 ה-AI כותב הודעה מושלמת...</p>
+                    <small style={{opacity: 0.7, marginTop: '8px'}}>עוד רגע!</small>
+                  </>
+                )}
+                {!generationStage && (
+                  <p className={styles.generatingText}>{t('messages.generating')}</p>
+                )}
               </div>
             ) : generatedMessage ? (
               <div className={styles.messageBox}>
@@ -274,6 +421,33 @@ function MessagesContent() {
         <div style={{ marginTop: '32px' }}>
           <AdBanner />
         </div>
+
+        {/* Rewarded Video Modal */}
+        {showRewardedVideoModal && (
+          <div className={styles.modalOverlay} onClick={() => setShowRewardedVideoModal(false)}>
+            <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+              <h2 className={styles.modalTitle}>
+                <MdVideoLibrary size={32} style={{marginBottom: '8px'}} />
+                <br />
+                הגעת למגבלת ההודעות היומית
+              </h2>
+              <p className={styles.modalText}>
+                צפה בסרטון קצר (30 שניות) וקבל <strong>25 הודעות נוספות</strong>! 🎉
+              </p>
+              <div className={styles.modalButtons}>
+                <button onClick={handleWatchRewardedVideo} className={styles.watchButton}>
+                  <MdVideoLibrary /> צפה בסרטון וקבל 25 הודעות
+                </button>
+                <button onClick={() => router.push('/paywall')} className={styles.upgradeButton}>
+                  <MdStar /> שדרג לפרימיום (ללא מגבלות)
+                </button>
+                <button onClick={() => setShowRewardedVideoModal(false)} className={styles.cancelButton}>
+                  סגור
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </main>
   )

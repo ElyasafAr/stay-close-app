@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Maintenance v1.9.9: Global version bump to 1.9.9 - Update .gitignore for PRIVATE_KEYS.txt - Update docs and status files"
+$commitMessage = "Feature: Complete AdMob integration - interstitial ads during generation + rewarded videos for extra messages"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files
