@@ -135,8 +135,54 @@ def get_daily_usage(db: Session, user_id: str) -> int:
         UsageStats.user_id == user_id,
         UsageStats.date == today
     ).first()
-    
+
     return usage.messages_generated if usage else 0
+
+
+def get_rewarded_video_bonus(db: Session, user_id: str) -> int:
+    """Get the rewarded video bonus messages available today"""
+    today = date.today()
+    usage = db.query(UsageStats).filter(
+        UsageStats.user_id == user_id,
+        UsageStats.date == today
+    ).first()
+
+    return usage.rewarded_video_bonus if usage else 0
+
+
+def add_rewarded_video_bonus(db: Session, user_id: str, bonus_messages: int = 25) -> bool:
+    """
+    Add rewarded video bonus messages for today.
+    Returns True if successful.
+    """
+    today = date.today()
+
+    # Try to find existing record for today
+    usage = db.query(UsageStats).filter(
+        UsageStats.user_id == user_id,
+        UsageStats.date == today
+    ).first()
+
+    if usage:
+        usage.rewarded_video_bonus += bonus_messages
+        usage.updated_at = utc_now()
+    else:
+        usage = UsageStats(
+            user_id=user_id,
+            date=today,
+            messages_generated=0,
+            rewarded_video_bonus=bonus_messages
+        )
+        db.add(usage)
+
+    try:
+        db.commit()
+        print(f"✅ [USAGE] Added {bonus_messages} rewarded video bonus messages for user {user_id}")
+        return True
+    except Exception as e:
+        db.rollback()
+        print(f"❌ [USAGE] Error adding rewarded video bonus: {e}")
+        return False
 
 
 def get_monthly_usage(db: Session, user_id: str) -> int:
@@ -155,61 +201,73 @@ def get_monthly_usage(db: Session, user_id: str) -> int:
 def check_can_generate_message(db: Session, user_id: str) -> Tuple[bool, dict]:
     """
     Check if a user can generate a message.
-    
+
     Returns:
         Tuple[bool, dict]: (can_generate, info)
-        info contains: status, daily_used, daily_limit, monthly_used, monthly_limit, trial_days_remaining
+        info contains: status, daily_used, daily_limit, rewarded_bonus, monthly_used, monthly_limit, trial_days_remaining
     """
     status = get_user_subscription_status(db, user_id)
-    
+
     info = {
         'status': status,
         'daily_used': 0,
         'daily_limit': None,
+        'rewarded_bonus': 0,
+        'messages_remaining': 0,
         'monthly_used': 0,
         'monthly_limit': None,
         'trial_days_remaining': 0,
         'can_generate': True,
         'reason': None
     }
-    
+
     # Premium users have no limits
     if status == 'premium':
         return True, info
-    
+
     # Trial users have no limits (but show remaining days)
     if status == 'trial':
         info['trial_days_remaining'] = get_trial_days_remaining(db, user_id)
         return True, info
-    
+
     # Free users have limits
     freemium_enabled = get_setting_bool(db, 'freemium_enabled', True)
     if not freemium_enabled:
         info['can_generate'] = False
         info['reason'] = 'freemium_disabled'
         return False, info
-    
-    daily_limit = get_setting_int(db, 'free_messages_per_day', 3)
-    monthly_limit = get_setting_int(db, 'free_messages_per_month', 30)
-    
+
+    # New model: 10 free messages + rewarded video bonuses
+    daily_limit = get_setting_int(db, 'free_messages_per_day', 10)
+    monthly_limit = get_setting_int(db, 'free_messages_per_month', 300)
+
     daily_used = get_daily_usage(db, user_id)
+    rewarded_bonus = get_rewarded_video_bonus(db, user_id)
     monthly_used = get_monthly_usage(db, user_id)
-    
+
+    # Total available = base limit + rewarded bonus
+    total_daily_limit = daily_limit + rewarded_bonus
+    messages_remaining = total_daily_limit - daily_used
+
     info['daily_used'] = daily_used
     info['daily_limit'] = daily_limit
+    info['rewarded_bonus'] = rewarded_bonus
+    info['messages_remaining'] = max(0, messages_remaining)
     info['monthly_used'] = monthly_used
     info['monthly_limit'] = monthly_limit
-    
-    if daily_used >= daily_limit:
+
+    # Check if user exceeded daily limit (including bonuses)
+    if daily_used >= total_daily_limit:
         info['can_generate'] = False
         info['reason'] = 'daily_limit_reached'
         return False, info
-    
+
+    # Check monthly limit
     if monthly_used >= monthly_limit:
         info['can_generate'] = False
         info['reason'] = 'monthly_limit_reached'
         return False, info
-    
+
     return True, info
 
 

@@ -1965,6 +1965,8 @@ async def get_usage_status(
         "messages": {
             "daily_used": message_info.get('daily_used', 0),
             "daily_limit": message_info.get('daily_limit'),
+            "rewarded_bonus": message_info.get('rewarded_bonus', 0),
+            "messages_remaining": message_info.get('messages_remaining', 0),
             "monthly_used": message_info.get('monthly_used', 0),
             "monthly_limit": message_info.get('monthly_limit'),
             "can_generate": message_info.get('can_generate', True)
@@ -1974,6 +1976,36 @@ async def get_usage_status(
             "max": contact_info.get('max_contacts'),
             "can_add": contact_info.get('can_add', True)
         }
+    }
+
+
+@app.post("/api/usage/rewarded-video")
+async def redeem_rewarded_video(
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """פדיון של וידאו מתוגמל עבור 25 הודעות נוספות"""
+    user_id = current_user["user_id"]
+
+    from usage_limiter import add_rewarded_video_bonus, get_user_subscription_status
+
+    # Premium and trial users don't need bonuses
+    status = get_user_subscription_status(db, user_id)
+    if status in ('premium', 'trial'):
+        raise HTTPException(status_code=400, detail="משתמשי פרימיום ו-trial אינם זקוקים לבונוסים")
+
+    # Add 25 bonus messages
+    success = add_rewarded_video_bonus(db, user_id, bonus_messages=25)
+
+    if not success:
+        raise HTTPException(status_code=500, detail="שגיאה בהוספת בונוס")
+
+    print(f"✅ [REWARDED] User {user_id} watched rewarded video, added 25 bonus messages")
+
+    return {
+        "success": True,
+        "bonus_added": 25,
+        "message": "נוספו 25 הודעות נוספות! 🎉"
     }
 
 # ========== MESSAGES ENDPOINTS ==========

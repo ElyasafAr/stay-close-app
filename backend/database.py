@@ -529,6 +529,45 @@ def _run_migrations():
             db.commit()
             print("✅ [DATABASE] Migration completed: ads_enabled setting added")
         
+        # Migration 15: Add donation_enabled setting
+        check_donation_setting = text("""
+            SELECT key
+            FROM app_settings
+            WHERE key='donation_enabled';
+        """)
+
+        result_donation = db.execute(check_donation_setting).fetchone()
+
+        if not result_donation:
+            print("🔵 [DATABASE] Running migration: Adding donation_enabled setting...")
+            insert_donation = text("""
+                INSERT INTO app_settings (key, value, description) VALUES
+                ('donation_enabled', 'false', 'האם לאפשר תרומות ושדרוג לפרימיום באפליקציה')
+                ON CONFLICT (key) DO NOTHING;
+            """)
+            db.execute(insert_donation)
+            db.commit()
+            print("✅ [DATABASE] Migration completed: donation_enabled setting added")
+
+        # Migration 16: Add rewarded_video_bonus column to usage_stats
+        check_rewarded_column = text("""
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_name='usage_stats' AND column_name='rewarded_video_bonus';
+        """)
+
+        result_rewarded = db.execute(check_rewarded_column).fetchone()
+
+        if not result_rewarded:
+            print("🔵 [DATABASE] Running migration: Adding rewarded_video_bonus column to usage_stats...")
+            add_rewarded_column = text("""
+                ALTER TABLE usage_stats
+                ADD COLUMN IF NOT EXISTS rewarded_video_bonus INTEGER NOT NULL DEFAULT 0;
+            """)
+            db.execute(add_rewarded_column)
+            db.commit()
+            print("✅ [DATABASE] Migration completed: rewarded_video_bonus column added")
+
         print("✅ [DATABASE] All migrations completed successfully")
     except Exception as e:
         db.rollback()

@@ -146,14 +146,15 @@ class AppSettings(Base):
 class UsageStats(Base):
     """Usage Stats model - tracks daily usage per user"""
     __tablename__ = "usage_stats"
-    
+
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     user_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     date = Column(Date, nullable=False, index=True)  # The date of usage
     messages_generated = Column(Integer, nullable=False, default=0)  # Messages generated that day
+    rewarded_video_bonus = Column(Integer, nullable=False, default=0)  # Bonus messages from rewarded videos
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
-    
+
     # Relationships
     user = relationship("User", back_populates="usage_stats")
 
