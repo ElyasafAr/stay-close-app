@@ -2,7 +2,14 @@
 
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app'
 import { getAuth, Auth } from 'firebase/auth'
-import { getMessaging, getToken, onMessage, Messaging } from 'firebase/messaging'
+
+/**
+ * Firebase Configuration
+ *
+ * NOTE: Firebase Messaging (FCM) has been removed.
+ * This file now only provides Firebase Authentication for Google Sign-In.
+ * Notifications are handled by Android local notifications (Capacitor).
+ */
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -17,6 +24,7 @@ const firebaseConfig = {
 let app: FirebaseApp
 if (getApps().length === 0) {
   app = initializeApp(firebaseConfig)
+  console.log('[FIREBASE] ✅ Firebase App initialized (Auth only)')
 } else {
   app = getApps()[0]
 }
@@ -29,61 +37,4 @@ export function getAuthInstance(): Auth {
   return auth
 }
 
-// Initialize messaging (only in browser and NOT in native apps)
-let messaging: Messaging | null = null
-if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-  // Check if we are in a native platform (Capacitor)
-  const isNative = (window as any).Capacitor?.isNativePlatform();
-  
-  if (!isNative) {
-    try {
-      messaging = getMessaging(app)
-    } catch (error) {
-      console.warn('Firebase Messaging initialization failed:', error)
-    }
-  } else {
-    console.log('🔍 [FCM] Native platform detected, skipping Web Messaging initialization');
-  }
-}
-
-/**
- * Get FCM token for push notifications
- */
-export async function getFCMToken(): Promise<string | null> {
-  if (typeof window === 'undefined' || !messaging) {
-    return null
-  }
-
-  try {
-    const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY
-    if (!vapidKey) {
-      console.warn('⚠️ [FCM] VAPID key not configured')
-      return null
-    }
-
-    const token = await getToken(messaging, { vapidKey })
-    return token || null
-  } catch (error) {
-    console.error('❌ [FCM] Error getting token:', error)
-    return null
-  }
-}
-
-/**
- * Listen for foreground FCM messages
- */
-export function onFCMMessage(callback: (payload: any) => void): () => void {
-  if (typeof window === 'undefined' || !messaging) {
-    return () => {} // Return empty unsubscribe function
-  }
-
-  try {
-    return onMessage(messaging, callback)
-  } catch (error) {
-    console.error('❌ [FCM] Error setting up message listener:', error)
-    return () => {} // Return empty unsubscribe function
-  }
-}
-
 export default app
-

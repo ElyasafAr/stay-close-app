@@ -1,9 +1,8 @@
 'use client'
 
 import { useEffect } from 'react'
-import { checkReminders, getReminders } from '@/services/reminders'
-import { getContact, getContacts } from '@/services/contacts'
-import { requestNotificationPermission, startReminderChecker } from '@/services/notifications'
+import { getReminders } from '@/services/reminders'
+import { getContacts } from '@/services/contacts'
 import { syncRemindersFromServer, isAndroid } from '@/services/localNotifications'
 import { isAuthenticated } from '@/services/auth'
 
@@ -19,13 +18,14 @@ export function ReminderChecker() {
     // סנכרון תזכורות לאנדרואיד בעת טעינת האפליקציה
     const syncRemindersOnLoad = async () => {
       if (!isAuthenticated()) {
+        console.log('[NOTIF] ⚠️ User not authenticated, skipping reminder sync')
         return
       }
 
       // רק באנדרואיד - סנכרון תזכורות מהשרת למכשיר
       if (isAndroid()) {
         try {
-          console.log('🔄 [ReminderChecker] Syncing reminders from server for Android...')
+          console.log('[NOTIF] 🔄 Syncing reminders from server for Android...')
           const reminders = await getReminders()
           const contacts = await getContacts()
           // סנן רק contacts עם id מוגדר
@@ -35,32 +35,22 @@ export function ReminderChecker() {
               .map(c => [c.id!, c.name])
           )
           await syncRemindersFromServer(reminders, contactNames)
-          console.log('✅ [ReminderChecker] Reminders synced successfully')
+          console.log('[NOTIF] ✅ Reminders synced successfully from server')
         } catch (error) {
-          console.error('❌ [ReminderChecker] Failed to sync reminders:', error)
+          console.error('[NOTIF] ❌ Failed to sync reminders from server:', error)
           // לא נכשיל את האפליקציה אם יש בעיה בסנכרון
         }
+      } else {
+        console.log('[NOTIF] ℹ️ Not on Android, skipping local notification sync')
       }
     }
 
     // סנכרון ראשוני
     syncRemindersOnLoad()
 
-    // לא מבקשים הרשאה כאן - רק כשמגדירים תזכורת
-    // הבקשה תופיע ב-ReminderModal כשמגדירים תזכורת חדשה
-
-    // התחלת בדיקה תקופתית - רק אם המשתמש מחובר
-    // הערה: באנדרואיד, ההתראות המקומיות יעבדו גם בלי בדיקה תקופתית
-    // ב-Web, אנחנו משתמשים ב-Push Notifications (FCM) מהשרת,
-    // ולכן אין צורך לבצע Polling מה-frontend (חוסך זיכרון ומשאבי שרת).
-    /*
-    const cleanup = startReminderChecker(
-      async () => {
-        // ...
-      }
-    )
-    return cleanup
-    */
+    // NOTE: FCM and browser polling have been removed.
+    // Reminders are now handled entirely by Android local notifications.
+    // No permission request or polling needed here.
   }, [])
 
   return null // קומפוננטה לא מציגה כלום

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslation } from '@/i18n/useTranslation'
 import { useSettings } from '@/state/useSettings'
-import { logout, getStoredUser, isAuthenticated } from '@/services/auth'
+import { logout, getStoredUser, isAuthenticated, isNativePlatform } from '@/services/auth'
 import { getData, putData } from '@/services/api'
 import { MdSettings, MdLanguage, MdPalette, MdNotifications, MdLogout, MdPerson, MdPhoneAndroid, MdComputer, MdDevices, MdDeleteForever } from 'react-icons/md'
 import { deleteData } from '@/services/api'
@@ -51,47 +51,36 @@ export default function SettingsPage() {
     }
   }
 
-  // טעינת הגדרת הפלטפורמה מהשרת
-  useEffect(() => {
-    const loadNotificationSettings = async () => {
-      if (!isAuthenticated()) return
-      
-      try {
-        const response = await getData<{ notification_platform: string }>('/api/notification-settings')
-        if (response.success && response.data?.notification_platform) {
-          updateSettings({ notificationPlatform: response.data.notification_platform as 'phone' | 'browser' | 'both' })
-        }
-      } catch (error) {
-        console.error('Failed to load notification settings:', error)
-      }
-    }
-    
-    loadNotificationSettings()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  // REMOVED: loadNotificationSettings - no longer needed (Android local notifications only)
+  // Settings are now stored locally only, no server sync required
 
   const handleSave = async () => {
     setIsSaving(true)
-    
+    console.log('[NOTIF] 💾 Saving settings:', settings)
+
     try {
       // שמירת הגדרות מקומיות
       saveSettings()
-      
-      // שמירת הגדרת הפלטפורמה בשרת
-      if (isAuthenticated()) {
-        await putData('/api/notification-settings', {
-          notification_platform: settings.notificationPlatform || 'both'
-        })
-      }
-      
+      console.log('[NOTIF] ✅ Settings saved locally')
+
       setShowSuccess(true)
+
+      console.log('[NOTIF] 🔵 Save successful, redirecting to messages...');
       
-      // Navigate to messages after a short delay to show success message
+      // Navigate to messages
       setTimeout(() => {
-        router.push('/messages')
+        if (typeof window !== 'undefined') {
+          if (isNativePlatform()) {
+            console.log('🔵 [Settings] Native platform detected, using router.replace');
+            router.replace('/messages');
+          } else {
+            console.log('🔵 [Settings] Web platform detected, using location.href with refresh');
+            window.location.href = '/messages?refresh=' + Date.now();
+          }
+        }
       }, 1000)
     } catch (error) {
-      console.error('Failed to save settings:', error)
+      console.error('❌ [Settings] Failed to save settings:', error)
     } finally {
       setIsSaving(false)
     }
@@ -146,71 +135,24 @@ export default function SettingsPage() {
           </div>
 
           <div className={styles.settingItem}>
-            <label htmlFor="messageLanguage">
-              <MdLanguage style={{ fontSize: '24px', color: '#6ab6ff' }} />
-              {language === 'he' ? 'שפת הודעות ברירת מחדל' : 'Default Message Language'}
-            </label>
-            <select
-              id="messageLanguage"
-              value={settings.messageLanguage || 'he'}
-              onChange={(e) => updateSettings({ messageLanguage: e.target.value })}
-              className={styles.select}
-            >
-              {Object.entries(t('messages.languages') as any).map(([key, label]) => (
-                <option key={key} value={key}>{label as string}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className={styles.settingItem}>
             <label htmlFor="notifications">
               <MdNotifications style={{ fontSize: '24px', color: '#a8d5e2' }} />
               <input
                 type="checkbox"
                 id="notifications"
                 checked={settings.notifications ?? true}
-                onChange={(e) => updateSettings({ notifications: e.target.checked })}
+                onChange={(e) => {
+                  console.log('[NOTIF] 🔔 Notifications toggled:', e.target.checked)
+                  updateSettings({ notifications: e.target.checked })
+                }}
                 className={styles.checkbox}
               />
               {t('settings.notifications')}
             </label>
+            <p className={styles.settingDescription}>
+              {t('settings.notificationsDescription')}
+            </p>
           </div>
-
-          {/* בחירת מקום קבלת התראות */}
-          {settings.notifications && (
-            <div className={styles.settingItem}>
-              <label htmlFor="notificationPlatform">
-                <MdDevices style={{ fontSize: '24px', color: '#a8d5e2' }} />
-                {t('settings.receiveNotificationsAt')}
-              </label>
-              <div className={styles.platformOptions}>
-                <button
-                  type="button"
-                  className={`${styles.platformButton} ${settings.notificationPlatform === 'phone' ? styles.active : ''}`}
-                  onClick={() => updateSettings({ notificationPlatform: 'phone' })}
-                >
-                  <MdPhoneAndroid style={{ fontSize: '20px' }} />
-                  <span>{t('settings.phoneOnly')}</span>
-                </button>
-                <button
-                  type="button"
-                  className={`${styles.platformButton} ${settings.notificationPlatform === 'browser' ? styles.active : ''}`}
-                  onClick={() => updateSettings({ notificationPlatform: 'browser' })}
-                >
-                  <MdComputer style={{ fontSize: '20px' }} />
-                  <span>{t('settings.browserOnly')}</span>
-                </button>
-                <button
-                  type="button"
-                  className={`${styles.platformButton} ${settings.notificationPlatform === 'both' ? styles.active : ''}`}
-                  onClick={() => updateSettings({ notificationPlatform: 'both' })}
-                >
-                  <MdDevices style={{ fontSize: '20px' }} />
-                  <span>{t('settings.bothPlatforms')}</span>
-                </button>
-              </div>
-            </div>
-          )}
 
           <button onClick={handleSave} className={styles.saveButton} disabled={isSaving}>
             {isSaving ? t('settings.saveLoading') : t('settings.save')}

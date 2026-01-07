@@ -4,18 +4,16 @@ import { useState, useEffect } from 'react'
 
 export interface Settings {
   language: string
-  messageLanguage: string
   theme: string
   notifications: boolean
-  notificationPlatform: 'phone' | 'browser' | 'both'
+  // REMOVED: notificationPlatform - no longer needed (Android local notifications only)
 }
 
 const defaultSettings: Settings = {
   language: 'he',
-  messageLanguage: 'he',
   theme: 'light',
   notifications: true,
-  notificationPlatform: 'both',
+  // REMOVED: notificationPlatform - no longer needed (Android local notifications only)
 }
 
 // Apply theme to document

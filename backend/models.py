@@ -27,9 +27,9 @@ class User(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     
-    # Notification settings - where to receive push notifications
-    # 'both' = phone + browser, 'phone' = only phone app, 'browser' = only web browser
-    notification_platform = Column(String, nullable=False, default='both')
+    # REMOVED: notification_platform field (FCM push notifications removed)
+    # Now using Android local notifications only, no platform selection needed
+    # notification_platform = Column(String, nullable=False, default='both')
     
     # Subscription fields
     trial_started_at = Column(DateTime(timezone=True), nullable=True)  # When trial started
@@ -82,19 +82,21 @@ class Reminder(Base):
     user = relationship("User", back_populates="reminders")
     contact = relationship("Contact", back_populates="reminders")
 
-class PushToken(Base):
-    """Push Token model - stores FCM push tokens for users"""
-    __tablename__ = "push_tokens"
-    
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    user_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    token = Column(Text, nullable=False, unique=True, index=True)  # FCM push token
-    device_info = Column(Text, nullable=True)  # JSON: {"platform": "web", "userAgent": "..."}
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
-    
-    # Relationships
-    user = relationship("User")
+# REMOVED: PushToken model (FCM push notifications removed)
+# Now using Android local notifications only, no server-side token storage needed
+# class PushToken(Base):
+#     """Push Token model - stores FCM push tokens for users"""
+#     __tablename__ = "push_tokens"
+#
+#     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+#     user_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+#     token = Column(Text, nullable=False, unique=True, index=True)  # FCM push token
+#     device_info = Column(Text, nullable=True)  # JSON: {"platform": "web", "userAgent": "..."}
+#     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+#     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+#
+#     # Relationships
+#     user = relationship("User")
 
 
 class Subscription(Base):
