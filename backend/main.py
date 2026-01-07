@@ -1798,24 +1798,35 @@ async def update_admin_setting(
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """עדכון הגדרת אפליקציה"""
+    """עדכון או יצירת הגדרת אפליקציה (upsert)"""
     user_id = current_user["user_id"]
-    
+
     if not is_admin(db, user_id):
         raise HTTPException(status_code=403, detail="אין הרשאת מנהל")
-    
+
     from models import AppSettings
-    
+
     db_setting = db.query(AppSettings).filter(AppSettings.key == setting.key).first()
-    
+
     if not db_setting:
-        raise HTTPException(status_code=404, detail="הגדרה לא נמצאה")
-    
+        # Setting doesn't exist - create it
+        print(f"🔵 [ADMIN] Setting '{setting.key}' not found, creating new setting with value '{setting.value}'")
+        db_setting = AppSettings(
+            key=setting.key,
+            value=setting.value,
+            description=f"הגדרה שנוצרה על ידי מנהל {user_id}"
+        )
+        db.add(db_setting)
+        db.commit()
+        print(f"✅ [ADMIN] Setting '{setting.key}' created with value '{setting.value}' by user {user_id}")
+        return {"message": "הגדרה נוצרה בהצלחה", "key": setting.key, "value": setting.value}
+
+    # Setting exists - update it
     db_setting.value = setting.value
     db.commit()
-    
+
     print(f"✅ [ADMIN] Setting '{setting.key}' updated to '{setting.value}' by user {user_id}")
-    
+
     return {"message": "הגדרה עודכנה בהצלחה", "key": setting.key, "value": setting.value}
 
 @app.post("/api/admin/add-admin")
@@ -1941,13 +1952,15 @@ async def get_usage_status(
     _, message_info = check_can_generate_message(db, user_id)
     _, contact_info = check_can_add_contact(db, user_id)
     
-    # Get ads setting
+    # Get ads and donation settings
     from usage_limiter import get_setting_bool
     ads_enabled = get_setting_bool(db, 'ads_enabled', False)
+    donation_enabled = get_setting_bool(db, 'donation_enabled', False)
     
     return {
         "subscription_status": status,
         "ads_enabled": ads_enabled,
+        "donation_enabled": donation_enabled,
         "trial_days_remaining": get_trial_days_remaining(db, user_id) if status == 'trial' else 0,
         "messages": {
             "daily_used": message_info.get('daily_used', 0),
