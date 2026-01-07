@@ -28,7 +28,7 @@ import {
 } from 'react-icons/md'
 import { AdBanner } from '@/components/AdBanner'
 import { UsageBanner } from '@/components/UsageBanner'
-import { showInterstitialAd, showRewardedVideoAd, isAdsSupported } from '@/services/admob'
+import { showInterstitialAd, showRewardedVideoAd, isAdsSupported, preloadInterstitialAd } from '@/services/admob'
 import styles from './page.module.css'
 
 function MessagesContent() {
@@ -156,6 +156,16 @@ function MessagesContent() {
   useEffect(() => {
     loadInitialData()
   }, [loadInitialData])
+
+  // Preload interstitial ad for free users (so it shows instantly when needed)
+  useEffect(() => {
+    if (usageStatus?.subscription_status === 'free' && isAdsSupported()) {
+      console.log('[Messages] Preloading interstitial ad for free user...')
+      preloadInterstitialAd().catch(err =>
+        console.error('❌ [Messages] Failed to preload ad:', err)
+      )
+    }
+  }, [usageStatus?.subscription_status])
 
   const handleGenerate = async () => {
     if (messageConfig.contact_id === 0) {

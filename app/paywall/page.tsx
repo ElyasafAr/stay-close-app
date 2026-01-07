@@ -34,6 +34,7 @@ export default function PaywallPage() {
   const [couponCode, setCouponCode] = useState('')
   const [couponResult, setCouponResult] = useState<{success: boolean; message?: string; type?: string; value?: number} | null>(null)
   const [applyingCoupon, setApplyingCoupon] = useState(false)
+  const [donationEnabled, setDonationEnabled] = useState(false)
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -41,12 +42,12 @@ export default function PaywallPage() {
       return
     }
     loadSubscriptionStatus()
-    
+
     // Check for success/cancel from Allpay
     const urlParams = new URLSearchParams(window.location.search)
     const success = urlParams.get('success')
     const cancel = urlParams.get('cancel')
-    
+
     if (success === 'true') {
       // Payment successful - reload status
       setTimeout(() => {
@@ -60,22 +61,54 @@ export default function PaywallPage() {
       // Remove query params
       window.history.replaceState({}, '', '/paywall')
     }
+
+    // Reload data when page becomes visible (e.g., when navigating back)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log('🔵 [Paywall] Page became visible, reloading status...')
+        loadSubscriptionStatus()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('focus', () => {
+      console.log('🔵 [Paywall] Window focused, reloading status...')
+      loadSubscriptionStatus()
+    })
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('focus', loadSubscriptionStatus)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router])
 
   const loadSubscriptionStatus = async () => {
     try {
-      const response = await getData<SubscriptionStatus>('/api/subscription/status')
+      console.log('🔵 [Paywall] Loading subscription status...');
+      const response = await getData<any>('/api/subscription/status')
+      console.log('🔵 [Paywall] Subscription status response:', response);
       if (response.success && response.data) {
         setSubscriptionData(response.data)
         
         // If already premium, redirect
         if (response.data.status === 'premium') {
+          console.log('🔵 [Paywall] User is already premium, redirecting home');
           router.push('/')
         }
       }
+
+      // Also check if donation is enabled from usage status
+      console.log('🔵 [Paywall] Checking usage status for donation toggle...');
+      const usageRes = await getData<any>('/api/usage/status')
+      console.log('🔵 [Paywall] Usage status response:', usageRes);
+      if (usageRes.success && usageRes.data) {
+        const isEnabled = usageRes.data.donation_enabled === true;
+        console.log('🔵 [Paywall] Donation enabled from server:', isEnabled);
+        setDonationEnabled(isEnabled)
+      }
     } catch (error) {
-      console.error('Error loading subscription status:', error)
+      console.error('❌ [Paywall] Error loading subscription status:', error)
     } finally {
       setLoading(false)
     }
@@ -164,9 +197,9 @@ export default function PaywallPage() {
     <main className={styles.main}>
       <div className={styles.container}>
         {/* Header */}
-        <button 
+        <button
           className={styles.closeButton}
-          onClick={() => router.back()}
+          onClick={() => router.push('/messages')}
         >
           <MdClose size={24} />
         </button>
@@ -204,7 +237,7 @@ export default function PaywallPage() {
           </div>
         </div>
 
-        {/* Pricing Cards */}
+        {/* Pricing Cards - Always Visible */}
         <div className={styles.pricingCards}>
           {/* Monthly */}
           <button
@@ -241,7 +274,7 @@ export default function PaywallPage() {
           </button>
         </div>
 
-        {/* Coupon Input */}
+        {/* Coupon Input - Always Visible */}
         <div className={styles.couponSection}>
           <div className={styles.couponInput}>
             <MdConfirmationNumber size={20} />
@@ -266,14 +299,23 @@ export default function PaywallPage() {
           )}
         </div>
 
-        {/* Purchase Button */}
-        <button 
-          className={styles.purchaseButton}
-          onClick={handlePurchase}
-          disabled={processing}
-        >
-          {processing ? t('paywall.processing') : t('paywall.purchase')}
-        </button>
+        {/* Purchase Button - Only this is controlled by the switch */}
+        {donationEnabled ? (
+          <button 
+            className={styles.purchaseButton}
+            onClick={handlePurchase}
+            disabled={processing}
+          >
+            {processing ? t('paywall.processing') : t('paywall.purchase')}
+          </button>
+        ) : (
+          <div className={styles.comingSoonBox}>
+            <h2 className={styles.comingSoonTitle}>{t('paywall.comingSoon.title')}</h2>
+            <p className={styles.comingSoonText}>
+              {t('paywall.comingSoon.description')}
+            </p>
+          </div>
+        )}
 
         {/* Terms */}
         <p className={styles.terms}>

@@ -452,7 +452,11 @@
     "processing": "Processing...",
     "termsNote": "By clicking \"Continue to payment\" you agree to the",
     "paymentCancelled": "Payment cancelled",
-    "trialDaysRemaining": "You have {{count}} trial days left"
+    "trialDaysRemaining": "You have {{count}} trial days left",
+    "comingSoon": {
+      "title": "Donation option will be available soon!",
+      "description": "We're working on completing the secure payment gateway integration. In the meantime, you can check out the packages and continue using the app for free."
+    }
   },
   "common": {
     "loading": "Loading...",

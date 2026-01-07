@@ -51,6 +51,44 @@ export async function initializeAdMob(): Promise<boolean> {
   }
 }
 
+let interstitialReady = false
+
+/**
+ * Preload interstitial ad in advance for instant showing
+ * Call this when page loads or after showing an ad
+ */
+export async function preloadInterstitialAd(): Promise<boolean> {
+  const isNative = Capacitor.getPlatform() === 'android'
+  if (!isNative) {
+    return false
+  }
+
+  try {
+    // Ensure initialized
+    if (!isInitialized) {
+      await initializeAdMob()
+    }
+
+    console.log('[AdMob] Preloading interstitial ad...')
+
+    // Prepare (load) the interstitial ad
+    const options: AdOptions = {
+      adId: AD_UNIT_IDS.INTERSTITIAL,
+      isTesting: false // Production mode
+    }
+
+    await AdMob.prepareInterstitial(options)
+    interstitialReady = true
+    console.log('✅ [AdMob] Interstitial ad preloaded and ready')
+
+    return true
+  } catch (error) {
+    console.error('❌ [AdMob] Interstitial preload error:', error)
+    interstitialReady = false
+    return false
+  }
+}
+
 /**
  * Show interstitial ad during message generation
  * Returns a promise that resolves when ad is closed or fails
@@ -63,29 +101,29 @@ export async function showInterstitialAd(): Promise<boolean> {
   }
 
   try {
-    // Ensure initialized
-    if (!isInitialized) {
-      await initializeAdMob()
+    // If ad is not preloaded, preload it now
+    if (!interstitialReady) {
+      console.log('[AdMob] Ad not preloaded, loading now...')
+      await preloadInterstitialAd()
     }
 
-    console.log('[AdMob] Preparing interstitial ad...')
-
-    // Prepare (load) the interstitial ad
-    const options: AdOptions = {
-      adId: AD_UNIT_IDS.INTERSTITIAL,
-      isTesting: false // Production mode
-    }
-
-    await AdMob.prepareInterstitial(options)
-    console.log('[AdMob] Interstitial ad prepared')
-
-    // Show the interstitial ad
+    // Show the interstitial ad (instant if preloaded)
+    console.log('[AdMob] Showing interstitial ad...')
     await AdMob.showInterstitial()
     console.log('✅ [AdMob] Interstitial ad shown')
+
+    // Mark as not ready and preload next ad in background
+    interstitialReady = false
+    setTimeout(() => {
+      preloadInterstitialAd().catch(err =>
+        console.error('❌ [AdMob] Background preload failed:', err)
+      )
+    }, 1000) // Wait 1 second before preloading next ad
 
     return true
   } catch (error) {
     console.error('❌ [AdMob] Interstitial error:', error)
+    interstitialReady = false
     return false
   }
 }
