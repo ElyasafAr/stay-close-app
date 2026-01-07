@@ -11,15 +11,10 @@ import {
 import { RewardAdPluginEvents } from '@capacitor-community/admob/dist/esm/reward/reward-ad-plugin-events.enum'
 import type { AdMobRewardItem } from '@capacitor-community/admob/dist/esm/reward/reward-item.interface'
 
-// Ad Unit IDs - TODO: Replace with your actual Ad Unit IDs from AdMob console
+// Ad Unit IDs - Production
 export const AD_UNIT_IDS = {
-  // Test IDs for development (replace with real IDs for production)
-  INTERSTITIAL: 'ca-app-pub-3940256099942544/1033173712', // Google test ID
-  REWARDED: 'ca-app-pub-3940256099942544/5224354917',     // Google test ID
-
-  // Production IDs (get these from AdMob console)
-  // INTERSTITIAL: 'ca-app-pub-XXXXX/YYYYY',
-  // REWARDED: 'ca-app-pub-XXXXX/ZZZZZ',
+  INTERSTITIAL: 'ca-app-pub-1245288761068546/4215501546', // Message Generation Interstitial
+  REWARDED: 'ca-app-pub-1245288761068546/6806345170',     // Extra Messages Reward
 }
 
 let isInitialized = false
@@ -44,7 +39,7 @@ export async function initializeAdMob(): Promise<boolean> {
 
     await AdMob.initialize({
       testingDevices: [myDeviceId],
-      initializeForTesting: true // Set to false for production
+      initializeForTesting: false // Production mode
     })
 
     isInitialized = true
@@ -78,7 +73,7 @@ export async function showInterstitialAd(): Promise<boolean> {
     // Prepare (load) the interstitial ad
     const options: AdOptions = {
       adId: AD_UNIT_IDS.INTERSTITIAL,
-      isTesting: true // Set to false for production
+      isTesting: false // Production mode
     }
 
     await AdMob.prepareInterstitial(options)
@@ -159,7 +154,7 @@ export async function showRewardedVideoAd(): Promise<{ rewarded: boolean; amount
         // Prepare (load) the rewarded video ad
         const options: AdOptions = {
           adId: AD_UNIT_IDS.REWARDED,
-          isTesting: true // Set to false for production
+          isTesting: false // Production mode
         }
 
         await AdMob.prepareRewardVideoAd(options)

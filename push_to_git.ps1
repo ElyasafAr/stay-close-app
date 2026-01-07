@@ -17,7 +17,7 @@ Write-Host ""
 # ============================================
 # UPDATE THIS SECTION FOR EACH FIX
 # ============================================
-$commitMessage = "Feature: Complete AdMob integration - interstitial ads during generation + rewarded videos for extra messages"
+$commitMessage = "Production: Add real AdMob Ad Unit IDs and enable production mode"
 
 # Files/directories to add (update as needed)
 # Use empty array to add ALL changes, or specify specific files
