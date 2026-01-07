@@ -249,10 +249,23 @@ export async function scheduleLocalNotification(
       if ((intervalType === 'days' && intervalValue === 1) ||
           (intervalType === 'hours' && intervalValue === 1)) {
         // מרווח רגיל - שימוש ב-native repeat
-        const scheduleTime = new Date(reminder.next_trigger)
-        if (scheduleTime <= new Date()) {
-          console.warn(`[NOTIF] ⚠️ Reminder ${reminder.id} next_trigger is in the past, skipping`)
-          return
+        let scheduleTime = new Date(reminder.next_trigger)
+        const now = new Date()
+
+        // אם next_trigger בעבר, חשב את המופע הבא
+        if (scheduleTime <= now) {
+          console.log(`[NOTIF] 🔵 Recurring reminder ${reminder.id} next_trigger is in the past, calculating next occurrence`)
+          scheduleTime = new Date()
+
+          if (intervalType === 'hours') {
+            // הוסף שעה אחת לזמן הנוכחי
+            scheduleTime.setHours(scheduleTime.getHours() + 1)
+            console.log(`[NOTIF] 🔵 Scheduling for next hour: ${scheduleTime.toISOString()}`)
+          } else {
+            // intervalType === 'days' - הוסף יום אחד
+            scheduleTime.setDate(scheduleTime.getDate() + 1)
+            console.log(`[NOTIF] 🔵 Scheduling for tomorrow: ${scheduleTime.toISOString()}`)
+          }
         }
 
         await LocalNotifications.schedule({
@@ -273,7 +286,7 @@ export async function scheduleLocalNotification(
             }
           }]
         })
-        console.log(`[NOTIF] ✅ Scheduled recurring notification (every ${intervalType}) for reminder ${reminder.id}`)
+        console.log(`[NOTIF] ✅ Scheduled recurring notification (every ${intervalType}) for reminder ${reminder.id} at ${scheduleTime.toISOString()}`)
 
       } else {
         // מרווח מותאם אישית - תזמון מספר התראות בודדות
@@ -299,11 +312,30 @@ export async function scheduleLocalNotification(
         return
       }
 
-      const scheduleTime = new Date(reminder.next_trigger)
-      if (scheduleTime <= new Date()) {
-        console.warn(`[NOTIF] ⚠️ Reminder ${reminder.id} next_trigger is in the past, skipping`)
-        return
+      // חישוב הזמן הבא - אם next_trigger עבר, חשב את המופע הבא
+      let scheduleTime = new Date(reminder.next_trigger)
+      const now = new Date()
+
+      if (scheduleTime <= now) {
+        console.log(`[NOTIF] 🔵 Daily reminder ${reminder.id} next_trigger is in the past, calculating next occurrence`)
+
+        // פיצול specific_time לשעה ודקה
+        const [hour, minute] = reminder.specific_time.split(':').map(Number)
+
+        // התחל מהיום בזמן המבוקש
+        scheduleTime = new Date()
+        scheduleTime.setHours(hour, minute, 0, 0)
+
+        // אם הזמן היום כבר עבר, קבע למחר
+        if (scheduleTime <= now) {
+          scheduleTime.setDate(scheduleTime.getDate() + 1)
+          console.log(`[NOTIF] 🔵 Today's time passed, scheduling for tomorrow at ${reminder.specific_time}`)
+        } else {
+          console.log(`[NOTIF] 🔵 Scheduling for today at ${reminder.specific_time}`)
+        }
       }
+
+      console.log(`[NOTIF] 📅 Daily reminder ${reminder.id} will fire at: ${scheduleTime.toISOString()}`)
 
       await LocalNotifications.schedule({
         notifications: [{
@@ -323,7 +355,7 @@ export async function scheduleLocalNotification(
           }
         }]
       })
-      console.log(`[NOTIF] ✅ Scheduled daily notification for reminder ${reminder.id}`)
+      console.log(`[NOTIF] ✅ Scheduled daily notification for reminder ${reminder.id} at ${scheduleTime.toLocaleTimeString('he-IL')}`)
     }
 
   } catch (error) {
