@@ -16,6 +16,7 @@ export interface Reminder {
   scheduled_datetime?: string  // ISO datetime string
   weekdays?: number[]  // [0,2,4] = ראשון, שלישי, חמישי
   specific_time?: string  // "14:30"
+  timezone?: string  // User's timezone (e.g., "Asia/Jerusalem")
   one_time_triggered?: boolean
   // שדות קיימים
   last_triggered?: string
