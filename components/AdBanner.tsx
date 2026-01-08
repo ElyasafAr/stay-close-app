@@ -84,7 +84,7 @@ export const AdBanner = () => {
           if (shouldShow && isAndroid) {
             console.log('✅ [AdBanner] Should show banner - initializing...');
             // טעינה עם השהיה קלה כדי לוודא שה-WebView סיים להתרנדר
-            setTimeout(() => initializeAndShowBanner(), 500);
+            setTimeout(() => initializeAndShowBanner(), 250);
           } else {
             console.log('❌ [AdBanner] Banner hidden. Reason:', {
               ads_enabled,

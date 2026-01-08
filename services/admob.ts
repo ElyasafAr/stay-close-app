@@ -118,7 +118,7 @@ export async function showInterstitialAd(): Promise<boolean> {
       preloadInterstitialAd().catch(err =>
         console.error('❌ [AdMob] Background preload failed:', err)
       )
-    }, 1000) // Wait 1 second before preloading next ad
+    }, 500) // Wait 500ms before preloading next ad
 
     return true
   } catch (error) {
