@@ -318,6 +318,28 @@
   font-size: 0.9rem;
 }
 
+.comingSoonBox {
+  background: rgba(255, 215, 0, 0.1);
+  border: 1px dashed #ffd700;
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.comingSoonTitle {
+  color: #ffd700;
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.comingSoonText {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
 @media (max-width: 480px) {
   .pricingCards {
     flex-direction: column;

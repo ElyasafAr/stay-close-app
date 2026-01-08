@@ -78,3 +78,4 @@ backend/install_all.py
 Dockerfile
 docker-compose.yml
 backend/Dockerfile
+.claude/

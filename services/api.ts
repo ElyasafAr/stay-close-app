@@ -125,9 +125,11 @@ async function fetchApi<T>(
       let errorMessage = `HTTP Error: ${response.status}`
       try {
         const errorData = await response.json()
-        console.error('❌ [API] Error details:', errorData)
+        console.error('❌ [API] Error details:', JSON.stringify(errorData, null, 2))
         if (errorData.detail) {
-          errorMessage = errorData.detail
+          errorMessage = typeof errorData.detail === 'string'
+            ? errorData.detail
+            : JSON.stringify(errorData.detail)
         }
       } catch (e) {
         console.error('❌ [API] Could not parse error response:', e)
@@ -137,10 +139,7 @@ async function fetchApi<T>(
     }
 
     const data = await response.json()
-    console.log('✅ [API] Request successful:', {
-      hasData: !!data,
-      dataKeys: data ? Object.keys(data) : []
-    })
+    console.log('✅ [API] Request successful:', JSON.stringify(data, null, 2))
     return { success: true, data }
   } catch (error) {
     console.error('❌ [API] Request error:', error)

@@ -15,7 +15,8 @@ import {
   MdSettings, 
   MdEmail, 
   MdInfo,
-  MdAdminPanelSettings
+  MdAdminPanelSettings,
+  MdStar
 } from 'react-icons/md'
 import { APP_VERSION } from '@/lib/constants'
 import styles from './Header.module.css'
@@ -28,25 +29,27 @@ export function Header() {
   const [showMobileMenu, setShowMobileMenu] = useState(false)
   const [showUserDropdown, setShowUserDropdown] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [isPremium, setIsPremium] = useState(true) // Default to true to hide during loading
+  const [donationEnabled, setDonationEnabled] = useState(false)
   const [mounted, setMounted] = useState(false)
 
-  // פונקציה לבדיקת סטטוס אדמין
-  const checkAdminStatus = async () => {
+  // פונקציה לבדיקת סטטוס אדמין ופרימיום
+  const checkAccountStatus = async () => {
     try {
-      console.log('🔍 [Header] checkAdminStatus: Starting check...');
-      const response = await getData('/api/admin/stats')
-      console.log('🔍 [Header] checkAdminStatus: API Response:', response);
+      console.log('🔍 [Header] checkAccountStatus: Starting check...');
       
-      if (response.success) {
-        console.log('✅ [Header] checkAdminStatus: Admin confirmed! Setting isAdmin=true');
-        setIsAdmin(true)
-      } else {
-        console.log('❌ [Header] checkAdminStatus: Admin denied (success=false). Setting isAdmin=false');
-        setIsAdmin(false)
+      // Check admin status
+      const adminRes = await getData('/api/admin/stats')
+      setIsAdmin(adminRes.success)
+      
+      // Check premium status and remote switches
+      const usageRes = await getData<any>('/api/usage/status')
+      if (usageRes.success && usageRes.data) {
+        setIsPremium(usageRes.data.subscription_status === 'premium')
+        setDonationEnabled(usageRes.data.donation_enabled === true)
       }
     } catch (err) {
-      console.error('❌ [Header] checkAdminStatus: API Error:', err);
-      setIsAdmin(false)
+      console.error('❌ [Header] checkAccountStatus: API Error:', err);
     }
   }
 
@@ -64,10 +67,11 @@ export function Header() {
       console.log('👤 [Header] onAuthStateChange:', updatedUser ? `User found: ${updatedUser.username}` : 'No user');
       setUser(updatedUser);
       if (updatedUser) {
-        console.log('👤 [Header] Triggering admin check from onAuthStateChange');
-        checkAdminStatus();
+        console.log('👤 [Header] Triggering account check from onAuthStateChange');
+        checkAccountStatus();
       } else {
         setIsAdmin(false);
+        setIsPremium(true);
       }
     });
 
@@ -87,10 +91,11 @@ export function Header() {
       console.log('👤 [Header] Custom authChanged event:', newUser ? `Login: ${newUser.username}` : 'No user');
       setUser(newUser || null);
       if (newUser) {
-        console.log('👤 [Header] Triggering admin check from authChanged event');
-        checkAdminStatus();
+        console.log('👤 [Header] Triggering account check from authChanged event');
+        checkAccountStatus();
       } else {
         setIsAdmin(false);
+        setIsPremium(true);
       }
     };
 
@@ -107,10 +112,11 @@ export function Header() {
         const storedUser = getStoredUser();
         setUser(storedUser);
         if (storedUser) {
-          console.log('👤 [Header] Triggering admin check from StorageChange');
-          checkAdminStatus();
+          console.log('👤 [Header] Triggering account check from StorageChange');
+          checkAccountStatus();
         } else {
           setIsAdmin(false);
+          setIsPremium(true);
         }
       }
     };
@@ -125,7 +131,7 @@ export function Header() {
       const stored = getStoredUser();
       console.log('👤 [Header] Initial check: stored user =', stored?.username);
       setUser(stored);
-      checkAdminStatus();
+      checkAccountStatus();
     }
 
     return () => {
@@ -195,6 +201,7 @@ export function Header() {
   const navLinks = [
     { href: '/messages', label: t('navigation.messages'), icon: <MdChat /> },
     { href: '/contacts', label: t('navigation.contacts'), icon: <MdPeople /> },
+    ...(donationEnabled && !isPremium ? [{ href: '/paywall', label: t('paywall.title'), icon: <MdStar />, highlight: true }] : []),
     { href: '/settings', label: t('navigation.settings'), icon: <MdSettings /> },
     { href: '/contact', label: t('navigation.contact'), icon: <MdEmail /> },
     { href: '/about', label: t('navigation.about'), icon: <MdInfo /> },
@@ -215,11 +222,11 @@ export function Header() {
 
           <div className={styles.navRight}>
             <div className={styles.navLinks}>
-              {navLinks.map((link) => (
+              {navLinks.map((link: any) => (
                 <a
                   key={link.href}
                   href={link.href}
-                  className={`${styles.navLink} ${pathname === link.href ? styles.active : ''}`}
+                  className={`${styles.navLink} ${pathname === link.href ? styles.active : ''} ${link.highlight ? styles.highlight : ''}`}
                   onClick={(e) => handleNavigation(e, link.href)}
                 >
                   <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -262,11 +269,11 @@ export function Header() {
 
       <div className={`${styles.mobileMenu} ${showMobileMenu ? styles.open : ''}`}>
         <div className={styles.mobileNavLinks}>
-          {navLinks.map((link) => (
+          {navLinks.map((link: any) => (
             <a
               key={link.href}
               href={link.href}
-              className={`${styles.mobileNavLink} ${pathname === link.href ? styles.active : ''}`}
+              className={`${styles.mobileNavLink} ${pathname === link.href ? styles.active : ''} ${link.highlight ? styles.highlight : ''}`}
               onClick={(e) => handleNavigation(e, link.href)}
             >
               <span className={styles.navLinkIcon}>{link.icon}</span>

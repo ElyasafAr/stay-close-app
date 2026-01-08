@@ -35,16 +35,30 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       setAuthenticated(auth)
       isInitialCheckDone.current = true
 
+      // Safety timeout to prevent stuck loading screen
+      const safetyTimeout = setTimeout(() => {
+        setLoading(currentLoading => {
+          if (currentLoading) {
+            console.warn('⚠️ [AuthGuard] Safety timeout triggered - forcing loading to false');
+            return false;
+          }
+          return currentLoading;
+        });
+      }, 3000);
+
       if (!auth && !isPublic) {
         console.log(`🛡️ [AuthGuard] Protected path detected! Redirecting to /login`);
+        clearTimeout(safetyTimeout);
         router.replace('/login');
-      } else if (auth && pathname === '/login') {
-        console.log(`🛡️ [AuthGuard] Authenticated user on login page! Redirecting to /messages`);
+      } else if (auth && (pathname === '/login' || pathname === '/')) {
+        console.log(`🛡️ [AuthGuard] Authenticated user on ${pathname}! Redirecting to /messages`);
+        clearTimeout(safetyTimeout);
         router.replace('/messages')
       } else {
         console.log(`🛡️ [AuthGuard] Stay on current path: ${pathname}`);
+        clearTimeout(safetyTimeout);
+        setLoading(false); // מוודא שכיבינו את הלודינג רק כשהחלטנו להישאר בדף
       }
-      setLoading(false)
     }
 
     // בדיקה ראשונית

@@ -172,15 +172,30 @@ export default function AdminPage() {
   const handleSaveSettingDirect = async (key: string, value: string) => {
     setSaving(true)
     try {
-      await putData('/api/admin/settings', { key, value })
+      console.log(`🔵 [Admin] Saving setting: ${key} = ${value}`)
+      const saveRes = await putData('/api/admin/settings', { key, value })
+      console.log('🔵 [Admin] Save response:', saveRes)
+
+      if (!saveRes.success) {
+        throw new Error(saveRes.error || 'Failed to save setting')
+      }
+
       // Refresh settings
+      console.log('🔵 [Admin] Refreshing settings...')
       const settingsRes = await getData<AppSettings>('/api/admin/settings')
+      console.log('🔵 [Admin] Settings after refresh:', settingsRes)
+
       if (settingsRes.success && settingsRes.data) {
         setSettings(settingsRes.data)
         setEditedSettings(prev => ({ ...prev, [key]: value }))
+        console.log(`✅ [Admin] Setting ${key} updated successfully to ${value}`)
+        console.log('✅ [Admin] New settings state:', settingsRes.data[key])
+      } else {
+        throw new Error('Failed to refresh settings')
       }
-    } catch (err) {
-      alert('שגיאה בשמירת הגדרה')
+    } catch (err: any) {
+      console.error('❌ [Admin] Error saving setting:', err)
+      alert(`שגיאה בשמירת הגדרה: ${err.message || 'Unknown error'}`)
     } finally {
       setSaving(false)
     }
@@ -386,6 +401,24 @@ export default function AdminPage() {
                   style={{ background: settings?.ads_enabled?.value === 'true' ? '#f59e0b' : '#6b7280' }}
                 >
                   {settings?.ads_enabled?.value === 'true' ? 'השבת פרסומות' : 'הפעל פרסומות'}
+                </button>
+                <button
+                  className={styles.emergencyButton}
+                  onClick={async () => {
+                    const isDonationEnabled = settings?.donation_enabled?.value === 'true'
+                    const newValue = isDonationEnabled ? 'false' : 'true'
+                    const action = isDonationEnabled ? 'להשבית' : 'להפעיל'
+                    if (confirm(`האם ${action} אפשרות לתרומות/שדרוג? (משפיע על כל האפליקציה)`)) {
+                      console.log(`🔵 [Admin] Toggling donation_enabled from ${isDonationEnabled} to ${newValue}`)
+                      await handleSaveSettingDirect('donation_enabled', newValue)
+                      console.log('✅ [Admin] Donation setting saved successfully')
+                      alert(`✅ אפשרות תרומות ${isDonationEnabled ? 'הושבתה' : 'הופעלה'} בהצלחה!\n\nמשתמשים שפתוחה להם דף התרומות יצטרכו לרענן את העמוד לראות את השינוי.`)
+                    }
+                  }}
+                  style={{ background: settings?.donation_enabled?.value === 'true' ? '#3b82f6' : '#6b7280' }}
+                  disabled={saving}
+                >
+                  {saving ? 'שומר...' : (settings?.donation_enabled?.value === 'true' ? 'השבת תרומות (LIVE)' : 'הפעל תרומות (LIVE)')}
                 </button>
               </div>
             </div>

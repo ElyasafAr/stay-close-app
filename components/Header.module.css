@@ -80,6 +80,18 @@ html.dark .logo {
   font-weight: 700;
 }
 
+.navLink.highlight {
+  background: linear-gradient(135deg, #ffd93d 0%, #fbbf24 100%);
+  color: #000;
+  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.navLink.highlight:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
 /* Dark theme nav links */
 html.dark .navLink:hover,
 html.dark .navLink.active {
@@ -293,6 +305,13 @@ html.dark .mobileMenuButton {
   background: var(--color-primary-light);
   color: var(--color-primary-dark);
   border-color: var(--color-primary);
+}
+
+.mobileNavLink.highlight {
+  background: linear-gradient(135deg, #ffd93d 0%, #fbbf24 100%);
+  color: #000;
+  border-color: #fbbf24;
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
 }
 
 html.dark .mobileNavLink:hover,
