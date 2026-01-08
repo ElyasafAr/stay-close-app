@@ -522,12 +522,12 @@ def _run_migrations():
             print("🔵 [DATABASE] Running migration: Adding ads_enabled setting...")
             insert_ads = text("""
                 INSERT INTO app_settings (key, value, description) VALUES
-                ('ads_enabled', 'false', 'האם להציג פרסומות למשתמשים בגרסה החינמית')
+                ('ads_enabled', 'true', 'האם להציג פרסומות למשתמשים בגרסה החינמית')
                 ON CONFLICT (key) DO NOTHING;
             """)
             db.execute(insert_ads)
             db.commit()
-            print("✅ [DATABASE] Migration completed: ads_enabled setting added")
+            print("✅ [DATABASE] Migration completed: ads_enabled setting added (default: TRUE)")
         
         # Migration 15: Add donation_enabled setting
         check_donation_setting = text("""

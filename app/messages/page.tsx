@@ -108,6 +108,13 @@ function MessagesContent() {
       const usageRes = await getData<any>('/api/usage/status')
       console.log('🔵 [MessagesPage] Usage status response:', JSON.stringify(usageRes.data, null, 2));
       if (usageRes.success && usageRes.data) {
+        console.log('📊 [ADS DEBUG] Usage status details:', {
+          subscription_status: usageRes.data.subscription_status,
+          ads_enabled: usageRes.data.ads_enabled,
+          donation_enabled: usageRes.data.donation_enabled,
+          daily_used: usageRes.data.messages?.daily_used,
+          daily_limit: usageRes.data.messages?.daily_limit
+        });
         setUsageStatus(usageRes.data)
       }
 
@@ -296,14 +303,19 @@ function MessagesContent() {
   }
 
   const handleWatchRewardedVideo = async () => {
+    console.log('📺 [REWARDED VIDEO] User clicked watch button');
     setShowRewardedVideoModal(false)
 
     try {
+      console.log('📺 [REWARDED VIDEO] Calling showRewardedVideoAd()...');
       const result = await showRewardedVideoAd()
+      console.log('📺 [REWARDED VIDEO] Result:', result);
 
       if (result.rewarded) {
+        console.log('✅ [REWARDED VIDEO] User watched complete video - calling backend...');
         // Call backend to redeem the bonus
         const response = await postData<{success: boolean; bonus_added: number; message: string}>('/api/usage/rewarded-video', {})
+        console.log('📺 [REWARDED VIDEO] Backend response:', response);
 
         if (response.success && response.data) {
           alert(`✅ ${response.data.message}`)
@@ -315,10 +327,11 @@ function MessagesContent() {
           }
         }
       } else {
+        console.warn('⚠️ [REWARDED VIDEO] User did not complete video');
         alert('⚠️ צפה בסרטון עד הסוף כדי לקבל 25 הודעות נוספות')
       }
     } catch (error) {
-      console.error('Rewarded video error:', error)
+      console.error('❌ [REWARDED VIDEO] Error:', error)
       alert('⚠️ שגיאה בהצגת הפרסומת. נסה שוב מאוחר יותר.')
     }
   }

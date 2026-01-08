@@ -26,16 +26,11 @@ export const AdBanner = () => {
   const [isVisible, setIsVisible] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
   const [isNative, setIsNative] = useState(false)
+  const [donationEnabled, setDonationEnabled] = useState(false)
 
   useEffect(() => {
     const isAndroid = Capacitor.getPlatform() === 'android';
     setIsNative(isAndroid);
-
-    // באנדרואיד אנחנו רוצים להראות את ה-Placeholder מיד כדי למנוע קפיצות במסך ההודעות
-    if (isAndroid) {
-      setIsVisible(true);
-      setIsLoaded(true);
-    }
 
     const initializeAndShowBanner = async () => {
       try {
@@ -58,7 +53,7 @@ export const AdBanner = () => {
           adSize: BannerAdSize.ADAPTIVE_BANNER,
           position: BannerAdPosition.BOTTOM_CENTER,
           margin: 0,
-          isTesting: true 
+          isTesting: false 
         });
         isBannerVisible = true;
         console.log('✅ [AdMob] Banner is now visible');
@@ -69,22 +64,39 @@ export const AdBanner = () => {
 
     const checkAdsStatus = async () => {
       try {
-        if (isAndroid) {
-          // טעינה עם השהיה קלה כדי לוודא שה-WebView סיים להתרנדר
-          setTimeout(() => initializeAndShowBanner(), 500);
-          return;
-        }
-
-        const response = await getData<UsageStatus>('/api/usage/status')
+        console.log('🔵 [AdBanner] Checking ads status...');
+        const response = await getData<any>('/api/usage/status')
         if (response.success && response.data) {
-          const { subscription_status, ads_enabled } = response.data
+          const { subscription_status, ads_enabled, donation_enabled } = response.data
+          console.log('📊 [AdBanner DEBUG] Status:', {
+            subscription_status,
+            ads_enabled,
+            donation_enabled,
+            isAndroid,
+            shouldShow: ads_enabled && subscription_status !== 'premium'
+          });
+
+          setDonationEnabled(donation_enabled === true);
+
           const shouldShow = ads_enabled && subscription_status !== 'premium';
           setIsVisible(shouldShow);
+
+          if (shouldShow && isAndroid) {
+            console.log('✅ [AdBanner] Should show banner - initializing...');
+            // טעינה עם השהיה קלה כדי לוודא שה-WebView סיים להתרנדר
+            setTimeout(() => initializeAndShowBanner(), 500);
+          } else {
+            console.log('❌ [AdBanner] Banner hidden. Reason:', {
+              ads_enabled,
+              subscription_status,
+              isAndroid
+            });
+          }
         }
       } catch (error) {
-        console.error('Error checking ads status:', error)
+        console.error('❌ [AdBanner] Error checking ads status:', error)
       } finally {
-        if (!isAndroid) setIsLoaded(true)
+        setIsLoaded(true)
       }
     }
 
@@ -108,13 +120,15 @@ export const AdBanner = () => {
       <div className={styles.adBox}>
         <span className={styles.adLabel}>פרסומת</span>
         <div className={styles.adContent}>
-          <div className={styles.adTitle}>Stay Close Premium</div>
-          <div className={styles.adText}>תמוך באפליקציה ותהנה מחוויה ללא פרסומות</div>
+          <div className={styles.adTitle}>Stay Close</div>
+          <div className={styles.adText}>תודה שאתם משתמשים באפליקציה! 💙</div>
         </div>
       </div>
-      <a href="/paywall" className={styles.removeAds} onClick={(e) => handleNavigation(e, '/paywall')}>
-        הסר פרסומות ושדרג לפרימיום
-      </a>
+      {donationEnabled && (
+        <a href="/paywall" className={styles.removeAds} onClick={(e) => handleNavigation(e, '/paywall')}>
+          הסר פרסומות ושדרג לפרימיום
+        </a>
+      )}
     </div>
   )
 }
