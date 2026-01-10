@@ -1,8 +1,23 @@
 # Stay Close App - Session Handoff
 
-**Last Updated:** 2026-01-11
+**Last Updated:** 2026-01-11 (Session 3)
 **App Version:** 2.2.0
 **Branch:** main
+
+---
+
+## Bug Fixes This Session
+
+### Fixed: Registration "Password too long" Error
+**Problem:** Users couldn't register - error "password cannot be longer than 72 bytes" even for short passwords.
+
+**Root Cause:** Version incompatibility between `passlib 1.7.4` and `bcrypt 4.1+`. The new bcrypt removed `__about__` attribute that passlib expects.
+
+**Solution:** Pinned `bcrypt==4.0.1` in `backend/requirements.txt`
+
+**Commits:**
+- `ff51276` - Fix: Pin bcrypt==4.0.1 for passlib compatibility
+- `c0eb444` - Fix: Password 72-byte bcrypt limit + Release signing setup
 
 ---
 
@@ -14,6 +29,7 @@
 - [x] Built release AAB (`android/app/build/outputs/bundle/release/app-release.aab` - 7.3MB)
 - [x] Created `PLAY_STORE_LISTING.md` with copy-paste ready content
 - [x] Added keystore to `.gitignore`
+- [x] Fixed registration bug (bcrypt/passlib compatibility)
 
 ### Keystore Credentials (SAVE THESE!)
 ```
