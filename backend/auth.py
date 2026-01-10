@@ -32,10 +32,23 @@ security_optional = HTTPBearer(auto_error=False)
 
 def hash_password(password: str) -> str:
     """מצפין סיסמה"""
+    # bcrypt has a 72-byte limit - encode and check
+    password_bytes = password.encode('utf-8')
+    print(f"🔍 [AUTH] hash_password: {len(password)} chars, {len(password_bytes)} bytes")
+
+    if len(password_bytes) > 72:
+        print(f"⚠️ [AUTH] Password exceeds 72 bytes ({len(password_bytes)}), truncating...")
+        # Truncate to 72 bytes (bcrypt limit)
+        password = password_bytes[:72].decode('utf-8', errors='ignore')
+
     return pwd_context.hash(password)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """בודק סיסמה"""
+    # Apply same truncation as hash_password for consistency
+    password_bytes = plain_password.encode('utf-8')
+    if len(password_bytes) > 72:
+        plain_password = password_bytes[:72].decode('utf-8', errors='ignore')
     return pwd_context.verify(plain_password, hashed_password)
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
@@ -117,6 +130,12 @@ def get_current_user_optional(
 
 def register_user(username: str, email: str, password: str, db: Session) -> dict:
     """רושם משתמש חדש בבסיס הנתונים"""
+    # Debug: Log password info (DO NOT log actual password in production!)
+    print(f"🔍 [AUTH] register_user called:")
+    print(f"   - username length: {len(username)}")
+    print(f"   - email length: {len(email)}")
+    print(f"   - password length: {len(password)} chars, {len(password.encode('utf-8'))} bytes")
+
     username_hash, username_encrypted = encrypt_for_storage(username)
     email_hash, email_encrypted = encrypt_for_storage(email)
     

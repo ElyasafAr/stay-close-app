@@ -68,6 +68,11 @@ PRIVATE_KEYS.txt
 *firebase-adminsdk*.json
 service-account*.json
 
+# Android Release Keystore (CRITICAL - Never commit!)
+*.keystore
+*.jks
+keystore.properties
+
 # Installation scripts (לא נדרש ב-production)
 backend/install*.ps1
 backend/install*.bat
